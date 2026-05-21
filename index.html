@@ -678,8 +678,7 @@ function card(b, i) {
     <div class="card-embed-fallback hidden" id="fb-${b.id}">
       <img
         class="fallback-shot"
-        src="https://image.thum.io/get/width/1200/${x(b.url)}"
-        loading="lazy"
+        data-url="${x(b.url)}"
         alt="${x(b.name)} preview">
       <div class="fb-overlay">${h} · snapshot</div>
     </div>
@@ -720,7 +719,20 @@ function iframeFailed(id) {
   const loader = document.getElementById('load-'+id);
   if (loader) loader.style.display = 'none';
   if (ifr) ifr.classList.add('hidden');
-  if (fb)  fb.classList.remove('hidden');
+  if (!fb) return;
+
+  // Fetch screenshot from Microlink only once
+  const img = fb.querySelector('img');
+  if (img && img.dataset.url && !img.src) {
+    const apiUrl = `https://api.microlink.io?url=${encodeURIComponent(img.dataset.url)}&screenshot=true&meta=false&embed=screenshot.url`;
+    img.src = apiUrl;
+    img.onerror = () => {
+      img.style.display = 'none';
+      fb.style.background = 'var(--bg2)';
+    };
+  }
+
+  fb.classList.remove('hidden');
 }
 
 function checkIframes() {
