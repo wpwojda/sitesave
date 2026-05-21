@@ -69,7 +69,7 @@ header {
 
 .logo {
   font-family: 'Geist', sans-serif;
-  font-size: 18px; font-weight: 600;
+  font-size: 20px; font-weight: 600;
   color: var(--text);
   text-decoration: none;
   letter-spacing: -.03em;
@@ -479,7 +479,6 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
       </svg>
     </button>
 
-    <button class="btn-ghost" onclick="resetDemo()" title="Reload demo sites" style="font-size:13px;height:34px;padding:0 12px">Reset demo</button>
     <button class="btn-add" onclick="openModal()">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Save site
@@ -611,15 +610,6 @@ function seed() {
 }
 
 function persist() { localStorage.setItem(KEY, JSON.stringify(BM)); }
-
-function resetDemo() {
-  if (!confirm('This will clear your current saved sites and reload the demo data. Continue?')) return;
-  localStorage.removeItem(KEY);
-  BM = [];
-  seed();
-  render();
-  toast('Demo data reloaded');
-}
 
 // ── FILTER / SORT ────────────────────────────────────────────
 function visible() {
