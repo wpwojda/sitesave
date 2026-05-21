@@ -479,6 +479,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
       </svg>
     </button>
 
+    <button class="btn-ghost" onclick="resetDemo()" title="Reload demo sites" style="font-size:13px;height:34px;padding:0 12px">Reset demo</button>
     <button class="btn-add" onclick="openModal()">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Save site
@@ -603,8 +604,8 @@ function seed() {
     { id:uid(), url:'https://en.wikipedia.org/wiki/Design',   name:'Wikipedia — Design',      tags:['reference'],                 color:'#6b6a67', fav:false, date:n-864e5*2  },
     { id:uid(), url:'https://tympanus.net/codrops',           name:'Codrops',                 tags:['interactions','inspiration'], color:'#2563eb', fav:true,  date:n-864e5*3  },
     { id:uid(), url:'https://www.nngroup.com',                name:'Nielsen Norman Group',    tags:['ux patterns','reference'],    color:'#d97706', fav:true,  date:n-864e5*4  },
-    { id:uid(), url:'https://lawsofux.com',                   name:'Laws of UX',              tags:['reference','inspiration'],   color:'#c0392b', fav:false, date:n-864e5*5  },
-    { id:uid(), url:'https://www.canva.com/colors/color-wheel', name:'Canva Colour Wheel',    tags:['colour','reference'],        color:'#16a34a', fav:false, date:n-864e5*6  },
+    { id:uid(), url:'https://coolors.co',                      name:'Coolors',                 tags:['colour','tools'],            color:'#c0392b', fav:false, date:n-864e5*5  },
+    { id:uid(), url:'https://gridbyexample.com',               name:'Grid by Example',         tags:['reference','layouts'],       color:'#16a34a', fav:false, date:n-864e5*6  },
   ];
   persist();
 }
