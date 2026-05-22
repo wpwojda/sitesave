@@ -60,7 +60,7 @@ header {
 
 .logo {
   font-family: 'Geist', sans-serif;
-  font-size: 20px; font-weight: 600;
+  font-size: 26px; font-weight: 600;
   color: var(--text);
   text-decoration: none;
   letter-spacing: -.03em;
