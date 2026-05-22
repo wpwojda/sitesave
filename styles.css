@@ -180,7 +180,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .topbar-l { display: flex; align-items: baseline; gap: 8px; }
 .pg-title {
-  font-size: 26px; font-weight: 600; letter-spacing: -.04em;
+  font-size: 22px; font-weight: 600; letter-spacing: -.04em;
   color: var(--text); transition: var(--trans);
 }
 .pg-count {
