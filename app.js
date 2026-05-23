@@ -643,4 +643,16 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// Wire modal buttons via addEventListener (more reliable than onclick)
+document.getElementById('btn-save-modal').addEventListener('click', () => {
+  console.log('Save button clicked');
+  saveBM();
+});
+document.getElementById('btn-cancel-modal').addEventListener('click', () => {
+  closeModal();
+});
+document.getElementById('m-ov').addEventListener('click', e => {
+  if (e.target === document.getElementById('m-ov')) closeModal();
+});
+
 init();
