@@ -62,6 +62,16 @@ const COLORS = [
 
 // ── BOOT ─────────────────────────────────────────────────────
 async function init() {
+  // Check for existing session first
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    CURRENT_USER = session.user;
+    await enterApp();
+  } else {
+    enterGuest();
+  }
+
+  // Then listen for changes (sign in / sign out)
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       CURRENT_USER = session.user;
@@ -73,23 +83,6 @@ async function init() {
       CURRENT_USER = null;
       BM = [];
       enterGuest();
-    } else if (event === 'INITIAL_SESSION') {
-      if (session?.user) {
-        CURRENT_USER = session.user;
-        await enterApp();
-      } else {
-        // Only go to guest if there's definitely no session coming
-        // Wait briefly to see if SIGNED_IN fires right after (OAuth redirect case)
-        setTimeout(async () => {
-          const { data: { session: s } } = await sb.auth.getSession();
-          if (s?.user) {
-            CURRENT_USER = s.user;
-            await enterApp();
-          } else {
-            enterGuest();
-          }
-        }, 500);
-      }
     }
   });
 }
@@ -122,7 +115,10 @@ async function signInWithGoogle() {
   btn.disabled = true;
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: {
+      redirectTo: 'https://wpwojda.github.io/sitesave/',
+      queryParams: { prompt: 'select_account' }
+    }
   });
   if (error) {
     toast('Sign in failed — ' + error.message);
