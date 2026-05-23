@@ -744,3 +744,13 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   animation: spin .7s linear infinite;
   vertical-align: middle;
 }
+
+/* ── FOOTER ──────────────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px; letter-spacing: .04em;
+  color: var(--text3);
+  transition: var(--trans);
+}
