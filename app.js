@@ -116,7 +116,7 @@ async function signInWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://wpwojda.github.io/sitesave/',
+      redirectTo: 'https://teal-cocada-399cab.netlify.app/',
       queryParams: { prompt: 'select_account' }
     }
   });
@@ -128,8 +128,19 @@ async function signInWithGoogle() {
 }
 
 async function signOut() {
-  await sb.auth.signOut();
   document.getElementById('user-dropdown').classList.add('hidden');
+  try {
+    await Promise.race([
+      sb.auth.signOut(),
+      new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
+    ]);
+  } catch(e) {
+    console.warn('Sign out error:', e);
+  }
+  // Always enter guest mode regardless of whether signOut succeeded
+  CURRENT_USER = null;
+  BM = [];
+  enterGuest();
 }
 
 function updateUserAvatar() {
@@ -189,6 +200,9 @@ async function loadBookmarks() {
 
 async function dbInsert(bm) {
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
+  // Refresh session in case it expired
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toast('Session expired — please sign in again'); enterGuest(); return null; }
   const { data, error } = await sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
