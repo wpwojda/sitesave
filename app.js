@@ -1,7 +1,15 @@
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    storage: window.localStorage,
+    storageKey: 'sitesave-auth',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  }
+});
 
 // ── PLACEHOLDER SITES (shown to logged-out visitors) ──────────
 const PLACEHOLDERS = [
@@ -86,13 +94,13 @@ async function init() {
     }
   });
 
-  // Fallback: if no auth event fires within 3 seconds, enter guest mode
+  // Fallback: if no auth event fires within 8 seconds, enter guest mode
   setTimeout(() => {
     if (!resolved) {
       resolved = true;
       enterGuest();
     }
-  }, 3000);
+  }, 8000);
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
