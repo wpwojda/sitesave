@@ -61,28 +61,31 @@ const COLORS = [
 ];
 
 // ── BOOT ─────────────────────────────────────────────────────
-async function init() {
-  // Check for existing session first
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    CURRENT_USER = session.user;
-    await enterApp();
-  } else {
-    enterGuest();
-  }
+let _authHandled = false;
 
-  // Then listen for changes (sign in / sign out)
+async function init() {
+  // Listen for auth changes first
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       CURRENT_USER = session.user;
       if (window.location.hash.includes('access_token')) {
         history.replaceState(null, '', window.location.pathname);
       }
-      await enterApp();
+      if (!_authHandled) { _authHandled = true; await enterApp(); }
     } else if (event === 'SIGNED_OUT') {
+      _authHandled = false;
       CURRENT_USER = null;
       BM = [];
       enterGuest();
+    } else if (event === 'INITIAL_SESSION') {
+      if (_authHandled) return;
+      _authHandled = true;
+      if (session?.user) {
+        CURRENT_USER = session.user;
+        await enterApp();
+      } else {
+        enterGuest();
+      }
     }
   });
 }
@@ -128,6 +131,7 @@ async function signInWithGoogle() {
 }
 
 async function signOut() {
+  _authHandled = false;
   document.getElementById('user-dropdown').classList.add('hidden');
   try {
     await Promise.race([
