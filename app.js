@@ -228,7 +228,7 @@ async function dbInsert(bm, attempt = 1) {
     if (error) {
       if (attempt < 3) {
         console.log(`Retrying in 1.5s... (attempt ${attempt})`);
-        showStatus('Having trouble connecting — retrying…');
+        showStatus(`Saving… (attempt ${attempt + 1} of 3)`);
         await new Promise(r => setTimeout(r, 1500));
         return dbInsert(bm, attempt + 1);
       }
@@ -243,12 +243,12 @@ async function dbInsert(bm, attempt = 1) {
     console.log('Insert error/timeout:', e.message);
     if (attempt < 3) {
       console.log(`Retrying in 1.5s... (attempt ${attempt})`);
-      showStatus('Having trouble connecting — retrying…');
+      showStatus(`Taking longer than usual… retrying (${attempt + 1} of 3)`);
       await new Promise(r => setTimeout(r, 1500));
       return dbInsert(bm, attempt + 1);
     }
     clearStatus();
-    showStatus('Our servers are temporarily unavailable. Please try again in a moment.', 'error');
+    showStatus('Could not save right now — our servers may be temporarily busy. Try again in a moment.', 'error');
     return null;
   }
 }
@@ -603,16 +603,30 @@ async function saveBM() {
   if (!url.startsWith('http')) url = 'https://' + url;
   const name = document.getElementById('f-name').value.trim() || host(url);
   const tags = [...modalTags];
+
+  // Show loading state on save button immediately
+  const saveBtn = document.getElementById('btn-save-modal');
+  const origHTML = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = `<span class="save-spinner"></span> Saving…`;
+
+  const resetBtn = () => {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = origHTML;
+  };
+
   if (S.editId) {
     const idx = BM.findIndex(b => b.id == S.editId);
     await dbUpdate(S.editId, { url, name, tags, color: S.color });
     BM[idx] = { ...BM[idx], url, name, tags, color: S.color };
+    resetBtn();
     toast('Updated');
     closeModal(); render();
   } else {
     console.log('Calling dbInsert...');
     const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
     console.log('dbInsert result:', row);
+    resetBtn();
     if (!row) return;
     BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
     toast('Saved');
@@ -663,9 +677,6 @@ function toHex(rgb) {
 }
 
 // ── STATUS BANNER ─────────────────────────────────────────────
-// Shows a persistent banner for connectivity issues.
-// Clears automatically when operations succeed.
-
 let _statusVisible = false;
 
 function showStatus(msg, type = 'warning') {
@@ -675,9 +686,8 @@ function showStatus(msg, type = 'warning') {
     banner.id = 'status-banner';
     document.body.appendChild(banner);
   }
-  banner.className = `status-banner status-${type}`;
+  banner.className = `status-toast status-${type}`;
   banner.innerHTML = `
-    <span class="status-icon">${type === 'warning' ? '⚠' : type === 'error' ? '✕' : '✓'}</span>
     <span class="status-msg">${msg}</span>
     <button class="status-close" onclick="clearStatus()">✕</button>
   `;
