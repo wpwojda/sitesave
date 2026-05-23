@@ -116,7 +116,7 @@ async function signInWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://teal-cocada-399cab.netlify.app/',
+      redirectTo: 'https://wpwojda.github.io/sitesave/',
       queryParams: { prompt: 'select_account' }
     }
   });
@@ -201,10 +201,6 @@ async function loadBookmarks() {
 async function dbInsert(bm) {
   console.log('dbInsert called, CURRENT_USER:', CURRENT_USER?.id);
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
-  console.log('Getting session...');
-  const { data: { session }, error: sessErr } = await sb.auth.getSession();
-  console.log('Session result:', session?.user?.id, 'error:', sessErr);
-  if (!session) { toast('Session expired — please sign in again'); enterGuest(); return null; }
   console.log('Inserting to Supabase...');
   const { data, error } = await sb.from('bookmarks').insert({
     url:     bm.url,
