@@ -199,10 +199,13 @@ async function loadBookmarks() {
 }
 
 async function dbInsert(bm) {
+  console.log('dbInsert called, CURRENT_USER:', CURRENT_USER?.id);
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
-  // Refresh session in case it expired
-  const { data: { session } } = await sb.auth.getSession();
+  console.log('Getting session...');
+  const { data: { session }, error: sessErr } = await sb.auth.getSession();
+  console.log('Session result:', session?.user?.id, 'error:', sessErr);
   if (!session) { toast('Session expired — please sign in again'); enterGuest(); return null; }
+  console.log('Inserting to Supabase...');
   const { data, error } = await sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
@@ -211,6 +214,7 @@ async function dbInsert(bm) {
     fav:     bm.fav,
     user_id: CURRENT_USER.id,
   }).select().single();
+  console.log('Insert result:', data, 'error:', error);
   if (error) { toast('Error: ' + error.message); console.error(error); return null; }
   return data;
 }
@@ -556,9 +560,11 @@ function addTag(t) {
 function removeTag(i) { modalTags.splice(i, 1); renderTagTokens(); }
 
 async function saveBM() {
+  console.log('saveBM called, CURRENT_USER:', CURRENT_USER?.id, 'guestMode:', S.guestMode);
   const bare = document.getElementById('tag-bare').value.trim().replace(/,$/, '').trim();
   if (bare) addTag(bare);
   let url = document.getElementById('f-url').value.trim();
+  console.log('URL:', url);
   if (!url) { toast('Please enter a URL'); return; }
   if (!url.startsWith('http')) url = 'https://' + url;
   const name = document.getElementById('f-name').value.trim() || host(url);
@@ -570,8 +576,10 @@ async function saveBM() {
     toast('Updated');
     closeModal(); render();
   } else {
+    console.log('Calling dbInsert...');
     const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
-    if (!row) return; // error already shown by dbInsert
+    console.log('dbInsert result:', row);
+    if (!row) return;
     BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
     toast('Saved');
     closeModal(); render();
