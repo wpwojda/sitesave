@@ -139,15 +139,16 @@ async function signInWithGoogle() {
 async function signOut() {
   _authHandled = false;
   document.getElementById('user-dropdown').classList.add('hidden');
+  // Clear stored session from localStorage immediately
+  localStorage.removeItem('sitesave-auth');
   try {
     await Promise.race([
-      sb.auth.signOut(),
-      new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
+      sb.auth.signOut({ scope: 'local' }),
+      new Promise(resolve => setTimeout(resolve, 3000))
     ]);
   } catch(e) {
     console.warn('Sign out error:', e);
   }
-  // Always enter guest mode regardless of whether signOut succeeded
   CURRENT_USER = null;
   BM = [];
   enterGuest();
