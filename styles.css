@@ -447,16 +447,25 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 .preview-screenshot {
   position: absolute; inset: 0;
   display: none;
-  flex-direction: column; align-items: center; justify-content: center;
-  gap: 14px; background: var(--bg); padding: 40px;
+  flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 0; background: var(--bg); overflow-y: auto;
 }
-.preview-screenshot img {
-  width: 100%; max-width: 860px;
-  border: 1px solid var(--border); border-radius: var(--r);
+
+.preview-blocked-msg {
+  width: 100%; flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  font-size: 14px; color: var(--text2);
+  transition: var(--trans);
+}
+.preview-blocked-msg svg { flex-shrink: 0; color: var(--text3); }
+.preview-blocked-msg strong { color: var(--text); font-weight: 500; }
+
+.preview-ss-img {
+  width: 100%;
   object-fit: cover;
-}
-.preview-screenshot p {
-  font-size: 14px; color: var(--text3); text-align: center;
+  display: block;
 }
 
 /* ── SAVE / EDIT MODAL ──────────────────────────────────────── */
