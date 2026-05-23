@@ -228,6 +228,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   animation: up .28s ease both;
   display: flex; flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 .card:hover { transform: translateY(-2px); }
 @keyframes up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -306,12 +307,15 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 .ca.del:hover { background: rgba(192,57,43,.75); border-color: rgba(255,100,80,.4); color: #ffffff; }
 
 /* ── CARD FOOTER ────────────────────────────────────────────── */
-/* Single row: favicon · name · tags — all outside the image */
+/* favicon + name on top row, tags stacked below */
 .card-foot {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; flex-direction: column; gap: 6px;
   padding: 0 2px;
   background: transparent; flex-shrink: 0;
   min-width: 0;
+}
+.foot-top {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
 }
 .foot-favicon {
   width: 20px; height: 20px; border-radius: 4px;
@@ -326,7 +330,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   flex: 1; min-width: 0; letter-spacing: -.02em; transition: var(--trans);
 }
 .foot-tags {
-  display: flex; gap: 4px; flex-wrap: nowrap; flex-shrink: 0;
+  display: flex; gap: 4px; flex-wrap: wrap;
+  padding-left: 28px; /* align tags under the name, not the favicon */
 }
 .tag-chip {
   font-family: 'Geist Mono', monospace; font-size: 11px;
