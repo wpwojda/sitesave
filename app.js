@@ -178,7 +178,12 @@ async function loadBookmarks() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) { toast('Error loading bookmarks'); console.error(error); return; }
+  if (error) {
+    showStatus('Unable to load your collection right now — our servers may be temporarily busy. Please refresh to try again.', 'error');
+    console.error(error);
+    render();
+    return;
+  }
 
   BM = (data || []).map(row => {
     let tags = row.tags;
@@ -223,22 +228,27 @@ async function dbInsert(bm, attempt = 1) {
     if (error) {
       if (attempt < 3) {
         console.log(`Retrying in 1.5s... (attempt ${attempt})`);
+        showStatus('Having trouble connecting — retrying…');
         await new Promise(r => setTimeout(r, 1500));
         return dbInsert(bm, attempt + 1);
       }
+      clearStatus();
       toast('Error: ' + error.message);
       console.error(error);
       return null;
     }
+    clearStatus();
     return data;
   } catch(e) {
     console.log('Insert error/timeout:', e.message);
     if (attempt < 3) {
       console.log(`Retrying in 1.5s... (attempt ${attempt})`);
+      showStatus('Having trouble connecting — retrying…');
       await new Promise(r => setTimeout(r, 1500));
       return dbInsert(bm, attempt + 1);
     }
-    toast('Save failed — please try again');
+    clearStatus();
+    showStatus('Our servers are temporarily unavailable. Please try again in a moment.', 'error');
     return null;
   }
 }
@@ -652,7 +662,39 @@ function toHex(rgb) {
   return '#' + m.slice(0, 3).map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
+// ── STATUS BANNER ─────────────────────────────────────────────
+// Shows a persistent banner for connectivity issues.
+// Clears automatically when operations succeed.
+
+let _statusVisible = false;
+
+function showStatus(msg, type = 'warning') {
+  let banner = document.getElementById('status-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'status-banner';
+    document.body.appendChild(banner);
+  }
+  banner.className = `status-banner status-${type}`;
+  banner.innerHTML = `
+    <span class="status-icon">${type === 'warning' ? '⚠' : type === 'error' ? '✕' : '✓'}</span>
+    <span class="status-msg">${msg}</span>
+    <button class="status-close" onclick="clearStatus()">✕</button>
+  `;
+  banner.classList.remove('hidden');
+  _statusVisible = true;
+}
+
+function clearStatus() {
+  const banner = document.getElementById('status-banner');
+  if (banner) banner.classList.add('hidden');
+  _statusVisible = false;
+}
+
+function showSuccess(msg) {
+  showStatus(msg, 'success');
+  setTimeout(clearStatus, 3000);
+}
 function uid()   { return Math.random().toString(36).slice(2, 10); }
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
 function x(s)    { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
