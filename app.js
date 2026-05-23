@@ -339,7 +339,7 @@ function loadScreenshot(id, url) {
   const shimmer = document.getElementById('shimmer-' + id);
   const errEl   = document.getElementById('err-' + id);
   if (!img) return;
-  const apiUrl = `https://image.thum.io/get/width/1440/crop/900/${encodeURIComponent(url)}`;
+  const apiUrl = `https://image.thum.io/get/width/1440/crop/900/noanimate/${encodeURIComponent(url)}`;
   img.onload = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
   img.src = apiUrl;
@@ -380,7 +380,7 @@ function showPreviewFallback(url) {
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
   const img = ss.querySelector('img');
-  if (img && !img.src) img.src = `https://image.thum.io/get/width/1440/crop/900/${encodeURIComponent(url)}`;
+  if (img && !img.src) img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${encodeURIComponent(url)}`;
 }
 
 function closePreview() {
