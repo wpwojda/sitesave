@@ -54,12 +54,21 @@ const COLORS = [
 
 // ── BOOT ─────────────────────────────────────────────────────
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    CURRENT_USER = session.user;
-    await enterApp();
+  // If Supabase redirected back with a token in the hash, wait for it to be processed
+  const hasAuthToken = window.location.hash.includes('access_token');
+
+  if (hasAuthToken) {
+    // Let Supabase process the token from the URL — onAuthStateChange will fire
+    // Clean the URL so the token doesn't persist visibly
+    history.replaceState(null, '', window.location.pathname);
   } else {
-    enterGuest();
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      CURRENT_USER = session.user;
+      await enterApp();
+    } else {
+      enterGuest();
+    }
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -69,6 +78,9 @@ async function init() {
     } else if (event === 'SIGNED_OUT') {
       CURRENT_USER = null;
       BM = [];
+      enterGuest();
+    } else if (hasAuthToken && !session) {
+      // Token in URL but no session resolved — fall back to guest
       enterGuest();
     }
   });
@@ -175,6 +187,7 @@ async function loadBookmarks() {
 }
 
 async function dbInsert(bm) {
+  if (!CURRENT_USER) { toast('Please sign in first'); return null; }
   const { data, error } = await sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
