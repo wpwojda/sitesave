@@ -437,25 +437,34 @@ function openPreview(id) {
 function showPreviewFallback(url) {
   document.getElementById('preview-loading').style.display = 'none';
 
-  // Hide iframe completely so browser error page never shows
+  // Clear iframe immediately so browser error page never shows
   const iframe = document.getElementById('preview-iframe');
   iframe.style.display = 'none';
-  iframe.src = '';
+  iframe.src = 'about:blank';
 
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
 
-  // Load screenshot
-  const img = ss.querySelector('.preview-ss-img');
-  if (img && !img.src) img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+  // Load screenshot using querySelector on the container
+  const img = ss.querySelector('img');
+  if (img && !img.getAttribute('src')) {
+    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+  }
 }
 
 function closePreview() {
   document.getElementById('preview-ov').classList.add('hidden');
   document.body.style.overflow = '';
   const iframe = document.getElementById('preview-iframe');
-  iframe.src = '';
+  iframe.src = 'about:blank';
   iframe.style.display = 'none';
+  // Reset screenshot so it reloads fresh next time
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'none';
+  const img = ss.querySelector('img');
+  if (img) { img.removeAttribute('src'); img.style.display = ''; }
+  const errEl = document.getElementById('preview-ss-error');
+  if (errEl) errEl.style.display = 'none';
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────
