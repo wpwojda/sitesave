@@ -421,7 +421,7 @@ function openPreview(id) {
   document.body.style.overflow = 'hidden';
   const iframe = document.getElementById('preview-iframe');
   iframe.src = '';
-  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 6000);
+  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 2000);
   iframe.onload = () => {
     clearTimeout(fallbackTimer);
     try {
@@ -435,11 +435,18 @@ function openPreview(id) {
 }
 
 function showPreviewFallback(url) {
-  document.getElementById('preview-loading').style.display    = 'none';
-  document.getElementById('preview-iframe').style.display     = 'none';
+  document.getElementById('preview-loading').style.display = 'none';
+
+  // Hide iframe completely so browser error page never shows
+  const iframe = document.getElementById('preview-iframe');
+  iframe.style.display = 'none';
+  iframe.src = '';
+
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
-  const img = ss.querySelector('img');
+
+  // Load screenshot
+  const img = ss.querySelector('.preview-ss-img');
   if (img && !img.src) img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
 }
 
