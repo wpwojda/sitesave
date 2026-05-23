@@ -64,14 +64,18 @@ const COLORS = [
 let _authHandled = false;
 
 async function init() {
-  // Listen for auth changes first
-  sb.auth.onAuthStateChange(async (event, session) => {
+  const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
+    if (_authHandled && event !== 'SIGNED_OUT' && event !== 'SIGNED_IN') return;
+
     if (event === 'SIGNED_IN' && session?.user) {
       CURRENT_USER = session.user;
       if (window.location.hash.includes('access_token')) {
         history.replaceState(null, '', window.location.pathname);
       }
-      if (!_authHandled) { _authHandled = true; await enterApp(); }
+      if (!_authHandled) {
+        _authHandled = true;
+        await enterApp();
+      }
     } else if (event === 'SIGNED_OUT') {
       _authHandled = false;
       CURRENT_USER = null;
@@ -88,6 +92,8 @@ async function init() {
       }
     }
   });
+  // Store subscription so we can access it if needed
+  window._authSub = subscription;
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
@@ -440,16 +446,13 @@ function openPreview(id) {
 
 function showPreviewFallback(url) {
   document.getElementById('preview-loading').style.display = 'none';
-
-  // Clear iframe immediately so browser error page never shows
   const iframe = document.getElementById('preview-iframe');
+  iframe.onload  = null;
+  iframe.onerror = null;
   iframe.style.display = 'none';
   iframe.src = 'about:blank';
-
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
-
-  // Load screenshot using querySelector on the container
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
     img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
@@ -460,6 +463,9 @@ function closePreview() {
   document.getElementById('preview-ov').classList.add('hidden');
   document.body.style.overflow = '';
   const iframe = document.getElementById('preview-iframe');
+  // Clear handlers BEFORE changing src to prevent spurious onload/onerror fires
+  iframe.onload  = null;
+  iframe.onerror = null;
   iframe.src = 'about:blank';
   iframe.style.display = 'none';
   // Reset screenshot so it reloads fresh next time
