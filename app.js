@@ -198,11 +198,13 @@ async function loadBookmarks() {
   render();
 }
 
-async function dbInsert(bm) {
-  console.log('dbInsert called, CURRENT_USER:', CURRENT_USER?.id);
+async function dbInsert(bm, attempt = 1) {
+  console.log('dbInsert called, CURRENT_USER:', CURRENT_USER?.id, 'attempt:', attempt);
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
   console.log('Inserting to Supabase...');
-  const { data, error } = await sb.from('bookmarks').insert({
+
+  // Wrap in a timeout so we don't hang forever
+  const insertPromise = sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
     tags:    JSON.stringify(bm.tags || []),
@@ -210,9 +212,35 @@ async function dbInsert(bm) {
     fav:     bm.fav,
     user_id: CURRENT_USER.id,
   }).select().single();
-  console.log('Insert result:', data, 'error:', error);
-  if (error) { toast('Error: ' + error.message); console.error(error); return null; }
-  return data;
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out')), 8000)
+  );
+
+  try {
+    const { data, error } = await Promise.race([insertPromise, timeoutPromise]);
+    console.log('Insert result:', data, 'error:', error);
+    if (error) {
+      if (attempt < 3) {
+        console.log(`Retrying in 1.5s... (attempt ${attempt})`);
+        await new Promise(r => setTimeout(r, 1500));
+        return dbInsert(bm, attempt + 1);
+      }
+      toast('Error: ' + error.message);
+      console.error(error);
+      return null;
+    }
+    return data;
+  } catch(e) {
+    console.log('Insert error/timeout:', e.message);
+    if (attempt < 3) {
+      console.log(`Retrying in 1.5s... (attempt ${attempt})`);
+      await new Promise(r => setTimeout(r, 1500));
+      return dbInsert(bm, attempt + 1);
+    }
+    toast('Save failed — please try again');
+    return null;
+  }
 }
 
 async function dbUpdate(id, fields) {
