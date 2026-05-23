@@ -156,15 +156,19 @@ async function loadBookmarks() {
 
   if (error) { toast('Error loading bookmarks'); console.error(error); return; }
 
-  BM = (data || []).map(row => ({
-    id:    row.id,
-    url:   row.url,
-    name:  row.name,
-    tags:  Array.isArray(row.tags) ? row.tags : [],
-    color: row.color || '#111110',
-    fav:   row.fav   || false,
-    date:  new Date(row.created_at).getTime(),
-  }));
+  BM = (data || []).map(row => {
+    let tags = row.tags;
+    if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = []; } }
+    return {
+      id:    row.id,
+      url:   row.url,
+      name:  row.name,
+      tags:  Array.isArray(tags) ? tags : [],
+      color: row.color || '#111110',
+      fav:   row.fav   || false,
+      date:  new Date(row.created_at).getTime(),
+    };
+  });
 
   buildColors();
   render();
@@ -174,18 +178,19 @@ async function dbInsert(bm) {
   const { data, error } = await sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
-    tags:    bm.tags,
+    tags:    JSON.stringify(bm.tags || []),
     color:   bm.color,
     fav:     bm.fav,
     user_id: CURRENT_USER.id,
   }).select().single();
-  if (error) { toast('Error saving'); console.error(error); return null; }
+  if (error) { toast('Error: ' + error.message); console.error(error); return null; }
   return data;
 }
 
 async function dbUpdate(id, fields) {
+  if (fields.tags) fields.tags = JSON.stringify(fields.tags);
   const { error } = await sb.from('bookmarks').update(fields).eq('id', id);
-  if (error) { toast('Error updating'); console.error(error); }
+  if (error) { toast('Error: ' + error.message); console.error(error); }
 }
 
 async function dbDelete(id) {
@@ -535,12 +540,14 @@ async function saveBM() {
     await dbUpdate(S.editId, { url, name, tags, color: S.color });
     BM[idx] = { ...BM[idx], url, name, tags, color: S.color };
     toast('Updated');
+    closeModal(); render();
   } else {
     const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
-    if (row) BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
+    if (!row) return; // error already shown by dbInsert
+    BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
     toast('Saved');
+    closeModal(); render();
   }
-  closeModal(); render();
 }
 
 function hintName() {
