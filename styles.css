@@ -64,11 +64,11 @@ header {
   color: var(--text);
   text-decoration: none;
   letter-spacing: -.03em;
-  flex-shrink: 0;
+  flex: 1;
   transition: var(--trans);
 }
 
-.search-wrap { flex: 1; max-width: 320px; position: relative; }
+.search-wrap { flex: 1; max-width: 400px; position: relative; }
 .search-icon {
   position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
   color: var(--text3); pointer-events: none; width: 14px; height: 14px;
@@ -83,7 +83,7 @@ header {
 .search-input::placeholder { color: var(--text3); }
 .search-input:focus { border-color: var(--border-md); background: var(--surface); }
 
-.hdr-r { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.hdr-r { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 
 /* ── THEME TOGGLE ───────────────────────────────────────────── */
 .theme-btn {
@@ -213,7 +213,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   column-gap: 14px;
-  row-gap: 28px;
+  row-gap: 32px;
 }
 @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
 
