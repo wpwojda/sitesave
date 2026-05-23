@@ -204,9 +204,7 @@ async function loadBookmarks() {
 }
 
 async function dbInsert(bm, attempt = 1) {
-  console.log('dbInsert called, CURRENT_USER:', CURRENT_USER?.id, 'attempt:', attempt);
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
-  console.log('Inserting to Supabase...');
 
   // Wrap in a timeout so we don't hang forever
   const insertPromise = sb.from('bookmarks').insert({
@@ -224,10 +222,8 @@ async function dbInsert(bm, attempt = 1) {
 
   try {
     const { data, error } = await Promise.race([insertPromise, timeoutPromise]);
-    console.log('Insert result:', data, 'error:', error);
     if (error) {
       if (attempt < 3) {
-        console.log(`Retrying in 1.5s... (attempt ${attempt})`);
         showStatus(`Saving… (attempt ${attempt + 1} of 3)`);
         await new Promise(r => setTimeout(r, 1500));
         return dbInsert(bm, attempt + 1);
@@ -240,9 +236,7 @@ async function dbInsert(bm, attempt = 1) {
     clearStatus();
     return data;
   } catch(e) {
-    console.log('Insert error/timeout:', e.message);
     if (attempt < 3) {
-      console.log(`Retrying in 1.5s... (attempt ${attempt})`);
       showStatus(`Taking longer than usual… retrying (${attempt + 1} of 3)`);
       await new Promise(r => setTimeout(r, 1500));
       return dbInsert(bm, attempt + 1);
@@ -594,11 +588,9 @@ function addTag(t) {
 function removeTag(i) { modalTags.splice(i, 1); renderTagTokens(); }
 
 async function saveBM() {
-  console.log('saveBM called, CURRENT_USER:', CURRENT_USER?.id, 'guestMode:', S.guestMode);
   const bare = document.getElementById('tag-bare').value.trim().replace(/,$/, '').trim();
   if (bare) addTag(bare);
   let url = document.getElementById('f-url').value.trim();
-  console.log('URL:', url);
   if (!url) { toast('Please enter a URL'); return; }
   if (!url.startsWith('http')) url = 'https://' + url;
   const name = document.getElementById('f-name').value.trim() || host(url);
@@ -623,9 +615,7 @@ async function saveBM() {
     toast('Updated');
     closeModal(); render();
   } else {
-    console.log('Calling dbInsert...');
     const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
-    console.log('dbInsert result:', row);
     resetBtn();
     if (!row) return;
     BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
@@ -729,7 +719,6 @@ document.addEventListener('keydown', e => {
 
 // Wire modal buttons via addEventListener (more reliable than onclick)
 document.getElementById('btn-save-modal').addEventListener('click', () => {
-  console.log('Save button clicked');
   saveBM();
 });
 document.getElementById('btn-cancel-modal').addEventListener('click', () => {
