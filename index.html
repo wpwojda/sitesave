@@ -133,7 +133,7 @@
 </div>
 
 <!-- SAVE / EDIT MODAL -->
-<div class="m-ov hidden" id="m-ov" onclick="if(event.target===this)closeModal()">
+<div class="m-ov hidden" id="m-ov">
   <div class="modal">
     <div class="m-title" id="m-title">Save a site</div>
     <div class="fg">
@@ -158,8 +158,8 @@
       <div class="c-row" id="c-row"></div>
     </div>
     <div class="m-foot">
-      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-add" onclick="saveBM()">
+      <button class="btn-ghost" id="btn-cancel-modal">Cancel</button>
+      <button class="btn-add" id="btn-save-modal">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Save
       </button>
