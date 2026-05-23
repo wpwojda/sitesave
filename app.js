@@ -394,11 +394,13 @@ function card(b, i) {
     ${actions}
   </div>
   <div class="card-foot">
-    <div class="foot-favicon">
-      <img src="https://www.google.com/s2/favicons?domain=${h}&sz=32"
-           onerror="this.style.display='none'" loading="lazy">
+    <div class="foot-top">
+      <div class="foot-favicon">
+        <img src="https://www.google.com/s2/favicons?domain=${h}&sz=32"
+             onerror="this.style.display='none'" loading="lazy">
+      </div>
+      <span class="foot-name">${x(b.name)}</span>
     </div>
-    <span class="foot-name">${x(b.name)}</span>
     ${(b.tags || []).length ? `<div class="foot-tags">${tagChips}</div>` : ''}
   </div>
 </div>`;
