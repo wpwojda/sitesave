@@ -155,6 +155,38 @@ async function signOut() {
   enterGuest();
 }
 
+async function deleteAccount() {
+  document.getElementById('user-dropdown').classList.add('hidden');
+  const confirmed = confirm('This will permanently delete your account and all saved sites. This cannot be undone.\n\nAre you sure?');
+  if (!confirmed) return;
+
+  try {
+    // Step 1 — delete all their bookmarks
+    const { error: bmError } = await sb
+      .from('bookmarks')
+      .delete()
+      .eq('user_id', CURRENT_USER.id);
+    if (bmError) throw bmError;
+
+    // Step 2 — delete the auth account via Supabase SQL function
+    const { error: authError } = await sb.rpc('delete_user');
+    if (authError) throw authError;
+
+    // Step 3 — clear local state
+    _authHandled = false;
+    localStorage.removeItem('sitesave-auth');
+    await sb.auth.signOut({ scope: 'local' });
+    CURRENT_USER = null;
+    BM = [];
+    toast('Account deleted');
+    enterGuest();
+
+  } catch(e) {
+    console.warn('Delete account error:', e);
+    toast('Could not delete account — please contact support');
+  }
+}
+
 function updateUserAvatar() {
   const avatar = document.getElementById('user-avatar');
   if (!avatar || !CURRENT_USER) return;
