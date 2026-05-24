@@ -64,37 +64,37 @@ const COLORS = [
 let _authHandled = false;
 
 async function init() {
-  _authHandled = false; // always reset on page load
-  const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
-    if (_authHandled && event !== 'SIGNED_OUT' && event !== 'SIGNED_IN') return;
+  _authHandled = false;
 
-    if (event === 'SIGNED_IN' && session?.user) {
+  // Step 1: check for existing session directly — most reliable method
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    _authHandled = true;
+    CURRENT_USER = session.user;
+    if (window.location.hash.includes('access_token')) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+    await enterApp();
+  } else {
+    enterGuest();
+  }
+
+  // Step 2: listen only for explicit sign in / sign out actions
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
+      _authHandled = true;
       CURRENT_USER = session.user;
       if (window.location.hash.includes('access_token')) {
         history.replaceState(null, '', window.location.pathname);
       }
-      if (!_authHandled) {
-        _authHandled = true;
-        await enterApp();
-      }
+      await enterApp();
     } else if (event === 'SIGNED_OUT') {
       _authHandled = false;
       CURRENT_USER = null;
       BM = [];
       enterGuest();
-    } else if (event === 'INITIAL_SESSION') {
-      if (_authHandled) return;
-      _authHandled = true;
-      if (session?.user) {
-        CURRENT_USER = session.user;
-        await enterApp();
-      } else {
-        enterGuest();
-      }
     }
   });
-  // Store subscription so we can access it if needed
-  window._authSub = subscription;
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
