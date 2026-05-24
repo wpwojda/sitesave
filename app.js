@@ -465,7 +465,7 @@ function openPreview(id) {
 
   // Short delay to let the iframe settle before showing fallback,
   // preventing the browser error page from flashing briefly
-  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 3000);
+  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 8000);
 
   iframe.onload = () => {
     clearTimeout(fallbackTimer);
@@ -475,13 +475,11 @@ function openPreview(id) {
         showPreviewFallback(b.url);
       } else {
         document.getElementById('preview-loading').style.display = 'none';
-        document.getElementById('preview-blocked-msg').style.display = 'none';
         iframe.style.display = 'block';
       }
     } catch (e) {
       // Cross-origin = real site loaded fine
       document.getElementById('preview-loading').style.display = 'none';
-      document.getElementById('preview-blocked-msg').style.display = 'none';
       iframe.style.display = 'block';
     }
   };
