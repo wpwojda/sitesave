@@ -816,11 +816,20 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   /* Full width main */
   main { padding: 14px 14px 60px; }
 
-  /* Header — tighter */
-  header { padding: 0 14px; gap: 10px; }
-  .logo { font-size: 17px; }
-  .search-wrap { max-width: none; }
-  .search-input { font-size: 14px; }
+  /* Header — two rows on mobile */
+  header {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .logo { font-size: 17px; flex: none; }
+  .search-wrap {
+    order: 3;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .hdr-r { margin-left: auto; flex: none; }
 
   /* Single column grid */
   .grid {
@@ -840,11 +849,21 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .pills::-webkit-scrollbar { display: none; }
 
   /* Preview modal — full screen on mobile */
-  .preview-ov { padding: 0; align-items: flex-end; }
+  .preview-ov {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: center;
+  }
   .preview-panel {
     max-width: 100%;
+    width: 100%;
     height: 92vh;
     border-radius: 14px 14px 0 0;
+    animation: slide-up .25s ease;
+  }
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
   }
   .preview-bar {
     border-radius: 14px 14px 0 0;
@@ -856,9 +875,16 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .preview-btn-primary { padding: 0 10px; font-size: 12px; }
   .preview-btn { padding: 0 10px; font-size: 12px; }
 
-  /* Save modal — full width */
-  .modal { border-radius: 14px 14px 0 0; }
-  .m-ov { align-items: flex-end; padding: 0; }
+  /* Save modal — full width bottom sheet */
+  .m-ov {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-radius: 14px 14px 0 0;
+    max-width: 100%;
+    animation: slide-up .25s ease;
+  }
 
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
