@@ -823,7 +823,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
     padding: 10px 14px;
     gap: 8px;
   }
-  .logo { font-size: 17px; flex: none; }
+  .logo { font-size: 22px; flex: none; }
   .search-wrap {
     order: 3;
     flex: 0 0 100%;
@@ -887,23 +887,23 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   }
 
   /* WCAG 2.2 — 40px touch targets on mobile */
-  .theme-btn          { width: 40px; height: 40px; }
-  .btn-add            { height: 40px; padding: 0 16px; }
-  .btn-ghost          { height: 40px; padding: 0 16px; }
-  .sort-sel           { height: 40px; padding: 0 32px 0 12px; }
-  .pill               { height: 40px; padding: 0 14px; }
-  .sb-item            { min-height: 40px; padding: 10px 8px; }
-  .signout-btn        { height: 40px; }
-  .preview-btn        { height: 40px; padding: 0 14px; }
-  .preview-btn-primary{ height: 40px; padding: 0 14px; }
-  .ca                 { width: 40px; height: 40px; }
-  .user-avatar        { width: 40px; height: 40px; }
-  .finput             { height: 40px; }
-  .search-input       { height: 40px; }
-  .tag-input-wrap     { min-height: 40px; }
-  .foot-ext           { width: 40px; height: 40px; }
-  #btn-save-modal     { height: 40px; }
-  #btn-cancel-modal   { height: 40px; }
+  .theme-btn          { width: 38px; height: 38px; }
+  .btn-add            { height: 38px; padding: 0 16px; }
+  .btn-ghost          { height: 38px; padding: 0 16px; }
+  .sort-sel           { height: 38px; padding: 0 32px 0 12px; }
+  .pill               { height: 38px; padding: 0 14px; }
+  .sb-item            { min-height: 38px; padding: 10px 8px; }
+  .signout-btn        { height: 38px; }
+  .preview-btn        { height: 38px; padding: 0 14px; }
+  .preview-btn-primary{ height: 38px; padding: 0 14px; }
+  .ca                 { width: 38px; height: 40px; }
+  .user-avatar        { width: 38px; height: 40px; }
+  .finput             { height: 38px; }
+  .search-input       { height: 38px; }
+  .tag-input-wrap     { min-height: 38px; }
+  .foot-ext           { width: 38px; height: 38px; }
+  #btn-save-modal     { height: 38px; }
+  #btn-cancel-modal   { height: 38px; }
 
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
