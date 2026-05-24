@@ -483,10 +483,18 @@ function openPreview(id) {
           iframe.style.display = 'block';
         }
       } catch (e) {
-        // Cross-origin = loaded fine
-        iframeResolved = true;
-        document.getElementById('preview-loading').style.display = 'none';
-        iframe.style.display = 'block';
+        // Cross-origin — check if it's a chrome error page (sameorigin block)
+        // by checking the iframe's current src against known error URL patterns
+        const src = iframe.src || '';
+        if (src.startsWith('chrome-error://') || src.includes('chromewebdata')) {
+          iframeResolved = true;
+          showPreviewFallback(b.url);
+        } else {
+          // Real cross-origin site loaded fine
+          iframeResolved = true;
+          document.getElementById('preview-loading').style.display = 'none';
+          iframe.style.display = 'block';
+        }
       }
     };
 
