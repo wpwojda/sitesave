@@ -889,3 +889,18 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
 }
+
+/* ── DELETE ACCOUNT ──────────────────────────────────────────── */
+.dropdown-div {
+  height: 1px; background: var(--border);
+  margin: 4px 0;
+}
+.delete-account-btn {
+  color: var(--danger) !important;
+  opacity: .7;
+}
+.delete-account-btn:hover {
+  color: var(--danger) !important;
+  opacity: 1;
+  background: rgba(192,57,43,.08) !important;
+}
