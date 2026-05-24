@@ -465,7 +465,7 @@ function openPreview(id) {
 
   // Short delay to let the iframe settle before showing fallback,
   // preventing the browser error page from flashing briefly
-  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 1500);
+  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 3000);
 
   iframe.onload = () => {
     clearTimeout(fallbackTimer);
@@ -475,11 +475,13 @@ function openPreview(id) {
         showPreviewFallback(b.url);
       } else {
         document.getElementById('preview-loading').style.display = 'none';
+        document.getElementById('preview-blocked-msg').style.display = 'none';
         iframe.style.display = 'block';
       }
     } catch (e) {
       // Cross-origin = real site loaded fine
       document.getElementById('preview-loading').style.display = 'none';
+      document.getElementById('preview-blocked-msg').style.display = 'none';
       iframe.style.display = 'block';
     }
   };
@@ -524,6 +526,8 @@ function closePreview() {
   if (img) { img.removeAttribute('src'); img.style.display = ''; }
   const errEl = document.getElementById('preview-ss-error');
   if (errEl) errEl.style.display = 'none';
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.style.display = '';
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────
