@@ -459,18 +459,35 @@ function openPreview(id) {
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   const iframe = document.getElementById('preview-iframe');
-  iframe.src = '';
-  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 2000);
+  iframe.onload  = null;
+  iframe.onerror = null;
+  iframe.src = 'about:blank';
+
+  // Short delay to let the iframe settle before showing fallback,
+  // preventing the browser error page from flashing briefly
+  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 1500);
+
   iframe.onload = () => {
     clearTimeout(fallbackTimer);
     try {
       const doc = iframe.contentDocument;
-      if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) { showPreviewFallback(b.url); }
-      else { document.getElementById('preview-loading').style.display = 'none'; iframe.style.display = 'block'; }
-    } catch (e) { document.getElementById('preview-loading').style.display = 'none'; iframe.style.display = 'block'; }
+      if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
+        showPreviewFallback(b.url);
+      } else {
+        document.getElementById('preview-loading').style.display = 'none';
+        iframe.style.display = 'block';
+      }
+    } catch (e) {
+      // Cross-origin = real site loaded fine
+      document.getElementById('preview-loading').style.display = 'none';
+      iframe.style.display = 'block';
+    }
   };
+
   iframe.onerror = () => { clearTimeout(fallbackTimer); showPreviewFallback(b.url); };
-  iframe.src = b.url;
+
+  // Set src after handlers are ready
+  setTimeout(() => { iframe.src = b.url; }, 50);
 }
 
 function showPreviewFallback(url) {
@@ -478,8 +495,11 @@ function showPreviewFallback(url) {
   const iframe = document.getElementById('preview-iframe');
   iframe.onload  = null;
   iframe.onerror = null;
+  // Remove src first so browser stops loading the blocked page
+  iframe.removeAttribute('src');
   iframe.style.display = 'none';
-  iframe.src = 'about:blank';
+  // Then set to blank
+  setTimeout(() => { iframe.src = 'about:blank'; }, 0);
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
   const img = ss.querySelector('img');
