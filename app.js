@@ -460,47 +460,54 @@ function openPreview(id) {
   document.body.style.overflow = 'hidden';
 
   const iframe = document.getElementById('preview-iframe');
+  // Clear handlers completely
   iframe.onload  = null;
   iframe.onerror = null;
-  iframe.src = 'about:blank';
 
   let iframeResolved = false;
+  let realLoadStarted = false;
 
-  iframe.onload = () => {
-    if (iframeResolved) return;
-    try {
-      const doc = iframe.contentDocument;
-      if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
-        iframeResolved = true;
-        showPreviewFallback(b.url);
-      } else {
+  // Wait a tick before attaching handlers and setting src
+  // This ensures any queued onload from previous about:blank has already fired
+  setTimeout(() => {
+    iframe.onload = () => {
+      if (!realLoadStarted || iframeResolved) return;
+      try {
+        const doc = iframe.contentDocument;
+        if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
+          iframeResolved = true;
+          showPreviewFallback(b.url);
+        } else {
+          iframeResolved = true;
+          document.getElementById('preview-loading').style.display = 'none';
+          iframe.style.display = 'block';
+        }
+      } catch (e) {
+        // Cross-origin = loaded fine
         iframeResolved = true;
         document.getElementById('preview-loading').style.display = 'none';
         iframe.style.display = 'block';
       }
-    } catch (e) {
-      // Cross-origin error = real site loaded fine
-      iframeResolved = true;
-      document.getElementById('preview-loading').style.display = 'none';
-      iframe.style.display = 'block';
-    }
-  };
+    };
 
-  iframe.onerror = () => {
-    if (iframeResolved) return;
-    iframeResolved = true;
-    showPreviewFallback(b.url);
-  };
-
-  // Only use timer as last resort for sites that never fire onload at all
-  setTimeout(() => {
-    if (!iframeResolved) {
+    iframe.onerror = () => {
+      if (!realLoadStarted || iframeResolved) return;
       iframeResolved = true;
       showPreviewFallback(b.url);
-    }
-  }, 12000);
+    };
 
-  setTimeout(() => { iframe.src = b.url; }, 50);
+    // Mark that the real load has started, then set src
+    realLoadStarted = true;
+    iframe.src = b.url;
+
+    // Last resort timeout
+    setTimeout(() => {
+      if (!iframeResolved) {
+        iframeResolved = true;
+        showPreviewFallback(b.url);
+      }
+    }, 12000);
+  }, 100);
 }
 
 function showPreviewFallback(url) {
@@ -508,14 +515,10 @@ function showPreviewFallback(url) {
   const iframe = document.getElementById('preview-iframe');
   iframe.onload  = null;
   iframe.onerror = null;
-  // Remove src first so browser stops loading the blocked page
   iframe.removeAttribute('src');
   iframe.style.display = 'none';
-  // Then set to blank
-  setTimeout(() => { iframe.src = 'about:blank'; }, 0);
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
-  // Show the blocked message
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
@@ -528,12 +531,10 @@ function closePreview() {
   document.getElementById('preview-ov').classList.add('hidden');
   document.body.style.overflow = '';
   const iframe = document.getElementById('preview-iframe');
-  // Clear handlers BEFORE changing src to prevent spurious onload/onerror fires
   iframe.onload  = null;
   iframe.onerror = null;
-  iframe.src = 'about:blank';
+  iframe.removeAttribute('src');
   iframe.style.display = 'none';
-  // Reset screenshot and message so they reload fresh next time
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.add('hidden');
   const ss = document.getElementById('preview-screenshot');
@@ -542,8 +543,6 @@ function closePreview() {
   if (img) { img.removeAttribute('src'); img.style.display = ''; }
   const errEl = document.getElementById('preview-ss-error');
   if (errEl) errEl.style.display = 'none';
-  const msgEl2 = document.getElementById('preview-blocked-msg');
-  if (msgEl2) msgEl2.style.display = '';
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────
