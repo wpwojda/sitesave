@@ -504,6 +504,9 @@ function showPreviewFallback(url) {
   setTimeout(() => { iframe.src = 'about:blank'; }, 0);
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
+  // Show the blocked message
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
     img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
@@ -519,15 +522,17 @@ function closePreview() {
   iframe.onerror = null;
   iframe.src = 'about:blank';
   iframe.style.display = 'none';
-  // Reset screenshot so it reloads fresh next time
+  // Reset screenshot and message so they reload fresh next time
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.add('hidden');
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'none';
   const img = ss.querySelector('img');
   if (img) { img.removeAttribute('src'); img.style.display = ''; }
   const errEl = document.getElementById('preview-ss-error');
   if (errEl) errEl.style.display = 'none';
-  const msgEl = document.getElementById('preview-blocked-msg');
-  if (msgEl) msgEl.style.display = '';
+  const msgEl2 = document.getElementById('preview-blocked-msg');
+  if (msgEl2) msgEl2.style.display = '';
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────
