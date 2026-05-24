@@ -886,6 +886,24 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
     animation: slide-up .25s ease;
   }
 
+  /* WCAG 2.2 — minimum 44px touch targets on mobile */
+  .theme-btn          { width: 44px; height: 44px; }
+  .btn-add            { height: 44px; padding: 0 18px; }
+  .btn-ghost          { height: 44px; padding: 0 16px; }
+  .sort-sel           { height: 44px; }
+  .pill               { height: 44px; padding: 0 14px; }
+  .sb-item            { min-height: 44px; padding: 10px 8px; }
+  .signout-btn        { height: 44px; }
+  .preview-btn        { height: 44px; padding: 0 14px; }
+  .preview-btn-primary{ height: 44px; padding: 0 14px; }
+  .ca                 { width: 44px; height: 44px; }
+  .user-avatar        { width: 44px; height: 44px; }
+  .finput             { height: 44px; }
+  .tag-input-wrap     { min-height: 44px; }
+  .foot-ext           { width: 44px; height: 44px; }
+  #btn-save-modal     { height: 44px; }
+  #btn-cancel-modal   { height: 44px; }
+
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
 }
