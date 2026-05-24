@@ -474,6 +474,13 @@ function openPreview(id) {
       if (!realLoadStarted || iframeResolved) return;
       try {
         const doc = iframe.contentDocument;
+        // Check if navigated to a chrome error page (sameorigin block)
+        const loc = iframe.contentWindow?.location?.href || '';
+        if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
+          iframeResolved = true;
+          showPreviewFallback(b.url);
+          return;
+        }
         if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
           iframeResolved = true;
           showPreviewFallback(b.url);
@@ -483,10 +490,11 @@ function openPreview(id) {
           iframe.style.display = 'block';
         }
       } catch (e) {
-        // Cross-origin — check if it's a chrome error page (sameorigin block)
-        // by checking the iframe's current src against known error URL patterns
-        const src = iframe.src || '';
-        if (src.startsWith('chrome-error://') || src.includes('chromewebdata')) {
+        // Cross-origin security error — could be blocked or legitimately cross-origin
+        // Try to get the location to distinguish the two cases
+        let errorLoc = '';
+        try { errorLoc = iframe.contentWindow?.location?.href || ''; } catch {}
+        if (errorLoc.startsWith('chrome-error://') || errorLoc.includes('chromewebdata')) {
           iframeResolved = true;
           showPreviewFallback(b.url);
         } else {
