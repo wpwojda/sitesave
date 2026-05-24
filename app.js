@@ -310,17 +310,42 @@ function renderCards() {
   document.getElementById('pg-count').textContent = `${list.length} site${list.length !== 1 ? 's' : ''}`;
 
   if (!list.length && !S.guestMode) {
-    g.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <div class="empty-icon">◫</div>
-      <div class="empty-title">Nothing here yet</div>
-      <div class="empty-sub">Save your first site to get started.</div>
-      <button class="btn-add" style="display:inline-flex;margin:0 auto" onclick="openModal()">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-        Save site
-      </button>
-    </div>`;
+    const firstName = CURRENT_USER?.user_metadata?.full_name?.split(' ')[0] || null;
+    const greeting  = firstName ? `Welcome, ${firstName}.` : 'Welcome to Sitesave.';
+    const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
+
+    if (isFiltered) {
+      // Filtered empty state — no results for this tag/search
+      g.innerHTML = `<div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon">◫</div>
+        <div class="empty-title">No sites found</div>
+        <div class="empty-sub">Try a different search or tag.</div>
+      </div>`;
+    } else {
+      // First-time / truly empty state
+      g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
+        <div class="empty-welcome-inner">
+          <div class="empty-greeting">${greeting}</div>
+          <div class="empty-title">Your collection is empty.</div>
+          <div class="empty-sub">
+            Paste any URL to save a site — a screenshot is generated automatically and stored here for you to browse whenever you need inspiration.
+          </div>
+          <button class="btn-add" style="display:inline-flex;margin:0 auto" id="btn-empty-save">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Save your first site
+          </button>
+          <div class="empty-hint">
+            <span>Tip — you can also tag sites to organise them by theme, client, or whatever works for you.</span>
+          </div>
+        </div>
+      </div>`;
+      // Wire button via addEventListener since it's injected HTML
+      setTimeout(() => {
+        document.getElementById('btn-empty-save')?.addEventListener('click', openModal);
+      }, 0);
+    }
     return;
   }
 
