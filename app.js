@@ -64,6 +64,7 @@ const COLORS = [
 let _authHandled = false;
 
 async function init() {
+  _authHandled = false; // always reset on page load
   const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
     if (_authHandled && event !== 'SIGNED_OUT' && event !== 'SIGNED_IN') return;
 
@@ -343,7 +344,7 @@ function renderCards() {
       </div>`;
       // Wire button via addEventListener since it's injected HTML
       setTimeout(() => {
-        document.getElementById('btn-empty-save')?.addEventListener('click', openModal);
+        document.getElementById('btn-empty-save')?.addEventListener('click', () => openModal());
       }, 0);
     }
     return;
