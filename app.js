@@ -458,35 +458,48 @@ function openPreview(id) {
   document.getElementById('preview-screenshot').style.display = 'none';
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+
   const iframe = document.getElementById('preview-iframe');
   iframe.onload  = null;
   iframe.onerror = null;
   iframe.src = 'about:blank';
 
-  // Short delay to let the iframe settle before showing fallback,
-  // preventing the browser error page from flashing briefly
-  const fallbackTimer = setTimeout(() => showPreviewFallback(b.url), 8000);
+  let iframeResolved = false;
 
   iframe.onload = () => {
-    clearTimeout(fallbackTimer);
+    if (iframeResolved) return;
     try {
       const doc = iframe.contentDocument;
       if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
+        iframeResolved = true;
         showPreviewFallback(b.url);
       } else {
+        iframeResolved = true;
         document.getElementById('preview-loading').style.display = 'none';
         iframe.style.display = 'block';
       }
     } catch (e) {
-      // Cross-origin = real site loaded fine
+      // Cross-origin error = real site loaded fine
+      iframeResolved = true;
       document.getElementById('preview-loading').style.display = 'none';
       iframe.style.display = 'block';
     }
   };
 
-  iframe.onerror = () => { clearTimeout(fallbackTimer); showPreviewFallback(b.url); };
+  iframe.onerror = () => {
+    if (iframeResolved) return;
+    iframeResolved = true;
+    showPreviewFallback(b.url);
+  };
 
-  // Set src after handlers are ready
+  // Only use timer as last resort for sites that never fire onload at all
+  setTimeout(() => {
+    if (!iframeResolved) {
+      iframeResolved = true;
+      showPreviewFallback(b.url);
+    }
+  }, 12000);
+
   setTimeout(() => { iframe.src = b.url; }, 50);
 }
 
