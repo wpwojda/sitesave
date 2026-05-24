@@ -806,3 +806,60 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   font-size: 13px; color: var(--text3); line-height: 1.5;
   transition: var(--trans);
 }
+
+/* ── MOBILE ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Hide sidebar completely on mobile */
+  aside { display: none; }
+
+  /* Full width main */
+  main { padding: 14px 14px 60px; }
+
+  /* Header — tighter */
+  header { padding: 0 14px; gap: 10px; }
+  .logo { font-size: 17px; }
+  .search-wrap { max-width: none; }
+  .search-input { font-size: 14px; }
+
+  /* Single column grid */
+  .grid {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: 24px;
+  }
+
+  /* Pills — scroll horizontally instead of wrapping */
+  .pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .pills::-webkit-scrollbar { display: none; }
+
+  /* Preview modal — full screen on mobile */
+  .preview-ov { padding: 0; align-items: flex-end; }
+  .preview-panel {
+    max-width: 100%;
+    height: 92vh;
+    border-radius: 14px 14px 0 0;
+  }
+  .preview-bar {
+    border-radius: 14px 14px 0 0;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .preview-url { display: none; }
+  .preview-title { font-size: 13px; }
+  .preview-btn-primary { padding: 0 10px; font-size: 12px; }
+  .preview-btn { padding: 0 10px; font-size: 12px; }
+
+  /* Save modal — full width */
+  .modal { border-radius: 14px 14px 0 0; }
+  .m-ov { align-items: flex-end; padding: 0; }
+
+  /* Page title smaller on mobile */
+  .pg-title { font-size: 20px; }
+}
