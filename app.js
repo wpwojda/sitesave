@@ -126,7 +126,7 @@ async function signInWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://wpwojda.github.io/sitesave/',
+      redirectTo: 'https://sitesave.co.uk/',
       queryParams: { prompt: 'select_account' }
     }
   });
