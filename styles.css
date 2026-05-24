@@ -890,7 +890,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .theme-btn          { width: 40px; height: 40px; }
   .btn-add            { height: 40px; padding: 0 16px; }
   .btn-ghost          { height: 40px; padding: 0 16px; }
-  .sort-sel           { height: 40px; }
+  .sort-sel           { height: 40px; padding: 0 32px 0 12px; }
   .pill               { height: 40px; padding: 0 14px; }
   .sb-item            { min-height: 40px; padding: 10px 8px; }
   .signout-btn        { height: 40px; }
