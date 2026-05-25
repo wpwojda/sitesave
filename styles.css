@@ -910,6 +910,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   #btn-save-modal     { height: 38px; }
   #btn-cancel-modal   { height: 38px; }
 
+  .grid-btns { display: none; }
+
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
 }
@@ -943,3 +945,22 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   background: var(--surface); color: var(--text);
   border-color: var(--border-md);
 }
+
+/* ── GRID DENSITY TOGGLE ─────────────────────────────────────── */
+.topbar-r {
+  display: flex; align-items: center; gap: 8px;
+}
+.grid-btns {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px;
+}
+.grid-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  border-radius: 4px; cursor: pointer;
+  color: var(--text3); transition: var(--trans);
+}
+.grid-btn:hover { background: var(--surface); color: var(--text2); }
+.grid-btn.on { background: var(--surface); color: var(--text); }
