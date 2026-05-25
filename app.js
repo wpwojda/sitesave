@@ -485,94 +485,89 @@ function openPreview(id) {
   document.getElementById('preview-url').textContent   = b.url;
   document.getElementById('preview-ext-link').href     = b.url;
   document.getElementById('preview-fav-img').src       = `https://www.google.com/s2/favicons?domain=${h}&sz=32`;
-  document.getElementById('preview-loading').style.display    = 'flex';
+  document.getElementById('preview-loading').style.display    = 'none';
   document.getElementById('preview-iframe').style.display     = 'none';
-  document.getElementById('preview-screenshot').style.display = 'none';
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
+  // Show screenshot immediately — no loading wait, no sad-face risk
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'flex';
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.add('hidden');
+
+  // Load screenshot
+  const img = ss.querySelector('img');
+  if (img) {
+    img.removeAttribute('src');
+    img.style.display = '';
+    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${b.url}`;
+  }
+
+  // Show "Try live preview" button
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) {
+    tryBtn.style.display = 'inline-flex';
+    tryBtn.onclick = () => tryLivePreview(b);
+  }
+}
+
+function tryLivePreview(b) {
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) { tryBtn.style.display = 'none'; }
+
+  document.getElementById('preview-loading').style.display = 'flex';
+  document.getElementById('preview-screenshot').style.display = 'none';
+
   const iframe = document.getElementById('preview-iframe');
-  // Clear handlers completely
   iframe.onload  = null;
   iframe.onerror = null;
+  iframe.removeAttribute('src');
 
-  let iframeResolved = false;
-  let realLoadStarted = false;
+  let resolved = false;
 
-  // Wait a tick before attaching handlers and setting src
-  // This ensures any queued onload from previous about:blank has already fired
   setTimeout(() => {
     iframe.onload = () => {
-      if (!realLoadStarted || iframeResolved) return;
+      if (resolved) return;
       try {
         const doc = iframe.contentDocument;
-        // Check if navigated to a chrome error page (sameorigin block)
         const loc = iframe.contentWindow?.location?.href || '';
         if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
-          iframeResolved = true;
-          showPreviewFallback(b.url);
+          resolved = true;
+          showPreviewFallback(b.url, true);
           return;
         }
         if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
-          iframeResolved = true;
-          showPreviewFallback(b.url);
+          resolved = true;
+          showPreviewFallback(b.url, true);
         } else {
-          iframeResolved = true;
+          resolved = true;
           document.getElementById('preview-loading').style.display = 'none';
           iframe.style.display = 'block';
         }
       } catch (e) {
-        // Cross-origin security error — could be blocked or legitimately cross-origin
-        let errorLoc = '';
-        try { errorLoc = iframe.contentWindow?.location?.href || ''; } catch {}
-        if (errorLoc.startsWith('chrome-error://') || errorLoc.includes('chromewebdata')) {
-          iframeResolved = true;
-          showPreviewFallback(b.url);
-        } else {
-          // Real cross-origin site loaded fine
-          iframeResolved = true;
-          document.getElementById('preview-loading').style.display = 'none';
-          iframe.style.display = 'block';
-        }
+        resolved = true;
+        document.getElementById('preview-loading').style.display = 'none';
+        iframe.style.display = 'block';
       }
     };
 
     iframe.onerror = () => {
-      if (!realLoadStarted || iframeResolved) return;
-      iframeResolved = true;
-      showPreviewFallback(b.url);
+      if (resolved) return;
+      resolved = true;
+      showPreviewFallback(b.url, true);
     };
 
-    // Poll every 200ms to catch chrome-error pages before onload fires
-    // This prevents the sad-face from flashing visible even briefly
-    const pollInterval = setInterval(() => {
-      if (iframeResolved) { clearInterval(pollInterval); return; }
-      try {
-        const loc = iframe.contentWindow?.location?.href || '';
-        if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
-          clearInterval(pollInterval);
-          iframeResolved = true;
-          showPreviewFallback(b.url);
-        }
-      } catch {}
-    }, 200);
-
-    // Mark that the real load has started, then set src
-    realLoadStarted = true;
-    iframe.src = b.url;
-
-    // Last resort timeout — also clear the poll interval
     setTimeout(() => {
-      clearInterval(pollInterval);
-      if (!iframeResolved) {
-        iframeResolved = true;
-        showPreviewFallback(b.url);
-      }
+      if (!resolved) { resolved = true; showPreviewFallback(b.url, true); }
     }, 12000);
+
+    resolved = false;
+    iframe.src = b.url;
   }, 100);
 }
 
-function showPreviewFallback(url) {
+function showPreviewFallback(url, showMsg = true) {
   document.getElementById('preview-loading').style.display = 'none';
   const iframe = document.getElementById('preview-iframe');
   iframe.onload  = null;
@@ -582,7 +577,7 @@ function showPreviewFallback(url) {
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
   const msgEl = document.getElementById('preview-blocked-msg');
-  if (msgEl) msgEl.classList.remove('hidden');
+  if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
     img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
@@ -597,6 +592,8 @@ function closePreview() {
   iframe.onerror = null;
   iframe.removeAttribute('src');
   iframe.style.display = 'none';
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) { tryBtn.style.display = 'none'; tryBtn.onclick = null; }
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.add('hidden');
   const ss = document.getElementById('preview-screenshot');
