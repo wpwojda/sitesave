@@ -15,24 +15,24 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
 const PLACEHOLDERS = [
   {
     id: 'placeholder-1',
-    url: 'https://www.awwwards.com',
-    name: 'Awwwards',
-    tags: ['inspiration', 'awards'],
-    color: '#111110', fav: false, date: Date.now() - 864e5 * 1
+    url: 'https://tympanus.net/codrops',
+    name: 'Codrops',
+    tags: ['inspiration', 'tutorials'],
+    color: '#2563eb', fav: false, date: Date.now() - 864e5 * 1
   },
   {
     id: 'placeholder-2',
-    url: 'https://tympanus.net/codrops',
-    name: 'Codrops',
-    tags: ['interactions', 'tutorials'],
-    color: '#2563eb', fav: false, date: Date.now() - 864e5 * 2
-  },
-  {
-    id: 'placeholder-3',
     url: 'https://muz.li',
     name: 'Muzli',
     tags: ['inspiration', 'design news'],
-    color: '#7c3aed', fav: false, date: Date.now() - 864e5 * 3
+    color: '#7c3aed', fav: false, date: Date.now() - 864e5 * 2
+  },
+  {
+    id: 'placeholder-3',
+    url: 'https://www.awwwards.com',
+    name: 'Awwwards',
+    tags: ['inspiration', 'awards'],
+    color: '#111110', fav: false, date: Date.now() - 864e5 * 3
   },
 ];
 
