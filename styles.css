@@ -879,6 +879,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .preview-title { font-size: 13px; }
   .preview-btn-primary { padding: 0 10px; font-size: 12px; }
   .preview-btn { padding: 0 10px; font-size: 12px; }
+  .close-btn { font-size: 0; width: 36px; padding: 0; }
+  .close-btn::before { content: '✕'; font-size: 14px; }
 
   /* Save modal — full width bottom sheet */
   .m-ov {
