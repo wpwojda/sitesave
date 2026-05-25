@@ -928,3 +928,18 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   opacity: 1;
   background: rgba(192,57,43,.08) !important;
 }
+
+/* ── TRY LIVE PREVIEW BUTTON ─────────────────────────────────── */
+.preview-btn-secondary {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 32px; padding: 0 12px;
+  background: var(--bg2); border: 1px solid var(--border-md);
+  border-radius: 6px; font-size: 13px; font-weight: 500;
+  color: var(--text2); cursor: pointer; white-space: nowrap;
+  font-family: 'Geist', sans-serif;
+  transition: var(--trans);
+}
+.preview-btn-secondary:hover {
+  background: var(--surface); color: var(--text);
+  border-color: var(--border-md);
+}
