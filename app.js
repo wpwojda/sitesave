@@ -543,12 +543,16 @@ function tryLivePreview(b) {
         } else {
           resolved = true;
           document.getElementById('preview-loading').style.display = 'none';
+          document.getElementById('preview-screenshot').style.display = 'none';
           iframe.style.display = 'block';
+          iframe.style.height = '100%';
         }
       } catch (e) {
         resolved = true;
         document.getElementById('preview-loading').style.display = 'none';
+        document.getElementById('preview-screenshot').style.display = 'none';
         iframe.style.display = 'block';
+        iframe.style.height = '100%';
       }
     };
 
@@ -592,6 +596,7 @@ function closePreview() {
   iframe.onerror = null;
   iframe.removeAttribute('src');
   iframe.style.display = 'none';
+  iframe.style.height = '';
   const tryBtn = document.getElementById('preview-try-live');
   if (tryBtn) { tryBtn.style.display = 'none'; tryBtn.onclick = null; }
   const msgEl = document.getElementById('preview-blocked-msg');
@@ -907,7 +912,12 @@ S.cols = parseInt(localStorage.getItem('sitesave-cols') || '2');
 function setGridCols(n) {
   S.cols = n;
   localStorage.setItem('sitesave-cols', n);
-  document.getElementById('grid').style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+  // Only apply inline columns on desktop — let the mobile media query handle it
+  if (window.innerWidth > 640) {
+    document.getElementById('grid').style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+  } else {
+    document.getElementById('grid').style.gridTemplateColumns = '';
+  }
   document.querySelectorAll('.grid-btn').forEach(b => {
     b.classList.toggle('on', parseInt(b.dataset.cols) === n);
   });
@@ -916,6 +926,17 @@ function setGridCols(n) {
 // Apply saved grid on load
 document.addEventListener('DOMContentLoaded', () => {
   setGridCols(S.cols);
+});
+
+// Re-apply grid on resize (e.g. orientation change or window resize across breakpoint)
+window.addEventListener('resize', () => {
+  const grid = document.getElementById('grid');
+  if (!grid) return;
+  if (window.innerWidth <= 640) {
+    grid.style.gridTemplateColumns = '';
+  } else {
+    grid.style.gridTemplateColumns = `repeat(${S.cols}, 1fr)`;
+  }
 });
 
 init();
