@@ -523,7 +523,6 @@ function openPreview(id) {
         }
       } catch (e) {
         // Cross-origin security error — could be blocked or legitimately cross-origin
-        // Try to get the location to distinguish the two cases
         let errorLoc = '';
         try { errorLoc = iframe.contentWindow?.location?.href || ''; } catch {}
         if (errorLoc.startsWith('chrome-error://') || errorLoc.includes('chromewebdata')) {
@@ -544,12 +543,27 @@ function openPreview(id) {
       showPreviewFallback(b.url);
     };
 
+    // Poll every 200ms to catch chrome-error pages before onload fires
+    // This prevents the sad-face from flashing visible even briefly
+    const pollInterval = setInterval(() => {
+      if (iframeResolved) { clearInterval(pollInterval); return; }
+      try {
+        const loc = iframe.contentWindow?.location?.href || '';
+        if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
+          clearInterval(pollInterval);
+          iframeResolved = true;
+          showPreviewFallback(b.url);
+        }
+      } catch {}
+    }, 200);
+
     // Mark that the real load has started, then set src
     realLoadStarted = true;
     iframe.src = b.url;
 
-    // Last resort timeout
+    // Last resort timeout — also clear the poll interval
     setTimeout(() => {
+      clearInterval(pollInterval);
       if (!iframeResolved) {
         iframeResolved = true;
         showPreviewFallback(b.url);
