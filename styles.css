@@ -914,6 +914,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
   .grid-btns { display: none !important; }
 
+  /* Card actions — always visible on mobile (no hover) */
+  .card-actions { opacity: 1; }
+
+  /* Prevent long-press context menu on screenshot images */
+  .card-thumb img { pointer-events: none; -webkit-touch-callout: none; }
+
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
 }
