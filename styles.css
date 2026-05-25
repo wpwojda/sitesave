@@ -910,7 +910,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   #btn-save-modal     { height: 38px; }
   #btn-cancel-modal   { height: 38px; }
 
-  .grid-btns { display: none; }
+  .grid-btns { display: none !important; }
 
   /* Page title smaller on mobile */
   .pg-title { font-size: 20px; }
