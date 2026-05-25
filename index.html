@@ -87,12 +87,37 @@
         <div class="pg-title" id="pg-title">All</div>
         <div class="pg-count" id="pg-count">0 sites</div>
       </div>
-      <select class="sort-sel" onchange="S.sort=this.value;renderCards()">
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="alpha">A–Z</option>
-        <option value="domain">Domain</option>
-      </select>
+      <div class="topbar-r">
+        <div class="grid-btns">
+          <button class="grid-btn on" data-cols="2" onclick="setGridCols(2)" title="2 columns">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="8" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+          <button class="grid-btn" data-cols="3" onclick="setGridCols(3)" title="3 columns">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="5.5" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="10" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+          <button class="grid-btn" data-cols="4" onclick="setGridCols(4)" title="4 columns">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="4.5" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="8" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="11" y="1" width="2" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+        </div>
+        <select class="sort-sel" onchange="S.sort=this.value;renderCards()">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="alpha">A–Z</option>
+          <option value="domain">Domain</option>
+        </select>
+      </div>
     </div>
     <div class="pills" id="pills"></div>
     <div id="grid" class="grid"></div>
