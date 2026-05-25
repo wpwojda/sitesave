@@ -464,13 +464,21 @@ function card(b, i) {
 </div>`;
 }
 
+// ── SCREENSHOT HELPER ─────────────────────────────────────────
+function thumUrl(url) {
+  const mobile = window.innerWidth <= 640;
+  return mobile
+    ? `https://image.thum.io/get/width/390/crop/844/noanimate/${url}`
+    : `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+}
+
 // ── SCREENSHOT LOADING ────────────────────────────────────────
 function loadScreenshot(id, url) {
   const img     = document.getElementById('shot-' + id);
   const shimmer = document.getElementById('shimmer-' + id);
   const errEl   = document.getElementById('err-' + id);
   if (!img) return;
-  const apiUrl = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+  const apiUrl = thumUrl(url);
   img.onload = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
   img.src = apiUrl;
@@ -501,7 +509,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${b.url}`;
+    img.src = thumUrl(b.url);
   }
 
   // Show "Try live preview" button
@@ -584,7 +592,7 @@ function showPreviewFallback(url, showMsg = true) {
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
-    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+    img.src = thumUrl(url);
   }
 }
 
