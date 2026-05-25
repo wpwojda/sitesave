@@ -877,8 +877,45 @@ document.getElementById('btn-save-modal').addEventListener('click', () => {
 document.getElementById('btn-cancel-modal').addEventListener('click', () => {
   closeModal();
 });
-document.getElementById('m-ov').addEventListener('click', e => {
-  if (e.target === document.getElementById('m-ov')) closeModal();
+
+// Fix: only close modal if BOTH mousedown and mouseup happened on the overlay
+// This prevents accidental close when user drags text and releases outside modal
+let _modalMousedownOnOverlay = false;
+const mOv = document.getElementById('m-ov');
+mOv.addEventListener('mousedown', e => {
+  _modalMousedownOnOverlay = e.target === mOv;
+});
+mOv.addEventListener('mouseup', e => {
+  if (_modalMousedownOnOverlay && e.target === mOv) closeModal();
+  _modalMousedownOnOverlay = false;
+});
+
+// Same fix for preview overlay
+const pOv = document.getElementById('preview-ov');
+let _previewMousedownOnOverlay = false;
+pOv.addEventListener('mousedown', e => {
+  _previewMousedownOnOverlay = e.target === pOv;
+});
+pOv.addEventListener('mouseup', e => {
+  if (_previewMousedownOnOverlay && e.target === pOv) closePreview();
+  _previewMousedownOnOverlay = false;
+});
+
+// ── GRID DENSITY ──────────────────────────────────────────────
+S.cols = parseInt(localStorage.getItem('sitesave-cols') || '2');
+
+function setGridCols(n) {
+  S.cols = n;
+  localStorage.setItem('sitesave-cols', n);
+  document.getElementById('grid').style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+  document.querySelectorAll('.grid-btn').forEach(b => {
+    b.classList.toggle('on', parseInt(b.dataset.cols) === n);
+  });
+}
+
+// Apply saved grid on load
+document.addEventListener('DOMContentLoaded', () => {
+  setGridCols(S.cols);
 });
 
 init();
