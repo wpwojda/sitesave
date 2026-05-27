@@ -1171,3 +1171,37 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .sheet-action-btn:hover { color: var(--text); background: var(--bg2); }
 .sheet-action-del:hover { color: var(--danger) !important; background: rgba(192,57,43,.1) !important; }
+
+/* ── SHEET INLINE CONFIRM ────────────────────────────────────── */
+.sheet-confirm {
+  margin: 12px 12px 0;
+  padding: 14px 16px;
+  background: var(--bg2); border: 1px solid var(--border-md);
+  border-radius: 10px;
+  animation: mu .15s ease;
+}
+.sheet-confirm-title {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  margin-bottom: 4px; letter-spacing: -.01em;
+}
+.sheet-confirm-msg {
+  font-size: 13px; color: var(--text2); line-height: 1.5;
+  margin-bottom: 12px;
+}
+.sheet-confirm-btns {
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.sheet-confirm-cancel {
+  height: 34px; padding: 0 14px;
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text2);
+  cursor: pointer; transition: var(--trans);
+}
+.sheet-confirm-cancel:hover { border-color: var(--border-md); color: var(--text); }
+.sheet-confirm-ok {
+  height: 34px; padding: 0 14px;
+  background: var(--danger); border: none; border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: #fff;
+  cursor: pointer; transition: opacity .15s;
+}
+.sheet-confirm-ok:hover { opacity: .85; }
