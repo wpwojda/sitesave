@@ -52,6 +52,7 @@ function toggleTheme() {
 
 // ── STATE ────────────────────────────────────────────────────
 let BM = [];
+let COLLECTIONS = []; // { id, name, color, created_at }
 let CURRENT_USER = null;
 let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 
@@ -66,7 +67,6 @@ let _authHandled = false;
 async function init() {
   _authHandled = false;
 
-  // Step 1: check for existing session directly — most reliable method
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
@@ -79,7 +79,6 @@ async function init() {
     enterGuest();
   }
 
-  // Step 2: listen only for explicit sign in / sign out actions
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       _authHandled = true;
@@ -92,6 +91,7 @@ async function init() {
       _authHandled = false;
       CURRENT_USER = null;
       BM = [];
+      COLLECTIONS = [];
       enterGuest();
     }
   });
@@ -115,6 +115,7 @@ async function enterApp() {
   document.getElementById('btn-save-site').classList.remove('hidden');
   document.getElementById('user-menu').classList.remove('hidden');
   updateUserAvatar();
+  await loadCollections();
   await loadBookmarks();
 }
 
@@ -140,7 +141,6 @@ async function signInWithGoogle() {
 async function signOut() {
   _authHandled = false;
   document.getElementById('user-dropdown').classList.add('hidden');
-  // Clear stored session from localStorage immediately
   localStorage.removeItem('sitesave-auth');
   try {
     await Promise.race([
@@ -152,6 +152,7 @@ async function signOut() {
   }
   CURRENT_USER = null;
   BM = [];
+  COLLECTIONS = [];
   enterGuest();
 }
 
@@ -161,23 +162,21 @@ async function deleteAccount() {
   if (!confirmed) return;
 
   try {
-    // Step 1 — delete all their bookmarks
     const { error: bmError } = await sb
       .from('bookmarks')
       .delete()
       .eq('user_id', CURRENT_USER.id);
     if (bmError) throw bmError;
 
-    // Step 2 — delete the auth account via Supabase SQL function
     const { error: authError } = await sb.rpc('delete_user');
     if (authError) throw authError;
 
-    // Step 3 — clear local state
     _authHandled = false;
     localStorage.removeItem('sitesave-auth');
     await sb.auth.signOut({ scope: 'local' });
     CURRENT_USER = null;
     BM = [];
+    COLLECTIONS = [];
     toast('Account deleted');
     enterGuest();
 
@@ -213,9 +212,13 @@ document.addEventListener('click', e => {
   if (menu && !menu.contains(e.target)) {
     document.getElementById('user-dropdown')?.classList.add('hidden');
   }
+  // Close collection menu if clicking outside
+  if (!e.target.closest('.col-menu-wrap')) {
+    document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  }
 });
 
-// ── DATABASE ──────────────────────────────────────────────────
+// ── DATABASE — BOOKMARKS ───────────────────────────────────────
 async function loadBookmarks() {
   const { data, error } = await sb
     .from('bookmarks')
@@ -229,17 +232,29 @@ async function loadBookmarks() {
     return;
   }
 
+  // Load collection memberships for all bookmarks
+  const { data: bcData } = await sb
+    .from('bookmark_collections')
+    .select('bookmark_id, collection_id');
+
+  const bcMap = {}; // bookmark_id -> [collection_id, ...]
+  (bcData || []).forEach(row => {
+    if (!bcMap[row.bookmark_id]) bcMap[row.bookmark_id] = [];
+    bcMap[row.bookmark_id].push(row.collection_id);
+  });
+
   BM = (data || []).map(row => {
     let tags = row.tags;
     if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = []; } }
     return {
-      id:    row.id,
-      url:   row.url,
-      name:  row.name,
-      tags:  Array.isArray(tags) ? tags : [],
-      color: row.color || '#111110',
-      fav:   row.fav   || false,
-      date:  new Date(row.created_at).getTime(),
+      id:          row.id,
+      url:         row.url,
+      name:        row.name,
+      tags:        Array.isArray(tags) ? tags : [],
+      color:       row.color || '#111110',
+      fav:         row.fav   || false,
+      date:        new Date(row.created_at).getTime(),
+      collections: bcMap[row.id] || [],
     };
   });
 
@@ -250,7 +265,6 @@ async function loadBookmarks() {
 async function dbInsert(bm, attempt = 1) {
   if (!CURRENT_USER) { toast('Please sign in first'); return null; }
 
-  // Wrap in a timeout so we don't hang forever
   const insertPromise = sb.from('bookmarks').insert({
     url:     bm.url,
     name:    bm.name,
@@ -302,6 +316,46 @@ async function dbDelete(id) {
   if (error) { toast('Error removing'); console.error(error); }
 }
 
+// ── DATABASE — COLLECTIONS ────────────────────────────────────
+async function loadCollections() {
+  const { data, error } = await sb
+    .from('collections')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  COLLECTIONS = data || [];
+}
+
+async function dbCreateCollection(name) {
+  const { data, error } = await sb.from('collections').insert({
+    name: name.trim(),
+    user_id: CURRENT_USER.id,
+  }).select().single();
+  if (error) { toast('Error creating collection'); console.error(error); return null; }
+  return data;
+}
+
+async function dbRenameCollection(id, name) {
+  const { error } = await sb.from('collections').update({ name: name.trim() }).eq('id', id);
+  if (error) { toast('Error renaming collection'); console.error(error); }
+}
+
+async function dbDeleteCollection(id) {
+  const { error } = await sb.from('collections').delete().eq('id', id);
+  if (error) { toast('Error deleting collection'); console.error(error); }
+}
+
+async function dbSetBookmarkCollections(bookmarkId, collectionIds) {
+  // Delete all existing memberships for this bookmark
+  await sb.from('bookmark_collections').delete().eq('bookmark_id', bookmarkId);
+  // Insert new ones
+  if (collectionIds.length > 0) {
+    const rows = collectionIds.map(cid => ({ bookmark_id: bookmarkId, collection_id: cid }));
+    const { error } = await sb.from('bookmark_collections').insert(rows);
+    if (error) { toast('Error updating collections'); console.error(error); }
+  }
+}
+
 // ── FILTER / SORT ─────────────────────────────────────────────
 function visible() {
   let list = [...BM];
@@ -309,6 +363,10 @@ function visible() {
 
   if      (S.filter === 'fav')    list = list.filter(b => b.fav);
   else if (S.filter === 'recent') list = list.filter(b => Date.now() - b.date < 864e5 * 7);
+  else if (S.filter.startsWith('col:')) {
+    const colId = S.filter.slice(4);
+    list = list.filter(b => (b.collections || []).includes(colId));
+  }
   else if (S.filter !== 'all')    list = list.filter(b =>
     (b.tags || []).map(t => t.toLowerCase()).includes(S.filter.toLowerCase())
   );
@@ -339,7 +397,15 @@ function renderCards() {
   const g = document.getElementById('grid');
   const TITLES = { all: 'All', fav: 'Favourites', recent: 'Recent' };
 
-  document.getElementById('pg-title').textContent = TITLES[S.filter] || S.filter;
+  let title = TITLES[S.filter];
+  if (!title && S.filter.startsWith('col:')) {
+    const col = COLLECTIONS.find(c => c.id === S.filter.slice(4));
+    title = col ? col.name : 'Collection';
+  } else if (!title) {
+    title = S.filter;
+  }
+
+  document.getElementById('pg-title').textContent = title;
   document.getElementById('pg-count').textContent = `${list.length} site${list.length !== 1 ? 's' : ''}`;
 
   if (!list.length && !S.guestMode) {
@@ -348,14 +414,12 @@ function renderCards() {
     const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
 
     if (isFiltered) {
-      // Filtered empty state — no results for this tag/search
       g.innerHTML = `<div class="empty" style="grid-column:1/-1">
         <div class="empty-icon">◫</div>
         <div class="empty-title">No sites found</div>
-        <div class="empty-sub">Try a different search or tag.</div>
+        <div class="empty-sub">Try a different search or filter.</div>
       </div>`;
     } else {
-      // First-time / truly empty state
       g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
         <div class="empty-welcome-inner">
           <div class="empty-greeting">${greeting}</div>
@@ -374,7 +438,6 @@ function renderCards() {
           </div>
         </div>
       </div>`;
-      // Wire button via addEventListener since it's injected HTML
       setTimeout(() => {
         document.getElementById('btn-empty-save')?.addEventListener('click', () => openModal());
       }, 0);
@@ -490,13 +553,11 @@ function openPreview(id) {
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Show screenshot immediately — no loading wait, no sad-face risk
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.add('hidden');
 
-  // Load screenshot
   const img = ss.querySelector('img');
   if (img) {
     img.removeAttribute('src');
@@ -504,7 +565,6 @@ function openPreview(id) {
     img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${b.url}`;
   }
 
-  // Show "Try live preview" button
   const tryBtn = document.getElementById('preview-try-live');
   if (tryBtn) {
     tryBtn.style.display = 'inline-flex';
@@ -622,8 +682,47 @@ function renderSidebar() {
   document.getElementById('cnt-fav').textContent = counts.fav;
   document.getElementById('cnt-rec').textContent = counts.rec;
 
-  if (S.guestMode) { document.getElementById('sb-tags').innerHTML = ''; return; }
+  if (S.guestMode) {
+    document.getElementById('sb-tags').innerHTML = '';
+    document.getElementById('sb-collections').innerHTML = '';
+    return;
+  }
 
+  // ── Collections section
+  const colEl = document.getElementById('sb-collections');
+  colEl.innerHTML = COLLECTIONS.map(col => {
+    const count = BM.filter(b => (b.collections || []).includes(col.id)).length;
+    const on = S.filter === 'col:' + col.id;
+    return `
+    <div class="sb-item ${on ? 'on' : ''}" onclick="setFilter('col:${col.id}', this)">
+      <span class="sb-tag-row">
+        <span class="sb-lbl">
+          <span class="sb-ico" style="font-size:11px">▤</span>
+          ${x(col.name)}
+        </span>
+        <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <span class="sb-n">${count}</span>
+          <div class="col-menu-wrap">
+            <button class="sb-del-tag col-menu-btn" title="Options"
+              onclick="event.stopPropagation();toggleColMenu('${col.id}')"
+              aria-label="Options for ${x(col.name)}">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <circle cx="5" cy="2" r="1" fill="currentColor"/>
+                <circle cx="5" cy="5" r="1" fill="currentColor"/>
+                <circle cx="5" cy="8" r="1" fill="currentColor"/>
+              </svg>
+            </button>
+            <div class="col-dropdown hidden" id="col-dd-${col.id}">
+              <button onclick="event.stopPropagation();renameCollection('${col.id}')">Rename</button>
+              <button class="col-dd-danger" onclick="event.stopPropagation();deleteCollection('${col.id}')">Delete</button>
+            </div>
+          </div>
+        </span>
+      </span>
+    </div>`;
+  }).join('');
+
+  // ── Tags section
   const allTags = allUniqueTags();
   document.getElementById('sb-tags').innerHTML = allTags.map(tag => {
     const matches  = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
@@ -646,6 +745,51 @@ function renderSidebar() {
     </div>`;
   }).join('');
   document.getElementById('tag-dl').innerHTML = allTags.map(t => `<option value="${x(t)}">`).join('');
+}
+
+// ── COLLECTION MENU ───────────────────────────────────────────
+function toggleColMenu(id) {
+  const dd = document.getElementById('col-dd-' + id);
+  if (!dd) return;
+  const wasHidden = dd.classList.contains('hidden');
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  if (wasHidden) dd.classList.remove('hidden');
+}
+
+async function renameCollection(id) {
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  const col = COLLECTIONS.find(c => c.id === id);
+  if (!col) return;
+  const newName = prompt('Rename collection:', col.name);
+  if (!newName || !newName.trim() || newName.trim() === col.name) return;
+  await dbRenameCollection(id, newName.trim());
+  col.name = newName.trim();
+  render();
+  toast('Collection renamed');
+}
+
+async function deleteCollection(id) {
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  const col = COLLECTIONS.find(c => c.id === id);
+  if (!col) return;
+  const confirmed = confirm(`Delete "${col.name}"?\n\nYour saved sites will not be deleted — they will remain in All.`);
+  if (!confirmed) return;
+  await dbDeleteCollection(id);
+  COLLECTIONS = COLLECTIONS.filter(c => c.id !== id);
+  BM.forEach(b => { b.collections = (b.collections || []).filter(cid => cid !== id); });
+  if (S.filter === 'col:' + id) S.filter = 'all';
+  render();
+  toast(`"${col.name}" deleted`);
+}
+
+async function createCollection() {
+  const name = prompt('Collection name:');
+  if (!name || !name.trim()) return;
+  const col = await dbCreateCollection(name.trim());
+  if (!col) return;
+  COLLECTIONS.push(col);
+  render();
+  toast(`"${col.name}" created`);
 }
 
 function deleteTagCategory(tag) {
@@ -686,17 +830,20 @@ function setFilter(f, el) {
 
 // ── SAVE / EDIT MODAL ─────────────────────────────────────────
 let modalTags = [];
+let modalCollections = []; // collection ids selected in modal
 
 function openModal(id = null) {
   if (S.guestMode) { signInWithGoogle(); return; }
   S.editId = id;
   modalTags = [];
+  modalCollections = [];
   document.getElementById('m-title').textContent = id ? 'Edit site' : 'Save a site';
   if (id) {
     const b = BM.find(b => b.id == id);
     document.getElementById('f-url').value  = b.url;
     document.getElementById('f-name').value = b.name;
     modalTags = [...(b.tags || [])];
+    modalCollections = [...(b.collections || [])];
     S.color = b.color;
   } else {
     document.getElementById('f-url').value  = '';
@@ -704,6 +851,7 @@ function openModal(id = null) {
     S.color = COLORS[0];
   }
   renderTagTokens();
+  renderCollectionDropdown();
   buildColors();
   document.getElementById('m-ov').classList.remove('hidden');
   setTimeout(() => document.getElementById('f-url').focus(), 80);
@@ -711,7 +859,7 @@ function openModal(id = null) {
 
 function closeModal() {
   document.getElementById('m-ov').classList.add('hidden');
-  S.editId = null; modalTags = [];
+  S.editId = null; modalTags = []; modalCollections = [];
 }
 
 function renderTagTokens() {
@@ -726,6 +874,68 @@ function renderTagTokens() {
   });
   input.value = '';
   input.placeholder = modalTags.length ? '' : 'e.g. typography, layouts…';
+}
+
+function renderCollectionDropdown() {
+  const wrap = document.getElementById('col-select-wrap');
+  if (!wrap) return;
+  if (COLLECTIONS.length === 0) {
+    wrap.innerHTML = `<div class="col-empty-hint">No collections yet — <button class="col-inline-create" onclick="createCollectionFromModal()">create one</button></div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="col-dropdown-box" id="col-dropdown-box">
+      <button class="col-dropdown-trigger" onclick="toggleModalColDropdown()" type="button">
+        <span id="col-dropdown-label">${collectionDropdownLabel()}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="col-dropdown-list hidden" id="col-dropdown-list">
+        ${COLLECTIONS.map(col => `
+          <label class="col-dropdown-item">
+            <input type="checkbox" value="${col.id}" ${modalCollections.includes(col.id) ? 'checked' : ''}
+              onchange="toggleModalCollection('${col.id}')">
+            <span>${x(col.name)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function collectionDropdownLabel() {
+  if (modalCollections.length === 0) return 'None';
+  if (modalCollections.length === 1) {
+    const col = COLLECTIONS.find(c => c.id === modalCollections[0]);
+    return col ? col.name : 'None';
+  }
+  return `${modalCollections.length} collections`;
+}
+
+function toggleModalColDropdown() {
+  const list = document.getElementById('col-dropdown-list');
+  if (list) list.classList.toggle('hidden');
+}
+
+function toggleModalCollection(colId) {
+  if (modalCollections.includes(colId)) {
+    modalCollections = modalCollections.filter(id => id !== colId);
+  } else {
+    modalCollections.push(colId);
+  }
+  const label = document.getElementById('col-dropdown-label');
+  if (label) label.textContent = collectionDropdownLabel();
+}
+
+async function createCollectionFromModal() {
+  const name = prompt('Collection name:');
+  if (!name || !name.trim()) return;
+  const col = await dbCreateCollection(name.trim());
+  if (!col) return;
+  COLLECTIONS.push(col);
+  modalCollections.push(col.id);
+  renderCollectionDropdown();
+  toast(`"${col.name}" created`);
 }
 
 function handleTagKey(e) {
@@ -746,6 +956,9 @@ function addTag(t) {
 function removeTag(i) { modalTags.splice(i, 1); renderTagTokens(); }
 
 async function saveBM() {
+  // Close collection dropdown if open
+  document.getElementById('col-dropdown-list')?.classList.add('hidden');
+
   const bare = document.getElementById('tag-bare').value.trim().replace(/,$/, '').trim();
   if (bare) addTag(bare);
   let url = document.getElementById('f-url').value.trim();
@@ -753,8 +966,8 @@ async function saveBM() {
   if (!url.startsWith('http')) url = 'https://' + url;
   const name = document.getElementById('f-name').value.trim() || host(url);
   const tags = [...modalTags];
+  const collections = [...modalCollections];
 
-  // Show loading state on save button immediately
   const saveBtn = document.getElementById('btn-save-modal');
   const origHTML = saveBtn.innerHTML;
   saveBtn.disabled = true;
@@ -768,7 +981,8 @@ async function saveBM() {
   if (S.editId) {
     const idx = BM.findIndex(b => b.id == S.editId);
     await dbUpdate(S.editId, { url, name, tags, color: S.color });
-    BM[idx] = { ...BM[idx], url, name, tags, color: S.color };
+    await dbSetBookmarkCollections(S.editId, collections);
+    BM[idx] = { ...BM[idx], url, name, tags, color: S.color, collections };
     resetBtn();
     toast('Updated');
     closeModal(); render();
@@ -776,7 +990,8 @@ async function saveBM() {
     const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
     resetBtn();
     if (!row) return;
-    BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime() });
+    await dbSetBookmarkCollections(row.id, collections);
+    BM.unshift({ id: row.id, url, name, tags, color: S.color, fav: false, date: new Date(row.created_at).getTime(), collections });
     toast('Saved');
     closeModal(); render();
   }
@@ -868,39 +1083,30 @@ function toast(msg) {
 
 // ── KEYBOARD ──────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePreview(); closeModal(); }
+  if (e.key === 'Escape') {
+    document.getElementById('col-dropdown-list')?.classList.add('hidden');
+    closePreview(); closeModal();
+  }
   if (e.key === 'n' && e.target === document.body && !S.guestMode) openModal();
   if (e.key === '/' && e.target === document.body) {
     e.preventDefault(); document.getElementById('q').focus();
   }
 });
 
-// Wire modal buttons via addEventListener (more reliable than onclick)
-document.getElementById('btn-save-modal').addEventListener('click', () => {
-  saveBM();
-});
-document.getElementById('btn-cancel-modal').addEventListener('click', () => {
-  closeModal();
-});
+document.getElementById('btn-save-modal').addEventListener('click', () => { saveBM(); });
+document.getElementById('btn-cancel-modal').addEventListener('click', () => { closeModal(); });
 
-// Fix: only close modal if BOTH mousedown and mouseup happened on the overlay
-// This prevents accidental close when user drags text and releases outside modal
 let _modalMousedownOnOverlay = false;
 const mOv = document.getElementById('m-ov');
-mOv.addEventListener('mousedown', e => {
-  _modalMousedownOnOverlay = e.target === mOv;
-});
+mOv.addEventListener('mousedown', e => { _modalMousedownOnOverlay = e.target === mOv; });
 mOv.addEventListener('mouseup', e => {
   if (_modalMousedownOnOverlay && e.target === mOv) closeModal();
   _modalMousedownOnOverlay = false;
 });
 
-// Same fix for preview overlay
 const pOv = document.getElementById('preview-ov');
 let _previewMousedownOnOverlay = false;
-pOv.addEventListener('mousedown', e => {
-  _previewMousedownOnOverlay = e.target === pOv;
-});
+pOv.addEventListener('mousedown', e => { _previewMousedownOnOverlay = e.target === pOv; });
 pOv.addEventListener('mouseup', e => {
   if (_previewMousedownOnOverlay && e.target === pOv) closePreview();
   _previewMousedownOnOverlay = false;
@@ -912,7 +1118,6 @@ S.cols = parseInt(localStorage.getItem('sitesave-cols') || '2');
 function setGridCols(n) {
   S.cols = n;
   localStorage.setItem('sitesave-cols', n);
-  // Only apply inline columns on desktop — let the mobile media query handle it
   if (window.innerWidth > 640) {
     document.getElementById('grid').style.gridTemplateColumns = `repeat(${n}, 1fr)`;
   } else {
@@ -923,12 +1128,8 @@ function setGridCols(n) {
   });
 }
 
-// Apply saved grid on load
-document.addEventListener('DOMContentLoaded', () => {
-  setGridCols(S.cols);
-});
+document.addEventListener('DOMContentLoaded', () => { setGridCols(S.cols); });
 
-// Re-apply grid on resize (e.g. orientation change or window resize across breakpoint)
 window.addEventListener('resize', () => {
   const grid = document.getElementById('grid');
   if (!grid) return;
