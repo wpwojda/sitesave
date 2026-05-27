@@ -125,6 +125,12 @@
           <option value="alpha">A–Z</option>
           <option value="domain">Domain</option>
         </select>
+        <button class="filter-btn" id="filter-btn" onclick="openFilterSheet()" title="Filter">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <span class="filter-btn-label">Filter</span>
+        </button>
       </div>
     </div>
     <div class="pills" id="pills"></div>
@@ -224,6 +230,47 @@
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Save
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BOTTOM SHEET -->
+<div class="sheet-ov hidden" id="sheet-ov" onclick="if(event.target===this)closeFilterSheet()">
+  <div class="sheet" id="filter-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Filter</div>
+
+    <div class="sheet-sec">
+      <div class="sheet-hd">Library</div>
+      <div class="sheet-item" data-filter="all" onclick="applySheetFilter('all')">
+        <span class="sheet-ico">⊞</span> All
+        <span class="sheet-n" id="sheet-cnt-all">0</span>
+      </div>
+      <div class="sheet-item" data-filter="fav" onclick="applySheetFilter('fav')">
+        <span class="sheet-ico">♥</span> Favourites
+        <span class="sheet-n" id="sheet-cnt-fav">0</span>
+      </div>
+      <div class="sheet-item" data-filter="recent" onclick="applySheetFilter('recent')">
+        <span class="sheet-ico">◷</span> Recent
+        <span class="sheet-n" id="sheet-cnt-rec">0</span>
+      </div>
+    </div>
+
+    <div class="sheet-div"></div>
+
+    <div class="sheet-sec" id="sheet-collections-sec">
+      <div class="sheet-hd-row">
+        <div class="sheet-hd">Collections</div>
+        <button class="sheet-add-btn" onclick="createCollection()">+ New</button>
+      </div>
+      <div id="sheet-collections"></div>
+    </div>
+
+    <div class="sheet-div"></div>
+
+    <div class="sheet-sec" id="sheet-tags-sec">
+      <div class="sheet-hd">Tags</div>
+      <div id="sheet-tags"></div>
     </div>
   </div>
 </div>
