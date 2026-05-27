@@ -1223,34 +1223,43 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
 (function() {
   const sheet = document.getElementById('filter-sheet');
   let startY = 0, dragY = 0, dragging = false;
-  const THRESHOLD = 120;
+  const THRESHOLD = 100;
 
   sheet.addEventListener('touchstart', e => {
-    // Only drag from the handle or sheet title area
-    if (!e.target.closest('.sheet-handle, .sheet-title')) return;
     startY = e.touches[0].clientY;
-    dragging = true;
-    sheet.style.transition = 'none';
+    dragY = 0;
+    dragging = false;
   }, { passive: true });
 
   sheet.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    dragY = Math.max(0, e.touches[0].clientY - startY);
+    const dy = e.touches[0].clientY - startY;
+    // Start dragging only if swiping down and sheet is scrolled to top
+    if (!dragging) {
+      if (dy > 8 && sheet.scrollTop <= 0) {
+        dragging = true;
+        sheet.style.transition = 'none';
+      } else {
+        return;
+      }
+    }
+    dragY = Math.max(0, dy);
     sheet.style.transform = `translateY(${dragY}px)`;
   }, { passive: true });
 
   sheet.addEventListener('touchend', () => {
     if (!dragging) return;
     dragging = false;
-    sheet.style.transition = '';
+    sheet.style.transition = 'transform .25s ease';
     if (dragY > THRESHOLD) {
       sheet.style.transform = `translateY(100%)`;
       setTimeout(() => {
         sheet.style.transform = '';
+        sheet.style.transition = '';
         closeFilterSheet();
       }, 250);
     } else {
       sheet.style.transform = '';
+      setTimeout(() => { sheet.style.transition = ''; }, 250);
     }
     dragY = 0;
   });
