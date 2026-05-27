@@ -831,6 +831,9 @@ async function deleteCollection(id) {
   BM.forEach(b => { b.collections = (b.collections || []).filter(cid => cid !== id); });
   if (S.filter === 'col:' + id) S.filter = 'all';
   render();
+  if (!document.getElementById('sheet-ov').classList.contains('hidden')) {
+    renderFilterSheet();
+  }
   toast(`"${col.name}" deleted`);
 }
 
