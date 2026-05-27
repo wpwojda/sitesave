@@ -1091,7 +1091,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 .sheet-handle {
   width: 36px; height: 4px; border-radius: 2px;
   background: var(--border-md);
-  margin: 0 auto 16px;
+  margin: 0 auto 0;
+  cursor: grab;
+}
+/* Expand touch area of handle + title without changing visual */
+.sheet-handle, .sheet-title {
+  touch-action: none;
 }
 
 .sheet-title {
