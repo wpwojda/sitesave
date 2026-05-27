@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sitesave — Shared Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">Sitesave</a>
+  <div class="search-wrap"></div>
+  <div class="hdr-r">
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark mode">
+      <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 16 16" fill="none">
+        <path d="M13.5 10.5A6 6 0 0 1 5.5 2.5a6.002 6.002 0 0 0 0 11 6 6 0 0 0 8-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="share-wrap">
+  <div class="share-meta" id="share-meta" style="display:none">
+    <div class="share-badge">Shared collection</div>
+    <div class="share-title" id="share-title"></div>
+    <div class="share-count" id="share-count"></div>
+  </div>
+  <div id="share-error" style="display:none" class="share-error">
+    <div class="empty-icon">◫</div>
+    <div class="empty-title">Collection not found</div>
+    <div class="empty-sub">This link may have expired or been revoked.</div>
+  </div>
+  <div id="share-grid" class="grid"></div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="preview-ov hidden" id="preview-ov" onclick="if(event.target===this)closePreview()">
+  <div class="preview-panel">
+    <div class="preview-bar">
+      <div class="preview-favicon">
+        <img id="preview-fav-img" src="" alt="">
+      </div>
+      <span class="preview-title" id="preview-title"></span>
+      <span class="preview-url"   id="preview-url"></span>
+      <div class="preview-actions">
+        <button class="preview-btn-secondary" id="preview-try-live" style="display:none">
+          <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 4.5l3.5 2L5 8.5V4.5z" fill="currentColor"/></svg>
+          Try live preview
+        </button>
+        <a class="preview-btn-primary" id="preview-ext-link" href="#" target="_blank" rel="noopener">
+          <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M4.5 2.5h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Open site
+        </a>
+        <button class="preview-btn close-btn" onclick="closePreview()">&#x2715; Close</button>
+      </div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-loading" id="preview-loading">
+        <div class="preview-loading-spinner"></div>
+        <span>Loading preview…</span>
+      </div>
+      <iframe class="preview-iframe" id="preview-iframe"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals"
+        referrerpolicy="no-referrer">
+      </iframe>
+      <div class="preview-screenshot" id="preview-screenshot">
+        <div class="preview-blocked-msg hidden" id="preview-blocked-msg">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M9 5.5v4M9 11.5v1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <span>This site doesn't allow previews — use <strong>Open site</strong> to visit it directly.</span>
+        </div>
+        <img class="preview-ss-img" src="" alt="Site screenshot" onerror="this.style.display='none';document.getElementById('preview-ss-error').style.display='flex'">
+        <div class="preview-ss-error" id="preview-ss-error">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M3 9l4.5 4.5L12 9l4.5 4.5L21 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span>Screenshot unavailable for this site.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+// ── THEME ─────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+  html.dataset.theme = next;
+  localStorage.setItem('sitesave-theme', next);
+}
+(function () {
+  const saved = localStorage.getItem('sitesave-theme');
+  if (saved) document.documentElement.dataset.theme = saved;
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.dataset.theme = 'dark';
+})();
+
+// ── SUPABASE ──────────────────────────────────────────────────
+const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
+function x(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let BM = [];
+
+// ── LOAD SHARED COLLECTION ────────────────────────────────────
+async function init() {
+  const token = new URLSearchParams(location.search).get('c');
+  if (!token) { showError(); return; }
+
+  // Fetch collection by share token
+  const { data: col, error: colErr } = await sb
+    .from('collections')
+    .select('id, name')
+    .eq('share_token', token)
+    .single();
+
+  if (colErr || !col) { showError(); return; }
+
+  // Fetch bookmark ids in this collection
+  const { data: bcData, error: bcErr } = await sb
+    .from('bookmark_collections')
+    .select('bookmark_id')
+    .eq('collection_id', col.id);
+
+  if (bcErr || !bcData?.length) {
+    showMeta(col.name, 0);
+    return;
+  }
+
+  const ids = bcData.map(r => r.bookmark_id);
+
+  // Fetch the bookmarks
+  const { data: bmData, error: bmErr } = await sb
+    .from('bookmarks')
+    .select('id, url, name, tags, color, fav, created_at')
+    .in('id', ids);
+
+  if (bmErr) { showError(); return; }
+
+  BM = (bmData || []).map(row => {
+    let tags = row.tags;
+    if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = []; } }
+    return { id: row.id, url: row.url, name: row.name, tags: Array.isArray(tags) ? tags : [], color: row.color || '#111110', fav: row.fav || false, date: new Date(row.created_at).getTime() };
+  }).sort((a, b) => b.date - a.date);
+
+  showMeta(col.name, BM.length);
+  renderCards();
+}
+
+function showMeta(name, count) {
+  document.title = `${name} — Sitesave`;
+  document.getElementById('share-title').textContent = name;
+  document.getElementById('share-count').textContent = `${count} site${count !== 1 ? 's' : ''}`;
+  document.getElementById('share-meta').style.display = '';
+}
+
+function showError() {
+  document.getElementById('share-error').style.display = 'flex';
+}
+
+// ── RENDER CARDS ──────────────────────────────────────────────
+function renderCards() {
+  const g = document.getElementById('share-grid');
+  g.innerHTML = BM.map((b, i) => {
+    const h = host(b.url);
+    const tagChips = (b.tags || []).map(t => `<span class="tag-chip">${x(t)}</span>`).join('');
+    return `
+<div class="card" style="animation-delay:${i * .03}s" onclick="openPreview('${b.id}')">
+  <div class="card-thumb" id="thumb-${b.id}">
+    <div class="thumb-shimmer" id="shimmer-${b.id}"></div>
+    <img id="shot-${b.id}" alt="${x(b.name)} preview">
+    <div class="thumb-error" id="err-${b.id}">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <span>Preview unavailable</span>
+    </div>
+  </div>
+  <div class="card-foot">
+    <div class="foot-top">
+      <div class="foot-favicon">
+        <img src="https://www.google.com/s2/favicons?domain=${h}&sz=32" onerror="this.style.display='none'" loading="lazy">
+      </div>
+      <span class="foot-name">${x(b.name)}</span>
+    </div>
+    ${(b.tags || []).length ? `<div class="foot-tags">${tagChips}</div>` : ''}
+  </div>
+</div>`;
+  }).join('');
+
+  BM.forEach(b => loadScreenshot(b.id, b.url));
+}
+
+function loadScreenshot(id, url) {
+  const img     = document.getElementById('shot-' + id);
+  const shimmer = document.getElementById('shimmer-' + id);
+  const errEl   = document.getElementById('err-' + id);
+  if (!img) return;
+  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
+  img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
+  img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+}
+
+// ── PREVIEW MODAL ─────────────────────────────────────────────
+function openPreview(id) {
+  const b = BM.find(b => b.id == id);
+  if (!b) return;
+  const h = host(b.url);
+  document.getElementById('preview-title').textContent = b.name;
+  document.getElementById('preview-url').textContent   = b.url;
+  document.getElementById('preview-ext-link').href     = b.url;
+  document.getElementById('preview-fav-img').src       = `https://www.google.com/s2/favicons?domain=${h}&sz=32`;
+  document.getElementById('preview-loading').style.display = 'none';
+  document.getElementById('preview-iframe').style.display  = 'none';
+  document.getElementById('preview-ov').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'flex';
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.add('hidden');
+
+  const img = ss.querySelector('img');
+  if (img) {
+    img.removeAttribute('src');
+    img.style.display = '';
+    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${b.url}`;
+  }
+
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) {
+    tryBtn.style.display = 'inline-flex';
+    tryBtn.onclick = () => tryLivePreview(b);
+  }
+}
+
+function tryLivePreview(b) {
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) tryBtn.style.display = 'none';
+  document.getElementById('preview-loading').style.display = 'flex';
+  document.getElementById('preview-screenshot').style.display = 'none';
+  const iframe = document.getElementById('preview-iframe');
+  iframe.onload = iframe.onerror = null;
+  iframe.removeAttribute('src');
+  let resolved = false;
+  setTimeout(() => {
+    iframe.onload = () => {
+      if (resolved) return;
+      try {
+        const loc = iframe.contentWindow?.location?.href || '';
+        if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
+          resolved = true; showPreviewFallback(b.url, true); return;
+        }
+        resolved = true;
+        document.getElementById('preview-loading').style.display = 'none';
+        document.getElementById('preview-screenshot').style.display = 'none';
+        iframe.style.display = 'block';
+        iframe.style.height = '100%';
+      } catch(e) {
+        resolved = true;
+        document.getElementById('preview-loading').style.display = 'none';
+        document.getElementById('preview-screenshot').style.display = 'none';
+        iframe.style.display = 'block';
+        iframe.style.height = '100%';
+      }
+    };
+    iframe.onerror = () => { if (!resolved) { resolved = true; showPreviewFallback(b.url, true); } };
+    setTimeout(() => { if (!resolved) { resolved = true; showPreviewFallback(b.url, true); } }, 12000);
+    resolved = false;
+    iframe.src = b.url;
+  }, 100);
+}
+
+function showPreviewFallback(url, showMsg = true) {
+  document.getElementById('preview-loading').style.display = 'none';
+  const iframe = document.getElementById('preview-iframe');
+  iframe.onload = iframe.onerror = null;
+  iframe.removeAttribute('src');
+  iframe.style.display = 'none';
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'flex';
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl && showMsg) msgEl.classList.remove('hidden');
+  const img = ss.querySelector('img');
+  if (img && !img.getAttribute('src')) img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+}
+
+function closePreview() {
+  document.getElementById('preview-ov').classList.add('hidden');
+  document.body.style.overflow = '';
+  const iframe = document.getElementById('preview-iframe');
+  iframe.onload = iframe.onerror = null;
+  iframe.removeAttribute('src');
+  iframe.style.display = 'none';
+  iframe.style.height = '';
+  const tryBtn = document.getElementById('preview-try-live');
+  if (tryBtn) { tryBtn.style.display = 'none'; tryBtn.onclick = null; }
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.add('hidden');
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'none';
+  const img = ss.querySelector('img');
+  if (img) { img.removeAttribute('src'); img.style.display = ''; }
+  const errEl = document.getElementById('preview-ss-error');
+  if (errEl) errEl.style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePreview();
+});
+
+const pOv = document.getElementById('preview-ov');
+let _pDown = false;
+pOv.addEventListener('mousedown', e => { _pDown = e.target === pOv; });
+pOv.addEventListener('mouseup',   e => { if (_pDown && e.target === pOv) closePreview(); _pDown = false; });
+
+// ── Mobile close button ───────────────────────────────────────
+// Handled via onclick in HTML
+
+init();
+</script>
+</body>
+</html>
