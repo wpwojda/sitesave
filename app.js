@@ -789,12 +789,18 @@ async function createCollection() {
   if (!col) return;
   COLLECTIONS.push(col);
   render();
+  // If the filter sheet is open, re-render it so the new collection appears immediately
+  if (!document.getElementById('sheet-ov').classList.contains('hidden')) {
+    renderFilterSheet();
+  }
   toast(`"${col.name}" created`);
 }
 
 function deleteTagCategory(tag) {
+  const affected = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
+  const confirmed = confirm(`Delete tag "${tag}"?\n\nThis will remove it from ${affected.length} site${affected.length !== 1 ? 's' : ''}. The sites themselves will not be deleted.`);
+  if (!confirmed) return;
   const lower = tag.toLowerCase();
-  const affected = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(lower));
   affected.forEach(b => {
     b.tags = b.tags.filter(t => t.toLowerCase() !== lower);
     dbUpdate(b.id, { tags: b.tags });
