@@ -760,12 +760,58 @@ async function renameCollection(id) {
   document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
+
+  // On mobile (sheet open), use inline rename input
+  const sheetOpen = !document.getElementById('sheet-ov').classList.contains('hidden');
+  if (sheetOpen) {
+    document.getElementById('sheet-confirm')?.remove();
+    const el = document.createElement('div');
+    el.id = 'sheet-confirm';
+    el.className = 'sheet-confirm';
+    el.innerHTML = `
+      <div class="sheet-confirm-title">Rename collection</div>
+      <input class="sheet-rename-input finput" value="${x(col.name)}" maxlength="60">
+      <div class="sheet-confirm-btns" style="margin-top:10px">
+        <button class="sheet-confirm-cancel" onclick="document.getElementById('sheet-confirm').remove()">Cancel</button>
+        <button class="sheet-confirm-ok" style="background:var(--accent)">Save</button>
+      </div>`;
+    el.querySelector('.sheet-confirm-ok').addEventListener('click', async () => {
+      const val = el.querySelector('input').value.trim();
+      if (!val || val === col.name) { el.remove(); return; }
+      await dbRenameCollection(id, val);
+      col.name = val;
+      el.remove();
+      render();
+      renderFilterSheet();
+      toast('Collection renamed');
+    });
+    el.querySelector('input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') el.querySelector('.sheet-confirm-ok').click();
+      if (e.key === 'Escape') el.remove();
+    });
+    document.getElementById('filter-sheet').appendChild(el);
+    setTimeout(() => el.querySelector('input').focus(), 50);
+    return;
+  }
+
+  // Desktop — native prompt is fine
   const newName = prompt('Rename collection:', col.name);
   if (!newName || !newName.trim() || newName.trim() === col.name) return;
   await dbRenameCollection(id, newName.trim());
   col.name = newName.trim();
   render();
   toast('Collection renamed');
+}
+
+async function deleteCollectionFromSheet(id) {
+  const col = COLLECTIONS.find(c => c.id === id);
+  if (!col) return;
+  const count = BM.filter(b => (b.collections || []).includes(id)).length;
+  showSheetConfirm(
+    `Delete "${col.name}"?`,
+    `Your saved sites will not be deleted — they will remain in All.`,
+    () => deleteCollection(id)
+  );
 }
 
 async function deleteCollection(id) {
@@ -1159,19 +1205,10 @@ window.addEventListener('resize', () => {
   }
 });
 
-// Wire sheet overlay to close only on direct tap/click — using pointerdown
-// to avoid spurious events fired after native dialogs (confirm/prompt)
-(function() {
-  let _sheetPointerOnOv = false;
-  const sheetOv = document.getElementById('sheet-ov');
-  sheetOv.addEventListener('pointerdown', e => {
-    _sheetPointerOnOv = e.target === sheetOv;
-  });
-  sheetOv.addEventListener('pointerup', e => {
-    if (_sheetPointerOnOv && e.target === sheetOv) closeFilterSheet();
-    _sheetPointerOnOv = false;
-  });
-})();
+// Sheet overlay — close when tapping the dark backdrop (not the sheet panel itself)
+document.getElementById('sheet-ov').addEventListener('click', e => {
+  if (!e.target.closest('#filter-sheet')) closeFilterSheet();
+});
 
 init();
 
@@ -1209,10 +1246,9 @@ function openFilterSheet() {
 }
 
 function closeFilterSheet() {
-  // Don't close if an inline confirm is showing
-  if (document.getElementById('sheet-confirm')) return;
   document.getElementById('sheet-ov').classList.add('hidden');
   document.body.style.overflow = '';
+  document.getElementById('sheet-confirm')?.remove();
 }
 
 function applySheetFilter(f) {
@@ -1253,8 +1289,8 @@ function renderFilterSheet() {
         <span class="sheet-ico" style="font-size:11px">▤</span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(col.name)}</span>
         <span class="sheet-n">${count}</span>
-        <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}');closeFilterSheet()">✎</button>
-        <button class="sheet-action-btn sheet-action-del" title="Delete" onclick="event.stopPropagation();deleteCollection('${col.id}');closeFilterSheet()">✕</button>
+        <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}')">✎</button>
+        <button class="sheet-action-btn sheet-action-del" title="Delete" onclick="event.stopPropagation();deleteCollectionFromSheet('${col.id}')">✕</button>
       </div>`;
     }).join('');
   }
