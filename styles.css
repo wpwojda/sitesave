@@ -1055,3 +1055,107 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   font-family: 'Geist', sans-serif; padding: 0;
   text-decoration: underline;
 }
+
+/* ── FILTER BUTTON (mobile only) ─────────────────────────────── */
+.filter-btn {
+  display: none; /* hidden on desktop */
+  align-items: center; gap: 6px;
+  height: 32px; padding: 0 10px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 5px;
+  font-family: 'Geist', sans-serif; font-size: 13px; color: var(--text2);
+  cursor: pointer; transition: var(--trans); white-space: nowrap;
+}
+.filter-btn:hover { border-color: var(--border-md); color: var(--text); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+
+/* ── FILTER BOTTOM SHEET ─────────────────────────────────────── */
+.sheet-ov {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.4);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fi .2s ease;
+}
+.sheet-ov.hidden { display: none !important; }
+
+.sheet {
+  width: 100%; max-height: 80vh;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 12px 0 40px;
+  overflow-y: auto;
+  animation: slide-up .25s ease;
+  transition: background .18s;
+}
+
+.sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border-md);
+  margin: 0 auto 16px;
+}
+
+.sheet-title {
+  font-size: 16px; font-weight: 600; letter-spacing: -.02em;
+  color: var(--text); padding: 0 20px; margin-bottom: 16px;
+  transition: var(--trans);
+}
+
+.sheet-sec { padding: 0 12px; margin-bottom: 4px; }
+
+.sheet-hd {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text3); padding: 0 8px; margin-bottom: 4px;
+  transition: var(--trans);
+}
+
+.sheet-hd-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px; margin-bottom: 4px;
+}
+.sheet-add-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  letter-spacing: .08em; color: var(--accent);
+  padding: 0; transition: opacity .15s;
+}
+.sheet-add-btn:hover { opacity: .7; }
+
+.sheet-item {
+  display: flex; align-items: center;
+  padding: 10px 8px; border-radius: 7px; cursor: pointer;
+  font-size: 15px; color: var(--text2);
+  border: 1px solid transparent;
+  transition: var(--trans); gap: 8px; margin-bottom: 1px;
+  position: relative;
+}
+.sheet-item:hover { background: var(--bg2); }
+.sheet-item.on {
+  background: var(--bg2); border-color: var(--border);
+  color: var(--text); font-weight: 500;
+}
+
+.sheet-ico { color: var(--text3); font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.sheet-item.on .sheet-ico { color: var(--text); }
+
+.sheet-n {
+  margin-left: auto; flex-shrink: 0;
+  font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text3);
+}
+.sheet-item.on .sheet-n { color: var(--text2); }
+
+.sheet-tag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: .7; }
+
+.sheet-div {
+  height: 1px; background: var(--border);
+  margin: 12px 20px;
+}
+
+.sheet-empty {
+  padding: 8px 8px 4px;
+  font-size: 13px; color: var(--text3);
+}
+
+@media (max-width: 640px) {
+  .filter-btn { display: flex; }
+  .pills { display: none; } /* replaced by bottom sheet on mobile */
+}
