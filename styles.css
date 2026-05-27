@@ -1205,3 +1205,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   cursor: pointer; transition: opacity .15s;
 }
 .sheet-confirm-ok:hover { opacity: .85; }
+
+.sheet-rename-input {
+  width: 100%; margin-top: 8px;
+}
