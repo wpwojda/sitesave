@@ -821,6 +821,7 @@ function renderPills() {
 }
 
 function setFilter(f, el) {
+  updateFilterBtn();
   if (S.guestMode) return;
   S.filter = f;
   document.querySelectorAll('.sb-item').forEach(e => e.classList.remove('on'));
@@ -1083,7 +1084,7 @@ function toast(msg) {
 
 // ── KEYBOARD ──────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
+  if (e.key === 'Escape') { closeFilterSheet();
     document.getElementById('col-dropdown-list')?.classList.add('hidden');
     closePreview(); closeModal();
   }
@@ -1141,3 +1142,77 @@ window.addEventListener('resize', () => {
 });
 
 init();
+
+// ── FILTER BOTTOM SHEET ───────────────────────────────────────
+function openFilterSheet() {
+  if (S.guestMode) return;
+  renderFilterSheet();
+  document.getElementById('sheet-ov').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFilterSheet() {
+  document.getElementById('sheet-ov').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function applySheetFilter(f) {
+  S.filter = f;
+  render();
+  updateFilterBtn();
+  closeFilterSheet();
+}
+
+function updateFilterBtn() {
+  const btn = document.getElementById('filter-btn');
+  if (!btn) return;
+  const isFiltered = S.filter !== 'all';
+  btn.classList.toggle('active', isFiltered);
+}
+
+function renderFilterSheet() {
+  // Update counts
+  document.getElementById('sheet-cnt-all').textContent = BM.length;
+  document.getElementById('sheet-cnt-fav').textContent = BM.filter(b => b.fav).length;
+  document.getElementById('sheet-cnt-rec').textContent = BM.filter(b => Date.now() - b.date < 864e5 * 7).length;
+
+  // Highlight active item in Library
+  document.querySelectorAll('#filter-sheet .sheet-item[data-filter]').forEach(el => {
+    el.classList.toggle('on', el.dataset.filter === S.filter);
+  });
+
+  // Collections
+  const colEl = document.getElementById('sheet-collections');
+  const colSec = document.getElementById('sheet-collections-sec');
+  if (COLLECTIONS.length === 0) {
+    colEl.innerHTML = `<div class="sheet-empty">No collections yet.</div>`;
+  } else {
+    colEl.innerHTML = COLLECTIONS.map(col => {
+      const count = BM.filter(b => (b.collections || []).includes(col.id)).length;
+      const on = S.filter === 'col:' + col.id;
+      return `<div class="sheet-item ${on ? 'on' : ''}" onclick="applySheetFilter('col:${col.id}')">
+        <span class="sheet-ico" style="font-size:11px">▤</span>
+        ${x(col.name)}
+        <span class="sheet-n">${count}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Tags
+  const tagsEl = document.getElementById('sheet-tags');
+  const tags = allUniqueTags();
+  if (tags.length === 0) {
+    tagsEl.innerHTML = `<div class="sheet-empty">No tags yet.</div>`;
+  } else {
+    tagsEl.innerHTML = tags.map(tag => {
+      const matches = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
+      const on = S.filter.toLowerCase() === tag.toLowerCase();
+      const dotColor = matches[0]?.color || '#6b6a67';
+      return `<div class="sheet-item ${on ? 'on' : ''}" onclick="applySheetFilter('${x(tag)}')">
+        <span class="sheet-tag-dot" style="background:${dotColor}"></span>
+        ${x(tag)}
+        <span class="sheet-n">${matches.length}</span>
+      </div>`;
+    }).join('');
+  }
+}
