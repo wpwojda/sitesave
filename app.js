@@ -1159,6 +1159,20 @@ window.addEventListener('resize', () => {
   }
 });
 
+// Wire sheet overlay to close only on direct tap/click — using pointerdown
+// to avoid spurious events fired after native dialogs (confirm/prompt)
+(function() {
+  let _sheetPointerOnOv = false;
+  const sheetOv = document.getElementById('sheet-ov');
+  sheetOv.addEventListener('pointerdown', e => {
+    _sheetPointerOnOv = e.target === sheetOv;
+  });
+  sheetOv.addEventListener('pointerup', e => {
+    if (_sheetPointerOnOv && e.target === sheetOv) closeFilterSheet();
+    _sheetPointerOnOv = false;
+  });
+})();
+
 init();
 
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
@@ -1195,6 +1209,8 @@ function openFilterSheet() {
 }
 
 function closeFilterSheet() {
+  // Don't close if an inline confirm is showing
+  if (document.getElementById('sheet-confirm')) return;
   document.getElementById('sheet-ov').classList.add('hidden');
   document.body.style.overflow = '';
 }
