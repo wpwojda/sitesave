@@ -807,6 +807,7 @@ function deleteTagCategory(tag) {
   });
   if (S.filter.toLowerCase() === lower) S.filter = 'all';
   render();
+  closeFilterSheet();
   toast(`Tag "${tag}" deleted`);
 }
 
@@ -1220,7 +1221,7 @@ function renderFilterSheet() {
         <span class="sheet-tag-dot" style="background:${dotColor}"></span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(tag)}</span>
         <span class="sheet-n">${matches.length}</span>
-        <button class="sheet-action-btn sheet-action-del" title="Delete tag" onclick="event.stopPropagation();deleteTagCategory('${x(tag)}');closeFilterSheet()">✕</button>
+        <button class="sheet-action-btn sheet-action-del" title="Delete tag" onclick="event.stopPropagation();deleteTagCategory('${x(tag)}')">✕</button>
       </div>`;
     }).join('');
   }
