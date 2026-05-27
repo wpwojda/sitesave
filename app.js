@@ -796,10 +796,21 @@ async function createCollection() {
   toast(`"${col.name}" created`);
 }
 
-function deleteTagCategory(tag) {
+function deleteTagCategory(tag, skipConfirm = false) {
   const affected = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
-  const confirmed = confirm(`Delete tag "${tag}"?\n\nThis will remove it from ${affected.length} site${affected.length !== 1 ? 's' : ''}. The sites themselves will not be deleted.`);
-  if (!confirmed) return;
+  // On mobile (sheet open), use inline confirm; on desktop use native confirm
+  const sheetOpen = !document.getElementById('sheet-ov').classList.contains('hidden');
+  if (sheetOpen && !skipConfirm) {
+    showSheetConfirm(
+      `Delete tag "${tag}"?`,
+      `This will remove it from ${affected.length} site${affected.length !== 1 ? 's' : ''}. The sites themselves will not be deleted.`,
+      () => deleteTagCategory(tag, true)
+    );
+    return;
+  }
+  if (!sheetOpen && !skipConfirm) {
+    if (!confirm(`Delete tag "${tag}"?\n\nThis will remove it from ${affected.length} site${affected.length !== 1 ? 's' : ''}. The sites themselves will not be deleted.`)) return;
+  }
   const lower = tag.toLowerCase();
   affected.forEach(b => {
     b.tags = b.tags.filter(t => t.toLowerCase() !== lower);
@@ -1149,6 +1160,31 @@ window.addEventListener('resize', () => {
 });
 
 init();
+
+// ── SHEET INLINE CONFIRM ─────────────────────────────────────
+function showSheetConfirm(title, message, onConfirm) {
+  // Remove any existing confirm panel
+  document.getElementById('sheet-confirm')?.remove();
+
+  const el = document.createElement('div');
+  el.id = 'sheet-confirm';
+  el.className = 'sheet-confirm';
+  el.innerHTML = `
+    <div class="sheet-confirm-title">${x(title)}</div>
+    <div class="sheet-confirm-msg">${x(message)}</div>
+    <div class="sheet-confirm-btns">
+      <button class="sheet-confirm-cancel" onclick="document.getElementById('sheet-confirm').remove()">Cancel</button>
+      <button class="sheet-confirm-ok">Delete</button>
+    </div>`;
+
+  el.querySelector('.sheet-confirm-ok').addEventListener('click', () => {
+    el.remove();
+    onConfirm();
+  });
+
+  document.getElementById('filter-sheet').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
 
 // ── FILTER BOTTOM SHEET ───────────────────────────────────────
 function openFilterSheet() {
