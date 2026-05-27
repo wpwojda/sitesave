@@ -775,6 +775,10 @@ async function renameCollection(id) {
         <button class="sheet-confirm-cancel" onclick="document.getElementById('sheet-confirm').remove()">Cancel</button>
         <button class="sheet-confirm-ok" style="background:var(--accent)">Save</button>
       </div>`;
+    // Stop clicks bubbling to the overlay
+    el.addEventListener('click', e => e.stopPropagation());
+
+    el.querySelector('.sheet-confirm-cancel').addEventListener('click', () => el.remove());
     el.querySelector('.sheet-confirm-ok').addEventListener('click', async () => {
       const val = el.querySelector('input').value.trim();
       if (!val || val === col.name) { el.remove(); return; }
@@ -789,7 +793,9 @@ async function renameCollection(id) {
       if (e.key === 'Enter') el.querySelector('.sheet-confirm-ok').click();
       if (e.key === 'Escape') el.remove();
     });
-    document.getElementById('filter-sheet').appendChild(el);
+    const sheet = document.getElementById('filter-sheet');
+    sheet.prepend(el);
+    sheet.scrollTop = 0;
     setTimeout(() => el.querySelector('input').focus(), 50);
     return;
   }
@@ -1214,7 +1220,6 @@ init();
 
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
 function showSheetConfirm(title, message, onConfirm) {
-  // Remove any existing confirm panel
   document.getElementById('sheet-confirm')?.remove();
 
   const el = document.createElement('div');
@@ -1224,17 +1229,23 @@ function showSheetConfirm(title, message, onConfirm) {
     <div class="sheet-confirm-title">${x(title)}</div>
     <div class="sheet-confirm-msg">${x(message)}</div>
     <div class="sheet-confirm-btns">
-      <button class="sheet-confirm-cancel" onclick="document.getElementById('sheet-confirm').remove()">Cancel</button>
+      <button class="sheet-confirm-cancel">Cancel</button>
       <button class="sheet-confirm-ok">Delete</button>
     </div>`;
 
+  // Stop ALL clicks inside the confirm panel bubbling to the overlay
+  el.addEventListener('click', e => e.stopPropagation());
+
+  el.querySelector('.sheet-confirm-cancel').addEventListener('click', () => el.remove());
   el.querySelector('.sheet-confirm-ok').addEventListener('click', () => {
     el.remove();
     onConfirm();
   });
 
-  document.getElementById('filter-sheet').appendChild(el);
-  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  // Prepend so it appears at the top of the sheet, not the bottom
+  const sheet = document.getElementById('filter-sheet');
+  sheet.prepend(el);
+  sheet.scrollTop = 0;
 }
 
 // ── FILTER BOTTOM SHEET ───────────────────────────────────────
