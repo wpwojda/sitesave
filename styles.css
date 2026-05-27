@@ -1174,10 +1174,9 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* ── SHEET INLINE CONFIRM ────────────────────────────────────── */
 .sheet-confirm {
-  margin: 12px 12px 0;
-  padding: 14px 16px;
-  background: var(--bg2); border: 1px solid var(--border-md);
-  border-radius: 10px;
+  margin: 0 0 2px;
+  padding: 16px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border-md);
   animation: mu .15s ease;
 }
 .sheet-confirm-title {
