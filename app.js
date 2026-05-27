@@ -1192,8 +1192,10 @@ function renderFilterSheet() {
       const on = S.filter === 'col:' + col.id;
       return `<div class="sheet-item ${on ? 'on' : ''}" onclick="applySheetFilter('col:${col.id}')">
         <span class="sheet-ico" style="font-size:11px">▤</span>
-        ${x(col.name)}
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(col.name)}</span>
         <span class="sheet-n">${count}</span>
+        <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}');closeFilterSheet()">✎</button>
+        <button class="sheet-action-btn sheet-action-del" title="Delete" onclick="event.stopPropagation();deleteCollection('${col.id}');closeFilterSheet()">✕</button>
       </div>`;
     }).join('');
   }
@@ -1210,8 +1212,9 @@ function renderFilterSheet() {
       const dotColor = matches[0]?.color || '#6b6a67';
       return `<div class="sheet-item ${on ? 'on' : ''}" onclick="applySheetFilter('${x(tag)}')">
         <span class="sheet-tag-dot" style="background:${dotColor}"></span>
-        ${x(tag)}
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(tag)}</span>
         <span class="sheet-n">${matches.length}</span>
+        <button class="sheet-action-btn sheet-action-del" title="Delete tag" onclick="event.stopPropagation();deleteTagCategory('${x(tag)}');closeFilterSheet()">✕</button>
       </div>`;
     }).join('');
   }
