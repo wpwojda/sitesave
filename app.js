@@ -1219,6 +1219,43 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
   if (!e.target.closest('#filter-sheet')) closeFilterSheet();
 });
 
+// ── SHEET DRAG TO CLOSE ───────────────────────────────────────
+(function() {
+  const sheet = document.getElementById('filter-sheet');
+  let startY = 0, dragY = 0, dragging = false;
+  const THRESHOLD = 120;
+
+  sheet.addEventListener('touchstart', e => {
+    // Only drag from the handle or sheet title area
+    if (!e.target.closest('.sheet-handle, .sheet-title')) return;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    sheet.style.transition = 'none';
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    dragY = Math.max(0, e.touches[0].clientY - startY);
+    sheet.style.transform = `translateY(${dragY}px)`;
+  }, { passive: true });
+
+  sheet.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    sheet.style.transition = '';
+    if (dragY > THRESHOLD) {
+      sheet.style.transform = `translateY(100%)`;
+      setTimeout(() => {
+        sheet.style.transform = '';
+        closeFilterSheet();
+      }, 250);
+    } else {
+      sheet.style.transform = '';
+    }
+    dragY = 0;
+  });
+})();
+
 init();
 
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
