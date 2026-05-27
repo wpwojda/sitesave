@@ -320,7 +320,7 @@ async function dbDelete(id) {
 async function loadCollections() {
   const { data, error } = await sb
     .from('collections')
-    .select('*')
+    .select('id, name, color, created_at, share_token')
     .order('created_at', { ascending: true });
   if (error) { console.error(error); return; }
   COLLECTIONS = data || [];
@@ -343,6 +343,19 @@ async function dbRenameCollection(id, name) {
 async function dbDeleteCollection(id) {
   const { error } = await sb.from('collections').delete().eq('id', id);
   if (error) { toast('Error deleting collection'); console.error(error); }
+}
+
+async function dbEnableSharing(id) {
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(18)))
+    .map(b => b.toString(36).padStart(2,'0')).join('').slice(0, 24);
+  const { error } = await sb.from('collections').update({ share_token: token }).eq('id', id);
+  if (error) { toast('Error enabling sharing'); console.error(error); return null; }
+  return token;
+}
+
+async function dbDisableSharing(id) {
+  const { error } = await sb.from('collections').update({ share_token: null }).eq('id', id);
+  if (error) { toast('Error revoking link'); console.error(error); }
 }
 
 async function dbSetBookmarkCollections(bookmarkId, collectionIds) {
@@ -698,7 +711,7 @@ function renderSidebar() {
       <span class="sb-tag-row">
         <span class="sb-lbl">
           <span class="sb-ico" style="font-size:11px">▤</span>
-          ${x(col.name)}
+          ${x(col.name)}${col.share_token ? '<span class="col-shared-dot" title="Shared"></span>' : ''}
         </span>
         <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <span class="sb-n">${count}</span>
@@ -714,6 +727,11 @@ function renderSidebar() {
             </button>
             <div class="col-dropdown hidden" id="col-dd-${col.id}">
               <button onclick="event.stopPropagation();renameCollection('${col.id}')">Rename</button>
+              ${col.share_token
+                ? `<button onclick="event.stopPropagation();copyShareLink('${col.share_token}')">Copy link</button>
+                   <button class="col-dd-danger" onclick="event.stopPropagation();revokeSharing('${col.id}')">Revoke link</button>`
+                : `<button onclick="event.stopPropagation();enableSharing('${col.id}')">Share</button>`
+              }
               <button class="col-dd-danger" onclick="event.stopPropagation();deleteCollection('${col.id}')">Delete</button>
             </div>
           </div>
@@ -835,6 +853,34 @@ async function deleteCollection(id) {
     renderFilterSheet();
   }
   toast(`"${col.name}" deleted`);
+}
+
+async function enableSharing(id) {
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  const col = COLLECTIONS.find(c => c.id === id);
+  if (!col) return;
+  const token = await dbEnableSharing(id);
+  if (!token) return;
+  col.share_token = token;
+  render();
+  copyShareLink(token);
+  toast('Sharing enabled — link copied');
+}
+
+async function revokeSharing(id) {
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  const col = COLLECTIONS.find(c => c.id === id);
+  if (!col) return;
+  if (!confirm('Revoke the share link? Anyone with the current link will no longer be able to view this collection.')) return;
+  await dbDisableSharing(id);
+  col.share_token = null;
+  render();
+  toast('Share link revoked');
+}
+
+function copyShareLink(token) {
+  const url = `${location.origin}/share.html?c=${token}`;
+  navigator.clipboard.writeText(url).then(() => toast('Link copied to clipboard'));
 }
 
 async function createCollection() {
@@ -1350,6 +1396,10 @@ function renderFilterSheet() {
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(col.name)}</span>
         <span class="sheet-n">${count}</span>
         <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}')">✎</button>
+        ${col.share_token
+          ? `<button class="sheet-action-btn" title="Copy link" onclick="event.stopPropagation();copyShareLink('${col.share_token}')">⎘</button>`
+          : `<button class="sheet-action-btn" title="Share" onclick="event.stopPropagation();enableSharing('${col.id}')">↗</button>`
+        }
         <button class="sheet-action-btn sheet-action-del" title="Delete" onclick="event.stopPropagation();deleteCollectionFromSheet('${col.id}')">✕</button>
       </div>`;
     }).join('');
