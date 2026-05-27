@@ -75,6 +75,14 @@
     </div>
     <div class="sb-div"></div>
     <div class="sb-sec">
+      <div class="sb-hd-row">
+        <div class="sb-hd" style="margin-bottom:0">Collections</div>
+        <button class="sb-add-btn" onclick="createCollection()" title="New collection">+</button>
+      </div>
+      <div id="sb-collections"></div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">
       <div class="sb-hd">Tags</div>
       <div id="sb-tags"></div>
     </div>
@@ -201,6 +209,10 @@
                onkeydown="handleTagKey(event)" list="tag-dl">
         <datalist id="tag-dl"></datalist>
       </div>
+    </div>
+    <div class="fg">
+      <label class="flabel">Collections</label>
+      <div class="col-select-wrap" id="col-select-wrap"></div>
     </div>
     <div class="fg">
       <label class="flabel">Label colour</label>
