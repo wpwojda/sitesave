@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /share.html
+
+Sitemap: https://sitesave.co.uk/sitemap.xml
