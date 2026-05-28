@@ -1312,18 +1312,20 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 
 .landing-benefits {
-  display: flex; gap: 28px; flex-wrap: wrap;
+  display: flex; gap: 40px; flex-wrap: wrap;
   justify-content: center;
 }
 
 .landing-benefit {
-  display: flex; align-items: center; gap: 7px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; text-align: center;
   font-size: 16px; color: var(--text2); line-height: 1.4;
   transition: var(--trans);
+  max-width: 180px;
 }
 
 .landing-benefit-icon {
-  font-size: 14px; flex-shrink: 0;
+  font-size: 24px; line-height: 1;
 }
 
 .landing-cards-wrap {
@@ -1375,7 +1377,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .landing-hero { padding-top: 44px; }
   .landing-headline { font-size: 32px; }
   .landing-body { font-size: 15px; }
-  .landing-benefits { flex-direction: column; align-items: center; gap: 10px; }
+  .landing-benefits { gap: 24px; }
+  .landing-benefit { max-width: 140px; font-size: 14px; }
+  /* Match signed-in card size — single column, no aspect ratio override */
   .landing-cards { grid-template-columns: 1fr !important; }
-  .landing-cards-wrap { margin-top: 48px; }
+  .landing-cards .card-thumb { aspect-ratio: unset; }
+  .landing-cards-wrap { margin-top: 48px; padding: 0; }
 }
