@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sitesave — Shared Collection</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="description" content="A curated collection of sites, shared via Sitesave.">
+<meta property="og:title" content="Sitesave — Shared Collection">
+<meta property="og:description" content="A curated collection of sites, shared via Sitesave.">
+<meta property="og:url" content="https://sitesave.co.uk/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sitesave — Shared Collection">
+<meta name="twitter:description" content="A curated collection of sites, shared via Sitesave.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -165,6 +174,8 @@ async function init() {
 
 function showMeta(name, count) {
   document.title = `${name} — Sitesave`;
+  document.querySelector('meta[property="og:title"]').setAttribute('content', `${name} — Sitesave`);
+  document.querySelector('meta[name="twitter:title"]').setAttribute('content', `${name} — Sitesave`);
   document.getElementById('share-title').textContent = name;
   document.getElementById('share-count').textContent = `${count} site${count !== 1 ? 's' : ''}`;
   document.getElementById('share-meta').style.display = '';
