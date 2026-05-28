@@ -102,18 +102,24 @@ function enterGuest() {
   BM = [...PLACEHOLDERS];
   document.getElementById('btn-save-site').classList.add('hidden');
   document.getElementById('user-menu').classList.add('hidden');
-  document.getElementById('btn-sign-in').classList.remove('hidden');
+  const signInBtn = document.getElementById('btn-sign-in');
+  signInBtn.classList.remove('hidden');
+  // Show 'Sign in' for returning users, 'Start saving' for new visitors
+  const returning = localStorage.getItem('sitesave-returning');
+  signInBtn.textContent = returning ? 'Sign in' : 'Start saving';
   S.guestMode = true;
   buildColors();
-  render();
+  showLanding();
 }
 
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
+  localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
   document.getElementById('user-menu').classList.remove('hidden');
+  hideLanding();
   updateUserAvatar();
   await loadCollections();
   await loadBookmarks();
@@ -398,6 +404,19 @@ function visible() {
   return list;
 }
 
+// ── LANDING SCREEN ───────────────────────────────────────────
+function showLanding() {
+  document.getElementById('app-shell').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  // Still render cards in the background for the card strip preview
+  render();
+}
+
+function hideLanding() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('app-shell').classList.remove('hidden');
+}
+
 // ── RENDER ────────────────────────────────────────────────────
 function render() {
   renderSidebar();
@@ -459,9 +478,16 @@ function renderCards() {
   }
 
   const cards = list.map((b, i) => card(b, i)).join('');
-  const prompt = S.guestMode ? signupPromptCard() : '';
-  g.innerHTML = cards + prompt;
+  g.innerHTML = cards;
   list.forEach(b => loadScreenshot(b.id, b.url));
+  // If in guest mode, also populate the landing card strip (fully interactive)
+  if (S.guestMode) {
+    const strip = document.getElementById('landing-cards');
+    if (strip) {
+      strip.innerHTML = cards;
+      list.forEach(b => loadScreenshot(b.id, b.url));
+    }
+  }
 }
 
 // ── SIGNUP PROMPT CARD ────────────────────────────────────────
@@ -703,6 +729,12 @@ function renderSidebar() {
 
   // ── Collections section
   const colEl = document.getElementById('sb-collections');
+  if (COLLECTIONS.length === 0) {
+    colEl.innerHTML = `<div class="sb-empty-hint">
+      Group your saved sites into collections and share them with others.
+      <button class="sb-empty-create" onclick="createCollection()">Create your first collection</button>
+    </div>`;
+  } else {
   colEl.innerHTML = COLLECTIONS.map(col => {
     const count = BM.filter(b => (b.collections || []).includes(col.id)).length;
     const on = S.filter === 'col:' + col.id;
@@ -739,6 +771,7 @@ function renderSidebar() {
       </span>
     </div>`;
   }).join('');
+  } // end collections else
 
   // ── Tags section
   const allTags = allUniqueTags();
@@ -958,6 +991,11 @@ function openModal(id = null) {
   modalTags = [];
   modalCollections = [];
   document.getElementById('m-title').textContent = id ? 'Edit site' : 'Save a site';
+  // Show first-time collections tooltip if user has collections and hasn't seen it yet
+  const hasSeenTip = localStorage.getItem('sitesave-col-tip');
+  if (!hasSeenTip && COLLECTIONS.length > 0 && !id) {
+    setTimeout(() => showCollectionTip(), 400);
+  }
   if (id) {
     const b = BM.find(b => b.id == id);
     document.getElementById('f-url').value  = b.url;
@@ -975,6 +1013,18 @@ function openModal(id = null) {
   buildColors();
   document.getElementById('m-ov').classList.remove('hidden');
   setTimeout(() => document.getElementById('f-url').focus(), 80);
+}
+
+function showCollectionTip() {
+  const wrap = document.getElementById('col-select-wrap');
+  if (!wrap || document.getElementById('col-tip')) return;
+  localStorage.setItem('sitesave-col-tip', 'true');
+  const tip = document.createElement('div');
+  tip.id = 'col-tip';
+  tip.className = 'col-tip';
+  tip.textContent = 'New — add this site to a collection';
+  wrap.appendChild(tip);
+  setTimeout(() => tip?.remove(), 3500);
 }
 
 function closeModal() {
@@ -1386,7 +1436,10 @@ function renderFilterSheet() {
   const colEl = document.getElementById('sheet-collections');
   const colSec = document.getElementById('sheet-collections-sec');
   if (COLLECTIONS.length === 0) {
-    colEl.innerHTML = `<div class="sheet-empty">No collections yet.</div>`;
+    colEl.innerHTML = `<div class="sheet-empty">
+      Group your saved sites into collections and share them with others.
+      <button class="col-inline-create" style="display:block;margin-top:8px" onclick="createCollection()">Create your first collection</button>
+    </div>`;
   } else {
     colEl.innerHTML = COLLECTIONS.map(col => {
       const count = BM.filter(b => (b.collections || []).includes(col.id)).length;
