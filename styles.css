@@ -25,7 +25,7 @@
   --border:    rgba(255,255,255,.08);
   --border-md: rgba(255,255,255,.14);
   --text:      #f0eeea;
-  --text2:     #8a8880;
+  --text2:     #9e9c98;
   --text3:     #7d7d7d;
   --accent:    #8585ff;
   --accent-fg: #0f0f0e;
@@ -1252,4 +1252,130 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   width: 6px; height: 6px; border-radius: 50%;
   background: #16a34a; flex-shrink: 0;
   display: inline-block; margin-left: 2px;
+}
+
+/* ── LANDING SCREEN ──────────────────────────────────────────── */
+.landing {
+  min-height: calc(100vh - 56px);
+  padding: 0 24px 100px;
+}
+
+.landing-hero {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-top: 80px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-eyebrow {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 20px;
+  transition: var(--trans);
+}
+
+.landing-headline {
+  font-size: 52px; font-weight: 600; letter-spacing: -.05em;
+  line-height: 1.08; color: var(--text);
+  margin-bottom: 24px; transition: var(--trans);
+}
+
+.landing-body {
+  font-size: 18px; color: var(--text2); line-height: 1.75;
+  margin-bottom: 36px; max-width: 520px;
+  transition: var(--trans);
+}
+
+.landing-actions {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; margin-bottom: 48px;
+}
+
+.landing-cta {
+  height: 46px; padding: 0 26px;
+  font-size: 15px; gap: 8px;
+}
+
+.landing-signin-hint {
+  font-size: 15px; color: var(--text2);
+  transition: var(--trans); margin: 0;
+}
+
+.landing-signin-link {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Geist', sans-serif; font-size: inherit;
+  color: var(--accent); padding: 0;
+  text-decoration: underline;
+}
+
+.landing-benefits {
+  display: flex; gap: 28px; flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-benefit {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 16px; color: var(--text2); line-height: 1.4;
+  transition: var(--trans);
+}
+
+.landing-benefit-icon {
+  font-size: 14px; flex-shrink: 0;
+}
+
+.landing-cards-wrap {
+  max-width: 1400px;
+  margin: 72px auto 0;
+  padding: 0 32px;
+}
+
+.landing-preview-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 16px; text-align: center;
+  transition: var(--trans);
+}
+
+.landing-cards {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+.landing-cards .card-thumb {
+  aspect-ratio: 16 / 10;
+}
+
+/* ── SIDEBAR COLLECTIONS EMPTY STATE ─────────────────────────── */
+.sb-empty-hint {
+  font-size: 12px; color: var(--text3);
+  line-height: 1.6; padding: 4px 8px 8px;
+  transition: var(--trans);
+}
+
+.sb-empty-create {
+  display: inline-block; margin-top: 8px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'Geist', sans-serif; font-size: 12px;
+  color: var(--accent); padding: 0;
+  text-decoration: underline; text-align: left;
+}
+
+/* ── COLLECTIONS TOOLTIP IN MODAL ────────────────────────────── */
+.col-tip {
+  margin-top: 6px; padding: 7px 10px;
+  background: var(--accent); color: var(--accent-fg);
+  border-radius: 6px; font-size: 12px;
+  animation: mu .2s ease;
+}
+
+/* ── LANDING MOBILE ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .landing { padding: 0 20px 60px; }
+  .landing-hero { padding-top: 44px; }
+  .landing-headline { font-size: 32px; }
+  .landing-body { font-size: 15px; }
+  .landing-benefits { flex-direction: column; align-items: center; gap: 10px; }
+  .landing-cards { grid-template-columns: 1fr !important; }
+  .landing-cards-wrap { margin-top: 48px; }
 }
