@@ -1,4 +1,3 @@
-Content is user-generated and unverified.
 /* ── TOKENS ─────────────────────────────────────────────────── */
 :root {
   --bg:        #f7f6f4;
@@ -878,9 +877,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   }
   .preview-url { display: none; }
   .preview-title { font-size: 13px; }
-  .preview-btn-primary { height: 44px; padding: 0 16px; font-size: 14px; }
-  .preview-btn { height: 44px; padding: 0 16px; font-size: 14px; }
-  .preview-btn-secondary { height: 44px; padding: 0 14px; font-size: 14px; }
+  .preview-btn-primary { padding: 0 10px; font-size: 12px; }
+  .preview-btn { padding: 0 10px; font-size: 12px; }
   .close-btn { font-size: 0; width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .close-btn::before { content: '✕'; font-size: 16px; line-height: 1; }
 
@@ -904,8 +902,9 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .pill               { height: 38px; padding: 0 14px; }
   .sb-item            { min-height: 38px; padding: 10px 8px; }
   .signout-btn        { height: 38px; }
-  .preview-btn        { height: 38px; padding: 0 14px; }
-  .preview-btn-primary{ height: 38px; padding: 0 14px; }
+  .preview-btn        { height: 44px; padding: 0 16px; font-size: 14px; }
+  .preview-btn-primary{ height: 44px; padding: 0 16px; font-size: 14px; }
+  .preview-btn-secondary { height: 44px; padding: 0 14px; font-size: 14px; }
   .ca                 { width: 38px; height: 40px; }
   .user-avatar        { width: 38px; height: 38px; aspect-ratio: 1 / 1; }
   .finput             { height: 38px; }
@@ -1108,8 +1107,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 .sheet-hd {
   font-family: 'Geist Mono', monospace;
-  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--text2); padding: 0 8px; margin-bottom: 4px;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text3); padding: 0 8px; margin-bottom: 4px;
   transition: var(--trans);
 }
 
@@ -1119,7 +1118,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .sheet-add-btn {
   background: none; border: none; cursor: pointer;
-  font-family: 'Geist Mono', monospace; font-size: 12px;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
   letter-spacing: .08em; color: var(--accent);
   padding: 0; transition: opacity .15s;
 }
@@ -1139,14 +1138,14 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   color: var(--text); font-weight: 500;
 }
 
-.sheet-ico { color: var(--text2); font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.sheet-ico { color: var(--text3); font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
 .sheet-item.on .sheet-ico { color: var(--text); }
 
 .sheet-n {
   margin-left: auto; flex-shrink: 0;
-  font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text2);
+  font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text3);
 }
-.sheet-item.on .sheet-n { color: var(--text); }
+.sheet-item.on .sheet-n { color: var(--text2); }
 
 .sheet-tag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: .7; }
 
@@ -1157,7 +1156,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 .sheet-empty {
   padding: 8px 8px 4px;
-  font-size: 14px; color: var(--text2);
+  font-size: 13px; color: var(--text3);
 }
 
 @media (max-width: 640px) {
@@ -1167,10 +1166,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* ── SHEET ACTION BUTTONS ────────────────────────────────────── */
 .sheet-action-btn {
-  width: 34px; height: 34px; border-radius: 5px; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 5px; flex-shrink: 0;
   background: none; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: var(--text2); font-size: 16px;
+  color: var(--text3); font-size: 13px;
   transition: color .15s, background .15s;
 }
 .sheet-action-btn:hover { color: var(--text); background: var(--bg2); }
