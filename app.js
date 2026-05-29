@@ -218,9 +218,13 @@ document.addEventListener('click', e => {
   if (menu && !menu.contains(e.target)) {
     document.getElementById('user-dropdown')?.classList.add('hidden');
   }
-  // Close collection menu if clicking outside
+  // Close sidebar collection menu if clicking outside
   if (!e.target.closest('.col-menu-wrap')) {
     document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
+  }
+  // Close modal collection dropdown if clicking outside it
+  if (!e.target.closest('.col-dropdown-box')) {
+    document.getElementById('col-dropdown-list')?.classList.add('hidden');
   }
 });
 
