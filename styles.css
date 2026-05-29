@@ -1166,10 +1166,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* ── SHEET ACTION BUTTONS ────────────────────────────────────── */
 .sheet-action-btn {
-  width: 28px; height: 28px; border-radius: 5px; flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 5px; flex-shrink: 0;
   background: none; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: var(--text3); font-size: 13px;
+  color: var(--text2); font-size: 16px;
   transition: color .15s, background .15s;
 }
 .sheet-action-btn:hover { color: var(--text); background: var(--bg2); }
