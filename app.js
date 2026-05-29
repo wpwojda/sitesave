@@ -382,13 +382,6 @@ function visible() {
 
   if      (S.filter === 'fav')    list = list.filter(b => b.fav);
   else if (S.filter === 'recent') list = list.filter(b => Date.now() - b.date < 864e5 * 7);
-  else if (S.filter === 'month') {
-    const now = new Date();
-    list = list.filter(b => {
-      const d = new Date(b.date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-  }
   else if (S.filter.startsWith('col:')) {
     const colId = S.filter.slice(4);
     list = list.filter(b => (b.collections || []).includes(colId));
@@ -434,7 +427,7 @@ function render() {
 function renderCards() {
   const list = visible();
   const g = document.getElementById('grid');
-  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Last 7 days', month: 'This month' };
+  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Recent' };
 
   let title = TITLES[S.filter];
   if (!title && S.filter.startsWith('col:')) {
@@ -453,28 +446,10 @@ function renderCards() {
     const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
 
     if (isFiltered) {
-      let emptyIcon = '◫';
-      let emptyTitle = 'No sites found';
-      let emptySub = 'Try a different search or filter.';
-
-      if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
-        emptyIcon = '♡';
-        emptyTitle = 'No favourites yet';
-        emptySub = 'Tap the ♥ on any card to save it here.';
-      } else if (S.filter === 'recent' && !document.getElementById('q').value.trim()) {
-        emptyIcon = '◷';
-        emptyTitle = 'Nothing saved in the last 7 days';
-        emptySub = 'Sites you save will appear here for 7 days.';
-      } else if (S.filter === 'month' && !document.getElementById('q').value.trim()) {
-        emptyIcon = '◈';
-        emptyTitle = 'Nothing saved this month';
-        emptySub = 'Sites you save this month will appear here.';
-      }
-
       g.innerHTML = `<div class="empty" style="grid-column:1/-1">
-        <div class="empty-icon">${emptyIcon}</div>
-        <div class="empty-title">${emptyTitle}</div>
-        <div class="empty-sub">${emptySub}</div>
+        <div class="empty-icon">◫</div>
+        <div class="empty-title">No sites found</div>
+        <div class="empty-sub">Try a different search or filter.</div>
       </div>`;
     } else {
       g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
@@ -740,14 +715,11 @@ function renderSidebar() {
     : {
         all: BM.length,
         fav: BM.filter(b => b.fav).length,
-        rec: BM.filter(b => Date.now() - b.date < 864e5 * 7).length,
-    month: (() => { const now = new Date(); return BM.filter(b => { const d = new Date(b.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length; })()
+        rec: BM.filter(b => Date.now() - b.date < 864e5 * 7).length
       };
   document.getElementById('cnt-all').textContent = counts.all;
   document.getElementById('cnt-fav').textContent = counts.fav;
   document.getElementById('cnt-rec').textContent = counts.rec;
-  const cntMonth = document.getElementById('cnt-month');
-  if (cntMonth) cntMonth.textContent = counts.month;
 
   if (S.guestMode) {
     document.getElementById('sb-tags').innerHTML = '';
@@ -993,7 +965,7 @@ function allUniqueTags() {
 // ── PILLS ─────────────────────────────────────────────────────
 function renderPills() {
   const tags = S.guestMode ? [] : allUniqueTags();
-  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }, { l: '◷ Last 7 days', v: 'recent' }, { l: '◈ This month', v: 'month' }];
+  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }];
   const all  = [...base, ...tags.map(t => ({ l: t, v: t }))];
   document.getElementById('pills').innerHTML = all.map(p =>
     `<div class="pill ${S.filter === p.v ? 'on' : ''}" onclick="setFilter('${p.v}', null)">${x(p.l)}</div>`
@@ -1454,10 +1426,6 @@ function renderFilterSheet() {
   document.getElementById('sheet-cnt-all').textContent = BM.length;
   document.getElementById('sheet-cnt-fav').textContent = BM.filter(b => b.fav).length;
   document.getElementById('sheet-cnt-rec').textContent = BM.filter(b => Date.now() - b.date < 864e5 * 7).length;
-  const now = new Date();
-  const monthCount = BM.filter(b => { const d = new Date(b.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
-  const sheetMonth = document.getElementById('sheet-cnt-month');
-  if (sheetMonth) sheetMonth.textContent = monthCount;
 
   // Highlight active item in Library
   document.querySelectorAll('#filter-sheet .sheet-item[data-filter]').forEach(el => {
@@ -1480,10 +1448,22 @@ function renderFilterSheet() {
         <span class="sheet-ico" style="font-size:11px">▤</span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(col.name)}</span>
         <span class="sheet-n">${count}</span>
-        <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}')">✎</button>
+        <button class="sheet-action-btn" title="Rename" onclick="event.stopPropagation();renameCollection('${col.id}')">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.5 1.5l3 3-9 9H1.5v-3l9-9z"/>
+          </svg>
+        </button>
         ${col.share_token
-          ? `<button class="sheet-action-btn" title="Copy link" onclick="event.stopPropagation();copyShareLink('${col.share_token}')">⎘</button>`
-          : `<button class="sheet-action-btn" title="Share" onclick="event.stopPropagation();enableSharing('${col.id}')">↗</button>`
+          ? `<button class="sheet-action-btn" title="Copy link" onclick="event.stopPropagation();copyShareLink('${col.share_token}')">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2h4v4M8.5 6.5l4.5-4.5M6 3H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V9"/>
+              </svg>
+             </button>`
+          : `<button class="sheet-action-btn" title="Share" onclick="event.stopPropagation();enableSharing('${col.id}')">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2h4v4M8.5 6.5l4.5-4.5M6 3H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V9"/>
+              </svg>
+             </button>`
         }
         <button class="sheet-action-btn sheet-action-del" title="Delete" onclick="event.stopPropagation();deleteCollectionFromSheet('${col.id}')">✕</button>
       </div>`;
