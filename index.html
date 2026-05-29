@@ -119,8 +119,12 @@
         <span class="sb-n" id="cnt-fav">0</span>
       </div>
       <div class="sb-item" onclick="setFilter('recent', this)">
-        <span class="sb-lbl"><span class="sb-ico">◷</span>Recent</span>
+        <span class="sb-lbl"><span class="sb-ico">◷</span>Last 7 days</span>
         <span class="sb-n" id="cnt-rec">0</span>
+      </div>
+      <div class="sb-item" onclick="setFilter('month', this)">
+        <span class="sb-lbl"><span class="sb-ico">◈</span>This month</span>
+        <span class="sb-n" id="cnt-month">0</span>
       </div>
     </div>
     <div class="sb-div"></div>
@@ -301,8 +305,12 @@
         <span class="sheet-n" id="sheet-cnt-fav">0</span>
       </div>
       <div class="sheet-item" data-filter="recent" onclick="applySheetFilter('recent')">
-        <span class="sheet-ico">◷</span> Recent
+        <span class="sheet-ico">◷</span> Last 7 days
         <span class="sheet-n" id="sheet-cnt-rec">0</span>
+      </div>
+      <div class="sheet-item" data-filter="month" onclick="applySheetFilter('month')">
+        <span class="sheet-ico">◈</span> This month
+        <span class="sheet-n" id="sheet-cnt-month">0</span>
       </div>
     </div>
 
