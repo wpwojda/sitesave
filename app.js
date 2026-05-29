@@ -382,6 +382,13 @@ function visible() {
 
   if      (S.filter === 'fav')    list = list.filter(b => b.fav);
   else if (S.filter === 'recent') list = list.filter(b => Date.now() - b.date < 864e5 * 7);
+  else if (S.filter === 'month') {
+    const now = new Date();
+    list = list.filter(b => {
+      const d = new Date(b.date);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+  }
   else if (S.filter.startsWith('col:')) {
     const colId = S.filter.slice(4);
     list = list.filter(b => (b.collections || []).includes(colId));
@@ -427,7 +434,7 @@ function render() {
 function renderCards() {
   const list = visible();
   const g = document.getElementById('grid');
-  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Recent' };
+  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Last 7 days', month: 'This month' };
 
   let title = TITLES[S.filter];
   if (!title && S.filter.startsWith('col:')) {
@@ -446,10 +453,28 @@ function renderCards() {
     const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
 
     if (isFiltered) {
+      let emptyIcon = '◫';
+      let emptyTitle = 'No sites found';
+      let emptySub = 'Try a different search or filter.';
+
+      if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '♡';
+        emptyTitle = 'No favourites yet';
+        emptySub = 'Tap the ♥ on any card to save it here.';
+      } else if (S.filter === 'recent' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '◷';
+        emptyTitle = 'Nothing saved in the last 7 days';
+        emptySub = 'Sites you save will appear here for 7 days.';
+      } else if (S.filter === 'month' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '◈';
+        emptyTitle = 'Nothing saved this month';
+        emptySub = 'Sites you save this month will appear here.';
+      }
+
       g.innerHTML = `<div class="empty" style="grid-column:1/-1">
-        <div class="empty-icon">◫</div>
-        <div class="empty-title">No sites found</div>
-        <div class="empty-sub">Try a different search or filter.</div>
+        <div class="empty-icon">${emptyIcon}</div>
+        <div class="empty-title">${emptyTitle}</div>
+        <div class="empty-sub">${emptySub}</div>
       </div>`;
     } else {
       g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
@@ -715,11 +740,14 @@ function renderSidebar() {
     : {
         all: BM.length,
         fav: BM.filter(b => b.fav).length,
-        rec: BM.filter(b => Date.now() - b.date < 864e5 * 7).length
+        rec: BM.filter(b => Date.now() - b.date < 864e5 * 7).length,
+    month: (() => { const now = new Date(); return BM.filter(b => { const d = new Date(b.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length; })()
       };
   document.getElementById('cnt-all').textContent = counts.all;
   document.getElementById('cnt-fav').textContent = counts.fav;
   document.getElementById('cnt-rec').textContent = counts.rec;
+  const cntMonth = document.getElementById('cnt-month');
+  if (cntMonth) cntMonth.textContent = counts.month;
 
   if (S.guestMode) {
     document.getElementById('sb-tags').innerHTML = '';
@@ -965,7 +993,7 @@ function allUniqueTags() {
 // ── PILLS ─────────────────────────────────────────────────────
 function renderPills() {
   const tags = S.guestMode ? [] : allUniqueTags();
-  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }];
+  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }, { l: '◷ Last 7 days', v: 'recent' }, { l: '◈ This month', v: 'month' }];
   const all  = [...base, ...tags.map(t => ({ l: t, v: t }))];
   document.getElementById('pills').innerHTML = all.map(p =>
     `<div class="pill ${S.filter === p.v ? 'on' : ''}" onclick="setFilter('${p.v}', null)">${x(p.l)}</div>`
@@ -1426,6 +1454,10 @@ function renderFilterSheet() {
   document.getElementById('sheet-cnt-all').textContent = BM.length;
   document.getElementById('sheet-cnt-fav').textContent = BM.filter(b => b.fav).length;
   document.getElementById('sheet-cnt-rec').textContent = BM.filter(b => Date.now() - b.date < 864e5 * 7).length;
+  const now = new Date();
+  const monthCount = BM.filter(b => { const d = new Date(b.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
+  const sheetMonth = document.getElementById('sheet-cnt-month');
+  if (sheetMonth) sheetMonth.textContent = monthCount;
 
   // Highlight active item in Library
   document.querySelectorAll('#filter-sheet .sheet-item[data-filter]').forEach(el => {
