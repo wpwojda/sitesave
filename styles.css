@@ -877,10 +877,11 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   }
   .preview-url { display: none; }
   .preview-title { font-size: 13px; }
-  .preview-btn-primary { padding: 0 10px; font-size: 12px; }
-  .preview-btn { padding: 0 10px; font-size: 12px; }
-  .close-btn { font-size: 0; width: 36px; padding: 0; display: flex; align-items: center; justify-content: center; }
-  .close-btn::before { content: '✕'; font-size: 14px; }
+  .preview-btn-primary { height: 44px; padding: 0 16px; font-size: 14px; }
+  .preview-btn { height: 44px; padding: 0 16px; font-size: 14px; }
+  .preview-btn-secondary { height: 44px; padding: 0 14px; font-size: 14px; }
+  .close-btn { font-size: 0; width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .close-btn::before { content: '✕'; font-size: 16px; line-height: 1; }
 
   /* Save modal — full width bottom sheet */
   .m-ov {
