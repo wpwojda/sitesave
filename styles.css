@@ -546,14 +546,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .tag-bare-input::placeholder { color: var(--text3); }
 
-.c-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.c-chip {
-  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
-  border: 2px solid transparent; transition: transform .11s;
-  outline: 2px solid transparent; outline-offset: 2px;
-}
-.c-chip:hover { transform: scale(1.15); }
-.c-chip.on { outline-color: var(--text); }
+
 
 .m-foot { display: flex; justify-content: flex-end; gap: 7px; margin-top: 18px; }
 .btn-ghost {
