@@ -56,10 +56,7 @@ let COLLECTIONS = []; // { id, name, color, created_at }
 let CURRENT_USER = null;
 let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 
-const COLORS = [
-  '#111110','#6b6a67','#a5a39e','#c0392b',
-  '#d97706','#16a34a','#2563eb','#7c3aed','#db2777','#0891b2'
-];
+
 
 // ── BOOT ─────────────────────────────────────────────────────
 let _authHandled = false;
@@ -268,7 +265,6 @@ async function loadBookmarks() {
     };
   });
 
-  buildColors();
   render();
 }
 
@@ -1037,15 +1033,12 @@ function openModal(id = null) {
     document.getElementById('f-name').value = b.name;
     modalTags = [...(b.tags || [])];
     modalCollections = [...(b.collections || [])];
-    S.color = b.color;
   } else {
     document.getElementById('f-url').value  = '';
     document.getElementById('f-name').value = '';
-    S.color = COLORS[0];
   }
   renderTagTokens();
   renderCollectionDropdown();
-  buildColors();
   document.getElementById('m-ov').classList.remove('hidden');
   setTimeout(() => document.getElementById('f-url').focus(), 80);
 }
@@ -1185,14 +1178,14 @@ async function saveBM() {
 
   if (S.editId) {
     const idx = BM.findIndex(b => b.id == S.editId);
-    await dbUpdate(S.editId, { url, name, tags, color: S.color });
+    await dbUpdate(S.editId, { url, name, tags });
     await dbSetBookmarkCollections(S.editId, collections);
-    BM[idx] = { ...BM[idx], url, name, tags, color: S.color, collections };
+    BM[idx] = { ...BM[idx], url, name, tags, collections };
     resetBtn();
     toast('Updated');
     closeModal(); render();
   } else {
-    const row = await dbInsert({ url, name, tags, color: S.color, fav: false });
+    const row = await dbInsert({ url, name, tags, color: '#111110', fav: false });
     resetBtn();
     if (!row) return;
     await dbSetBookmarkCollections(row.id, collections);
@@ -1224,25 +1217,7 @@ async function delBM(id) {
   render(); toast('Removed');
 }
 
-// ── COLOURS ───────────────────────────────────────────────────
-function buildColors() {
-  document.getElementById('c-row').innerHTML = COLORS.map(c =>
-    `<div class="c-chip" style="background:${c}" onclick="S.color='${c}';updateColors()" title="${c}"></div>`
-  ).join('');
-  updateColors();
-}
 
-function updateColors() {
-  document.querySelectorAll('.c-chip').forEach(el => {
-    el.classList.toggle('on', toHex(el.style.background) === S.color || el.style.background === S.color);
-  });
-}
-
-function toHex(rgb) {
-  const m = rgb.match(/\d+/g);
-  if (!m) return rgb;
-  return '#' + m.slice(0, 3).map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
-}
 
 // ── STATUS BANNER ─────────────────────────────────────────────
 let _statusVisible = false;
