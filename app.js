@@ -390,6 +390,7 @@ function visible() {
     const colId = S.filter.slice(4);
     list = list.filter(b => (b.collections || []).includes(colId));
   }
+  else if (S.filter === 'untagged') list = list.filter(b => !(b.tags || []).length);
   else if (S.filter !== 'all')    list = list.filter(b =>
     (b.tags || []).map(t => t.toLowerCase()).includes(S.filter.toLowerCase())
   );
@@ -431,7 +432,7 @@ function render() {
 function renderCards() {
   const list = visible();
   const g = document.getElementById('grid');
-  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Recent' };
+  const TITLES = { all: 'All', fav: 'Favourites', recent: 'Last 7 days', month: 'This month', untagged: 'Untagged' };
 
   let title = TITLES[S.filter];
   if (!title && S.filter.startsWith('col:')) {
@@ -450,10 +451,32 @@ function renderCards() {
     const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
 
     if (isFiltered) {
+      let emptyIcon = '◫';
+      let emptyTitle = 'No sites found';
+      let emptySub = 'Try a different search or filter.';
+
+      if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '♡';
+        emptyTitle = 'No favourites yet';
+        emptySub = 'Click the ♥ on any card to save it here.';
+      } else if (S.filter === 'recent' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '◷';
+        emptyTitle = 'Nothing saved in the last 7 days';
+        emptySub = 'Sites you save will appear here for 7 days.';
+      } else if (S.filter === 'month' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '◈';
+        emptyTitle = 'Nothing saved this month';
+        emptySub = 'Sites you save this month will appear here.';
+      } else if (S.filter === 'untagged' && !document.getElementById('q').value.trim()) {
+        emptyIcon = '◫';
+        emptyTitle = 'No untagged sites';
+        emptySub = 'All your saved sites have at least one tag.';
+      }
+
       g.innerHTML = `<div class="empty" style="grid-column:1/-1">
-        <div class="empty-icon">◫</div>
-        <div class="empty-title">No sites found</div>
-        <div class="empty-sub">Try a different search or filter.</div>
+        <div class="empty-icon">${emptyIcon}</div>
+        <div class="empty-title">${emptyTitle}</div>
+        <div class="empty-sub">${emptySub}</div>
       </div>`;
     } else {
       g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
@@ -779,7 +802,15 @@ function renderSidebar() {
 
   // ── Tags section
   const allTags = allUniqueTags();
-  document.getElementById('sb-tags').innerHTML = allTags.map(tag => {
+  const untaggedCount = BM.filter(b => !(b.tags || []).length).length;
+  const untaggedItem = untaggedCount > 0 ? `
+    <div class="sb-item ${S.filter === 'untagged' ? 'on' : ''}" onclick="setFilter('untagged', this)">
+      <span class="sb-tag-row">
+        <span class="sb-lbl"><span class="tag-dot" style="background:var(--text3)"></span>Untagged</span>
+        <span class="sb-n">${untaggedCount}</span>
+      </span>
+    </div>` : '';
+  document.getElementById('sb-tags').innerHTML = untaggedItem + allTags.map(tag => {
     const matches  = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
     const on       = S.filter.toLowerCase() === tag.toLowerCase();
     const dotColor = matches[0]?.color || '#6b6a67';
@@ -969,7 +1000,7 @@ function allUniqueTags() {
 // ── PILLS ─────────────────────────────────────────────────────
 function renderPills() {
   const tags = S.guestMode ? [] : allUniqueTags();
-  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }];
+  const base = [{ l: 'All', v: 'all' }, { l: '♥ Favourites', v: 'fav' }, { l: '◷ Last 7 days', v: 'recent' }, { l: '◈ This month', v: 'month' }, { l: 'Untagged', v: 'untagged' }];
   const all  = [...base, ...tags.map(t => ({ l: t, v: t }))];
   document.getElementById('pills').innerHTML = all.map(p =>
     `<div class="pill ${S.filter === p.v ? 'on' : ''}" onclick="setFilter('${p.v}', null)">${x(p.l)}</div>`
@@ -1477,10 +1508,18 @@ function renderFilterSheet() {
   // Tags
   const tagsEl = document.getElementById('sheet-tags');
   const tags = allUniqueTags();
-  if (tags.length === 0) {
+  const untagged = BM.filter(b => !(b.tags || []).length).length;
+  const untaggedHtml = untagged > 0 ? `
+    <div class="sheet-item ${S.filter === 'untagged' ? 'on' : ''}" onclick="applySheetFilter('untagged')">
+      <span class="sheet-tag-dot" style="background:var(--text3)"></span>
+      Untagged
+      <span class="sheet-n">${untagged}</span>
+    </div>` : '';
+
+  if (tags.length === 0 && !untagged) {
     tagsEl.innerHTML = `<div class="sheet-empty">No tags yet.</div>`;
   } else {
-    tagsEl.innerHTML = tags.map(tag => {
+    tagsEl.innerHTML = untaggedHtml + tags.map(tag => {
       const matches = BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(tag.toLowerCase()));
       const on = S.filter.toLowerCase() === tag.toLowerCase();
       const dotColor = matches[0]?.color || '#6b6a67';
