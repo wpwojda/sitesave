@@ -529,7 +529,7 @@ function signupPromptCard() {
 function card(b, i) {
   const h = host(b.url);
   const isPlaceholder = String(b.id).startsWith('placeholder-');
-  const tagChips = (b.tags || []).map(t => `<span class="tag-chip">${x(t)}</span>`).join('');
+  // Tag chips removed from cards — filtering via pills/sidebar only
   const actions = isPlaceholder ? '' : `
     <div class="card-actions">
       <div class="ca ${b.fav ? 'fav-on' : ''}"
@@ -565,7 +565,7 @@ function card(b, i) {
       </div>
       <span class="foot-name">${x(b.name)}</span>
     </div>
-    ${(b.tags || []).length ? `<div class="foot-tags">${tagChips}</div>` : ''}
+
   </div>
 </div>`;
 }
