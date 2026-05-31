@@ -40,7 +40,33 @@
   <div class="share-meta" id="share-meta" style="display:none">
     <div class="share-badge">Shared collection</div>
     <div class="share-title" id="share-title"></div>
-    <div class="share-count" id="share-count"></div>
+    <div class="share-topbar">
+      <div class="share-count" id="share-count"></div>
+      <div class="grid-btns">
+        <button class="grid-btn on" data-cols="2" onclick="setGridCols(2)" title="2 columns">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="8" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+        <button class="grid-btn" data-cols="3" onclick="setGridCols(3)" title="3 columns">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="5.5" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="10" y="1" width="3" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+        <button class="grid-btn" data-cols="4" onclick="setGridCols(4)" title="4 columns">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="4.5" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="8" y="1" width="2.5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="11" y="1" width="2" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="pills" id="share-pills"></div>
   </div>
   <div id="share-error" style="display:none" class="share-error">
     <div class="empty-icon">◫</div>
@@ -127,6 +153,46 @@ function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch
 function x(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 let BM = [];
+let activeTag = null;
+let gridCols = parseInt(localStorage.getItem('sitesave-share-cols') || '2');
+
+function setGridCols(n) {
+  gridCols = n;
+  localStorage.setItem('sitesave-share-cols', n);
+  if (window.innerWidth > 640) {
+    document.getElementById('share-grid').style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+  }
+  document.querySelectorAll('.grid-btn').forEach(b => {
+    b.classList.toggle('on', parseInt(b.dataset.cols) === n);
+  });
+}
+
+window.addEventListener('resize', () => {
+  const grid = document.getElementById('share-grid');
+  if (!grid) return;
+  if (window.innerWidth <= 640) {
+    grid.style.gridTemplateColumns = '';
+  } else {
+    grid.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+  }
+});
+
+function renderPills() {
+  const allTags = [...new Set(BM.flatMap(b => b.tags || []))].sort();
+  const pillsEl = document.getElementById('share-pills');
+  if (!pillsEl) return;
+  if (!allTags.length) { pillsEl.innerHTML = ''; return; }
+  pillsEl.innerHTML = [
+    `<div class="pill ${!activeTag ? 'on' : ''}" onclick="setTagFilter(null)">All</div>`,
+    ...allTags.map(t => `<div class="pill ${activeTag === t ? 'on' : ''}" onclick="setTagFilter('${x(t)}')">${x(t)}</div>`)
+  ].join('');
+}
+
+function setTagFilter(tag) {
+  activeTag = tag;
+  renderPills();
+  renderCards();
+}
 
 // ── LOAD SHARED COLLECTION ────────────────────────────────────
 async function init() {
@@ -170,6 +236,7 @@ async function init() {
   }).sort((a, b) => b.date - a.date);
 
   showMeta(col.name, BM.length);
+  renderPills();
   renderCards();
 }
 
@@ -189,9 +256,19 @@ function showError() {
 // ── RENDER CARDS ──────────────────────────────────────────────
 function renderCards() {
   const g = document.getElementById('share-grid');
-  g.innerHTML = BM.map((b, i) => {
+  const list = activeTag
+    ? BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(activeTag.toLowerCase()))
+    : BM;
+
+  if (window.innerWidth > 640) {
+    g.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+  }
+  document.querySelectorAll('.grid-btn').forEach(b => {
+    b.classList.toggle('on', parseInt(b.dataset.cols) === gridCols);
+  });
+
+  g.innerHTML = list.map((b, i) => {
     const h = host(b.url);
-    const tagChips = (b.tags || []).map(t => `<span class="tag-chip">${x(t)}</span>`).join('');
     return `
 <div class="card" style="animation-delay:${i * .03}s" onclick="openPreview('${b.id}')">
   <div class="card-thumb" id="thumb-${b.id}">
@@ -212,12 +289,11 @@ function renderCards() {
       </div>
       <span class="foot-name">${x(b.name)}</span>
     </div>
-    ${(b.tags || []).length ? `<div class="foot-tags">${tagChips}</div>` : ''}
   </div>
 </div>`;
   }).join('');
 
-  BM.forEach(b => loadScreenshot(b.id, b.url));
+  list.forEach(b => loadScreenshot(b.id, b.url));
 }
 
 function loadScreenshot(id, url) {
