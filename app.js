@@ -105,7 +105,6 @@ function enterGuest() {
   const returning = localStorage.getItem('sitesave-returning');
   signInBtn.textContent = returning ? 'Sign in' : 'Start saving';
   S.guestMode = true;
-  buildColors();
   showLanding();
 }
 
