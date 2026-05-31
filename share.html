@@ -179,13 +179,21 @@ window.addEventListener('resize', () => {
 
 function renderPills() {
   const allTags = [...new Set(BM.flatMap(b => b.tags || []))].sort();
+  const untaggedCount = BM.filter(b => !(b.tags || []).length).length;
   const pillsEl = document.getElementById('share-pills');
   if (!pillsEl) return;
-  if (!allTags.length) { pillsEl.innerHTML = ''; return; }
-  pillsEl.innerHTML = [
+  const pills = [
     `<div class="pill ${!activeTag ? 'on' : ''}" onclick="setTagFilter(null)">All</div>`,
-    ...allTags.map(t => `<div class="pill ${activeTag === t ? 'on' : ''}" onclick="setTagFilter('${x(t)}')">${x(t)}</div>`)
-  ].join('');
+    ...allTags.map(t => `<div class="pill ${activeTag === t ? 'on' : ''}" onclick="setTagFilter('${x(t)}')">${x(t)}</div>`),
+    ...(untaggedCount > 0 ? [`<div class="pill ${activeTag === 'untagged' ? 'on' : ''}" onclick="setTagFilter('untagged')">Untagged</div>`] : [])
+  ];
+  pillsEl.innerHTML = pills.join('');
+}
+
+function setTagFilter(tag) {
+  activeTag = tag;
+  renderPills();
+  renderCards();
 }
 
 function setTagFilter(tag) {
@@ -256,9 +264,11 @@ function showError() {
 // ── RENDER CARDS ──────────────────────────────────────────────
 function renderCards() {
   const g = document.getElementById('share-grid');
-  const list = activeTag
-    ? BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(activeTag.toLowerCase()))
-    : BM;
+  const list = activeTag === 'untagged'
+    ? BM.filter(b => !(b.tags || []).length)
+    : activeTag
+      ? BM.filter(b => (b.tags || []).map(t => t.toLowerCase()).includes(activeTag.toLowerCase()))
+      : BM;
 
   if (window.innerWidth > 640) {
     g.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
