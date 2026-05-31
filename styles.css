@@ -1390,3 +1390,27 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .landing-cards .card-thumb { aspect-ratio: unset; }
   .landing-cards-wrap { margin-top: 48px; padding: 0; }
 }
+
+/* ── SHARE PAGE CTA ──────────────────────────────────────────── */
+.share-cta {
+  max-width: 480px;
+  margin: 80px auto 60px;
+  padding: 32px 36px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+.share-cta-text {
+  font-size: 20px; font-weight: 600; letter-spacing: -.03em;
+  color: var(--text); margin-bottom: 8px;
+  transition: var(--trans);
+}
+.share-cta-sub {
+  font-size: 15px; color: var(--text2); line-height: 1.6;
+  margin-bottom: 24px; transition: var(--trans);
+}
+.share-cta-btn {
+  display: inline-flex; text-decoration: none;
+  height: 42px; padding: 0 22px; font-size: 14px;
+}
