@@ -1248,6 +1248,11 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   color: var(--text3);
 }
 
+.share-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 /* ── COLLECTION SHARE INDICATOR IN SIDEBAR ───────────────────── */
 .col-shared-dot {
   width: 6px; height: 6px; border-radius: 50%;
