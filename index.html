@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sitesave — Save sites. Browse visually.</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="canonical" href="https://sitesave.co.uk/">
 <meta name="description" content="Sitesave captures a screenshot of every site you save, so you can browse your references visually. For creatives who collect.">
 <meta property="og:title" content="Sitesave — Save sites. Browse visually.">
 <meta property="og:description" content="Sitesave captures a screenshot of every site you save, so you can browse your references visually. For creatives who collect.">
@@ -119,12 +118,8 @@
         <span class="sb-n" id="cnt-fav">0</span>
       </div>
       <div class="sb-item" onclick="setFilter('recent', this)">
-        <span class="sb-lbl"><span class="sb-ico">◷</span>Last 7 days</span>
+        <span class="sb-lbl"><span class="sb-ico">◷</span>Recent</span>
         <span class="sb-n" id="cnt-rec">0</span>
-      </div>
-      <div class="sb-item" onclick="setFilter('month', this)">
-        <span class="sb-lbl"><span class="sb-ico">◈</span>This month</span>
-        <span class="sb-n" id="cnt-month">0</span>
       </div>
     </div>
     <div class="sb-div"></div>
@@ -210,7 +205,7 @@
       <div class="preview-actions">
         <button class="preview-btn-secondary" id="preview-try-live" style="display:none">
           <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 4.5l3.5 2L5 8.5V4.5z" fill="currentColor"/></svg>
-          Live preview
+          Try live preview
         </button>
         <a class="preview-btn-primary" id="preview-ext-link" href="#" target="_blank" rel="noopener">
           <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M4.5 2.5h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -274,10 +269,7 @@
       <label class="flabel">Collections</label>
       <div class="col-select-wrap" id="col-select-wrap"></div>
     </div>
-    <div class="fg">
-      <label class="flabel">Label colour</label>
-      <div class="c-row" id="c-row"></div>
-    </div>
+
     <div class="m-foot">
       <button class="btn-ghost" id="btn-cancel-modal">Cancel</button>
       <button class="btn-add" id="btn-save-modal">
@@ -305,12 +297,8 @@
         <span class="sheet-n" id="sheet-cnt-fav">0</span>
       </div>
       <div class="sheet-item" data-filter="recent" onclick="applySheetFilter('recent')">
-        <span class="sheet-ico">◷</span> Last 7 days
+        <span class="sheet-ico">◷</span> Recent
         <span class="sheet-n" id="sheet-cnt-rec">0</span>
-      </div>
-      <div class="sheet-item" data-filter="month" onclick="applySheetFilter('month')">
-        <span class="sheet-ico">◈</span> This month
-        <span class="sheet-n" id="sheet-cnt-month">0</span>
       </div>
     </div>
 
