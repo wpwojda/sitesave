@@ -879,10 +879,15 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .m-ov {
     align-items: flex-end;
     padding: 0;
+    touch-action: none;
   }
   .modal {
     border-radius: 14px 14px 0 0;
     max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     animation: slide-up .25s ease;
   }
 
@@ -1025,9 +1030,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   background: var(--surface); border: 1px solid var(--border-md);
   border-radius: 7px; padding: 4px;
   box-shadow: 0 8px 24px rgba(0,0,0,.12);
-  max-height: 180px; overflow-y: auto;
+  max-height: 200px; overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   animation: mu .15s ease;
 }
 
