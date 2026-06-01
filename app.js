@@ -1287,6 +1287,10 @@ mOv.addEventListener('mouseup', e => {
   if (_modalMousedownOnOverlay && e.target === mOv) closeModal();
   _modalMousedownOnOverlay = false;
 });
+// Prevent background scroll when touching the overlay backdrop
+mOv.addEventListener('touchmove', e => {
+  if (!e.target.closest('.modal')) e.preventDefault();
+}, { passive: false });
 
 const pOv = document.getElementById('preview-ov');
 let _previewMousedownOnOverlay = false;
