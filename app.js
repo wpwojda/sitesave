@@ -99,6 +99,7 @@ function enterGuest() {
   BM = [...PLACEHOLDERS];
   document.getElementById('btn-save-site').classList.add('hidden');
   document.getElementById('user-menu').classList.add('hidden');
+  document.getElementById('btn-new-collection')?.classList.add('hidden');
   const signInBtn = document.getElementById('btn-sign-in');
   signInBtn.classList.remove('hidden');
   // Show 'Sign in' for returning users, 'Start saving' for new visitors
@@ -115,6 +116,7 @@ async function enterApp() {
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
   document.getElementById('user-menu').classList.remove('hidden');
+  document.getElementById('btn-new-collection')?.classList.remove('hidden');
   hideLanding();
   updateUserAvatar();
   await loadCollections();
