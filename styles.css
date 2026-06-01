@@ -1407,3 +1407,28 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   display: inline-flex; text-decoration: none;
   height: 42px; padding: 0 22px; font-size: 14px;
 }
+
+/* ── MOBILE TOPBAR SECOND ROW ────────────────────────────────── */
+.topbar-mobile-row {
+  display: none; /* hidden on desktop */
+}
+
+.new-col-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 14px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 5px;
+  font-family: 'Geist', sans-serif; font-size: 13px; color: var(--text2);
+  cursor: pointer; transition: var(--trans); white-space: nowrap;
+}
+.new-col-btn:hover { border-color: var(--border-md); color: var(--text); }
+
+@media (max-width: 640px) {
+  .topbar-mobile-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 8px;
+  }
+  /* Move filter btn to second row — hide from topbar-r on mobile */
+  .topbar-r .filter-btn { display: none !important; }
+  .new-col-btn { height: 38px; flex: 1; justify-content: center; }
+  .filter-btn { flex: 1; justify-content: center; }
+}
