@@ -1022,6 +1022,7 @@ function openModal(id = null) {
   S.editId = id;
   modalTags = [];
   modalCollections = [];
+  document.body.style.overflow = 'hidden';
   document.getElementById('m-title').textContent = id ? 'Edit site' : 'Save a site';
   // Show first-time collections tooltip if user has collections and hasn't seen it yet
   const hasSeenTip = localStorage.getItem('sitesave-col-tip');
@@ -1058,6 +1059,7 @@ function showCollectionTip() {
 
 function closeModal() {
   document.getElementById('m-ov').classList.add('hidden');
+  document.body.style.overflow = '';
   S.editId = null; modalTags = []; modalCollections = [];
 }
 
@@ -1114,12 +1116,7 @@ function collectionDropdownLabel() {
 function toggleModalColDropdown() {
   const list = document.getElementById('col-dropdown-list');
   if (!list) return;
-  const isHidden = list.classList.contains('hidden');
   list.classList.toggle('hidden');
-  if (isHidden) {
-    // Prevent touch scroll from bubbling to modal or page background
-    list.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
-  }
 }
 
 function toggleModalCollection(colId) {
