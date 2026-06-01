@@ -1153,7 +1153,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 
 @media (max-width: 640px) {
-  .filter-btn { height: 38px; padding: 0 12px; }
+  .filter-btn { display: flex; height: 38px; padding: 0 12px; }
   .pills { display: none; } /* replaced by bottom sheet on mobile */
 }
 
@@ -1425,11 +1425,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 @media (max-width: 640px) {
   .topbar-mobile-row {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; gap: 8px;
+    display: flex; align-items: center;
+    margin-bottom: 12px;
   }
-  /* Move filter btn to second row — hide from topbar-r on mobile */
-  .topbar-r .filter-btn { display: none !important; }
-  .new-col-btn { height: 38px; flex: 1; justify-content: center; }
-  .filter-btn { flex: 1; justify-content: center; }
+  .new-col-btn { height: 38px; width: 100%; justify-content: center; }
 }
