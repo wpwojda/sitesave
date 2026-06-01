@@ -873,8 +873,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .preview-title { font-size: 13px; }
   .preview-btn-primary { padding: 0 10px; font-size: 12px; }
   .preview-btn { padding: 0 10px; font-size: 12px; }
-  .close-btn { font-size: 0; width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .close-btn::before { content: '✕'; font-size: 16px; line-height: 1; }
+  .close-btn { width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
 
   /* Save modal — full width bottom sheet */
   .m-ov {
@@ -1056,12 +1055,15 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* ── FILTER BUTTON (mobile only) ─────────────────────────────── */
 .filter-btn {
-  display: none; /* hidden on desktop */
+  display: none; /* shown only on mobile via media query */
   align-items: center; gap: 6px;
   height: 32px; padding: 0 10px;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 5px;
   font-family: 'Geist', sans-serif; font-size: 13px; color: var(--text2);
   cursor: pointer; transition: var(--trans); white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .filter-btn { display: flex; }
 }
 .filter-btn:hover { border-color: var(--border-md); color: var(--text); }
 .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
@@ -1156,7 +1158,6 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 
 @media (max-width: 640px) {
-  .filter-btn { display: flex !important; height: 38px; padding: 0 12px; }
   .pills { display: none; } /* replaced by bottom sheet on mobile */
 }
 
