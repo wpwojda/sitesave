@@ -1153,7 +1153,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 
 @media (max-width: 640px) {
-  .filter-btn { display: flex; height: 38px; padding: 0 12px; }
+  .filter-btn { height: 38px; padding: 0 12px; }
   .pills { display: none; } /* replaced by bottom sheet on mobile */
 }
 
@@ -1411,6 +1411,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 /* ── MOBILE TOPBAR SECOND ROW ────────────────────────────────── */
 .topbar-mobile-row {
   display: none; /* hidden on desktop */
+  margin-bottom: 12px;
 }
 
 .new-col-btn {
