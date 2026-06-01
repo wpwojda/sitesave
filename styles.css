@@ -1039,7 +1039,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 .col-dropdown-item {
   display: flex; align-items: center; gap: 8px;
-  padding: 7px 10px; border-radius: 5px; cursor: pointer;
+  padding: 11px 10px; border-radius: 5px; cursor: pointer;
   font-size: 14px; color: var(--text2);
   transition: var(--trans);
 }
