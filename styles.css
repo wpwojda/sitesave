@@ -892,7 +892,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .btn-add            { height: 38px; padding: 0 16px; }
   .btn-ghost          { height: 38px; padding: 0 16px; }
   .sort-sel           { height: 38px; }
-  .filter-btn         { height: 38px; padding: 0 12px; }
+  .filter-btn         { display: flex !important; height: 38px; padding: 0 12px; }
   .pill               { height: 38px; padding: 0 14px; }
   .sb-item            { min-height: 38px; padding: 10px 8px; }
   .signout-btn        { height: 38px; }
