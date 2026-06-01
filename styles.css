@@ -879,15 +879,15 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .m-ov {
     align-items: flex-end;
     padding: 0;
-    touch-action: none;
   }
   .modal {
     border-radius: 14px 14px 0 0;
     max-width: 100%;
-    max-height: 92vh;
+    max-height: 85vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    touch-action: pan-y;
     animation: slide-up .25s ease;
   }
 
@@ -1026,11 +1026,11 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 .col-dropdown-trigger svg { color: var(--text3); flex-shrink: 0; }
 
 .col-dropdown-list {
-  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 400;
+  position: absolute; bottom: calc(100% + 4px); left: 0; right: 0; z-index: 400;
   background: var(--surface); border: 1px solid var(--border-md);
   border-radius: 7px; padding: 4px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.12);
-  max-height: 200px; overflow-y: scroll;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.10);
+  max-height: 220px; overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
