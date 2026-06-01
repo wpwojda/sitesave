@@ -158,7 +158,15 @@ function toggleTheme() {
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+// Use anonymous-only client — no auth persistence, so shared collections
+// never bleed into a signed-in user's session or account
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  }
+});
 
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
 function x(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
