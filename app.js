@@ -606,7 +606,7 @@ function loadScreenshot(id, url) {
   const shimmer = document.getElementById('shimmer-' + id);
   const errEl   = document.getElementById('err-' + id);
   if (!img) return;
-  const apiUrl = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+  const apiUrl = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
   img.onload = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
   img.src = apiUrl;
@@ -635,7 +635,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${b.url}`;
+    img.src = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${b.url}`;
   }
 
   const tryBtn = document.getElementById('preview-try-live');
@@ -717,7 +717,7 @@ function showPreviewFallback(url, showMsg = true) {
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
-    img.src = `https://image.thum.io/get/width/1440/crop/900/noanimate/${url}`;
+    img.src = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
   }
 }
 
