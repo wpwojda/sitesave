@@ -1475,15 +1475,15 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   opacity: .5; flex: 1;
 }
 .ob-btn {
-  height: 28px; padding: 0 12px; border-radius: 5px;
+  height: 36px; padding: 0 16px; border-radius: 6px;
   background: var(--accent); color: var(--accent-fg);
   border: none; cursor: pointer;
-  font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500;
+  font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
 }
 .ob-skip {
   background: none; border: none; cursor: pointer;
-  font-family: 'Geist', sans-serif; font-size: 12px;
-  opacity: .5; color: inherit; padding: 0;
+  font-family: 'Geist', sans-serif; font-size: 13px;
+  opacity: .5; color: inherit; padding: 0; height: 36px;
 }
 .ob-skip:hover { opacity: 1; }
 .onboarding-highlight {
