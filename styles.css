@@ -1440,3 +1440,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   }
   .new-col-btn { height: 38px; width: 100%; justify-content: center; }
 }
+
+/* ── SEARCH EMPTY STATE ──────────────────────────────────────── */
+.empty-clear-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Geist', sans-serif; font-size: inherit;
+  color: var(--accent); padding: 0; text-decoration: underline;
+  display: inline;
+}
+.empty-clear-btn:hover { opacity: .75; }
