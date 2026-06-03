@@ -635,7 +635,7 @@ const _shotObserver = new IntersectionObserver((entries) => {
 function loadScreenshot(id, url) {
   const img = document.getElementById('shot-' + id);
   if (!img) return;
-  const apiUrl = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
+  const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
   img.dataset.src = apiUrl;
   _shotObserver.observe(img);
 }
@@ -663,7 +663,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    img.src = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(b.url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
+    img.src = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(b.url)}`;
   }
 
   const tryBtn = document.getElementById('preview-try-live');
@@ -745,7 +745,7 @@ function showPreviewFallback(url, showMsg = true) {
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
-    img.src = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
+    img.src = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
   }
 }
 
