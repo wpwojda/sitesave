@@ -1521,12 +1521,27 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 
 @media (max-width: 640px) {
+  .landing-explainer {
+    padding: 0 20px 0;
+    margin-top: 40px;
+  }
   .explainer-inner {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 24px;
+    padding-top: 36px;
     text-align: left;
   }
-  .explainer-item { display: flex; gap: 16px; align-items: flex-start; text-align: left; }
-  .explainer-icon { margin-bottom: 0; flex-shrink: 0; }
-  .landing-explainer { padding: 0 20px 60px; margin-top: 48px; }
+  .explainer-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+  }
+  .explainer-icon {
+    margin-bottom: 0;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .explainer-title { margin-bottom: 4px; }
 }
