@@ -635,7 +635,7 @@ const _shotObserver = new IntersectionObserver((entries) => {
 function loadScreenshot(id, url) {
   const img = document.getElementById('shot-' + id);
   if (!img) return;
-  const apiUrl = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
+  const apiUrl = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
   img.dataset.src = apiUrl;
   _shotObserver.observe(img);
 }
