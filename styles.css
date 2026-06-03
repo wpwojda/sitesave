@@ -1322,8 +1322,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 .landing-cards-wrap {
   max-width: 1400px;
-  margin: 72px auto 0;
-  padding: 0 32px;
+  margin: 64px auto 0;
+  padding: 0 32px 80px;
 }
 
 .landing-preview-label {
@@ -1494,8 +1494,8 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 /* ── LANDING EXPLAINER ───────────────────────────────────────── */
 .landing-explainer {
   max-width: 900px;
-  margin: 72px auto 0;
-  padding: 0 32px 80px;
+  margin: 64px auto 0;
+  padding: 0 32px;
 }
 .explainer-inner {
   display: grid;
