@@ -1460,11 +1460,11 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   animation: mu .2s ease;
 }
 .ob-title {
-  font-size: 14px; font-weight: 600; letter-spacing: -.02em;
-  margin-bottom: 5px;
+  font-size: 15px; font-weight: 600; letter-spacing: -.02em;
+  margin-bottom: 6px;
 }
 .ob-text {
-  font-size: 13px; line-height: 1.5; opacity: .8;
+  font-size: 14px; line-height: 1.55; opacity: .85;
   margin-bottom: 12px;
 }
 .ob-foot {
@@ -1490,6 +1490,16 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+/* ── MODAL FIELD TIPS ───────────────────────────────────────── */
+.modal-tip {
+  background: var(--text); color: var(--bg);
+  border-radius: 8px; padding: 12px 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  animation: mu .15s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── URL HINT IN MODAL ───────────────────────────────────────── */
@@ -1519,12 +1529,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   transition: var(--trans);
 }
 .explainer-title {
-  font-size: 15px; font-weight: 600; letter-spacing: -.02em;
+  font-size: 16px; font-weight: 600; letter-spacing: -.02em;
   color: var(--text); margin-bottom: 8px;
   transition: var(--trans);
 }
 .explainer-text {
-  font-size: 14px; color: var(--text2); line-height: 1.65;
+  font-size: 15px; color: var(--text2); line-height: 1.65;
   transition: var(--trans);
 }
 
