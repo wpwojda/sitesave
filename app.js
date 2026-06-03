@@ -174,6 +174,15 @@ async function deleteAccount() {
       .eq('user_id', CURRENT_USER.id);
     if (bmError) throw bmError;
 
+    // Delete all screenshots from Storage for this user
+    try {
+      const { data: files } = await sb.storage.from('screenshots').list(CURRENT_USER.id);
+      if (files && files.length > 0) {
+        const paths = files.map(f => `${CURRENT_USER.id}/${f.name}`);
+        await sb.storage.from('screenshots').remove(paths);
+      }
+    } catch (e) { console.warn('Storage cleanup failed:', e.message); }
+
     const { error: authError } = await sb.rpc('delete_user');
     if (authError) throw authError;
 
@@ -257,14 +266,15 @@ async function loadBookmarks() {
     let tags = row.tags;
     if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = []; } }
     return {
-      id:          row.id,
-      url:         row.url,
-      name:        row.name,
-      tags:        Array.isArray(tags) ? tags : [],
-      color:       row.color || '#111110',
-      fav:         row.fav   || false,
-      date:        new Date(row.created_at).getTime(),
-      collections: bcMap[row.id] || [],
+      id:             row.id,
+      url:            row.url,
+      name:           row.name,
+      tags:           Array.isArray(tags) ? tags : [],
+      color:          row.color || '#111110',
+      fav:            row.fav   || false,
+      date:           new Date(row.created_at).getTime(),
+      collections:    bcMap[row.id] || [],
+      screenshot_url: row.screenshot_url || null,
     };
   });
 
@@ -630,14 +640,51 @@ const _shotObserver = new IntersectionObserver((entries) => {
     _shotQueue.push({ img, url });
     _processQueue();
   });
-}, { rootMargin: '0px' }); // only load when actually visible
+}, { rootMargin: '0px' });
 
 function loadScreenshot(id, url) {
   const img = document.getElementById('shot-' + id);
   if (!img) return;
+  const bm = BM.find(b => b.id == id);
+  // If we already have a stored screenshot, use it directly — no Render call needed
+  if (bm?.screenshot_url) {
+    img.dataset.src = bm.screenshot_url;
+    _shotObserver.observe(img);
+    return;
+  }
+  // No stored screenshot — queue a Render request, then store the result
   const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
   img.dataset.src = apiUrl;
+  // After the image loads, upload it to Supabase Storage in the background
+  img.addEventListener('load', async function onFirstLoad() {
+    img.removeEventListener('load', onFirstLoad);
+    await captureAndStore(id, url);
+  }, { once: true });
   _shotObserver.observe(img);
+}
+
+// Fetch screenshot from Render, upload to Supabase Storage, save URL to DB
+async function captureAndStore(id, url) {
+  if (!CURRENT_USER) return;
+  try {
+    const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const path = `${CURRENT_USER.id}/${id}.jpg`;
+    const { error: upErr } = await sb.storage.from('screenshots').upload(path, blob, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+    if (upErr) { console.warn('Storage upload failed:', upErr.message); return; }
+    const { data: { publicUrl } } = sb.storage.from('screenshots').getPublicUrl(path);
+    await sb.from('bookmarks').update({ screenshot_url: publicUrl }).eq('id', id);
+    // Update in-memory bookmark so future renders use the stored URL
+    const bm = BM.find(b => b.id == id);
+    if (bm) bm.screenshot_url = publicUrl;
+  } catch (e) {
+    console.warn('captureAndStore failed:', e.message);
+  }
 }
 
 // ── PREVIEW MODAL ─────────────────────────────────────────────
@@ -663,7 +710,8 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    img.src = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(b.url)}`;
+    const screenshotSrc = b.screenshot_url || `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(b.url)}`;
+    img.src = screenshotSrc;
   }
 
   const tryBtn = document.getElementById('preview-try-live');
@@ -745,7 +793,8 @@ function showPreviewFallback(url, showMsg = true) {
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
-    img.src = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    const bm = BM.find(b => b.url === url);
+    img.src = bm?.screenshot_url || `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
   }
 }
 
@@ -1264,6 +1313,12 @@ async function toggleFav(id) {
 
 async function delBM(id) {
   if (!confirm('Remove this site?')) return;
+  // Delete screenshot from Storage if one exists
+  const bm = BM.find(b => b.id == id);
+  if (bm?.screenshot_url && CURRENT_USER) {
+    const path = `${CURRENT_USER.id}/${id}.jpg`;
+    await sb.storage.from('screenshots').remove([path]).catch(() => {});
+  }
   await dbDelete(id);
   BM = BM.filter(b => b.id != id);
   render(); toast('Removed');
