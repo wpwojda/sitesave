@@ -1570,29 +1570,22 @@ function showModalTip() {
       <button class="ob-skip" onclick="finishModalTips()">Skip</button>
     </div>`;
 
-  // Position relative to target within modal
-  target.appendChild(el);
-  el.style.position = 'absolute';
-  el.style.left = '0';
-  el.style.right = '0';
-  el.style.zIndex = '600';
-  if (tip.position === 'below') {
-    el.style.top = 'calc(100% + 6px)';
-  } else {
-    el.style.bottom = 'calc(100% + 6px)';
-    el.style.top = 'auto';
-  }
-  target.style.position = 'relative';
-  target.style.zIndex = '2';
+  // Insert after the target element's parent fg div
+  const fg = target.closest('.fg') || target.parentElement;
+  fg.appendChild(el);
+  target.classList.add('onboarding-highlight');
 }
 
 function nextModalTip() {
+  const target = document.getElementById(MODAL_TIPS[_modalTipStep]?.target);
+  if (target) target.classList.remove('onboarding-highlight');
   removeModalTip();
   _modalTipStep++;
   showModalTip();
 }
 
 function finishModalTips() {
+  MODAL_TIPS.forEach(t => document.getElementById(t.target)?.classList.remove('onboarding-highlight'));
   removeModalTip();
   localStorage.setItem('sitesave-modal-tip', 'true');
 }
