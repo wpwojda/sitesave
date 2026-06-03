@@ -461,7 +461,7 @@ function renderCards() {
         const col = COLLECTIONS.find(c => c.id === S.filter.slice(4));
         emptyIcon = '▤';
         emptyTitle = `${col ? col.name : 'This collection'} is empty`;
-        emptySub = `<span>Open any card and tap <strong>✎ Edit</strong> to add it to this collection.</span>`;
+        emptySub = `<span>Edit any saved site and select <strong>${col ? col.name : 'this collection'}</strong> from the Collections dropdown to add it here.</span>`;
       } else if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
         emptyIcon = '♡';
         emptyTitle = 'No favourites yet';
@@ -1039,6 +1039,10 @@ function openModal(id = null) {
   if (urlHint) {
     urlHint.style.display = (!id && !localStorage.getItem('sitesave-saved')) ? '' : 'none';
   }
+  // Show modal field tooltips on first open
+  if (!id && !localStorage.getItem('sitesave-modal-tip')) {
+    setTimeout(startModalTips, 400);
+  }
   // Show first-time collections tooltip if user has collections and hasn't seen it yet
   const hasSeenTip = localStorage.getItem('sitesave-col-tip');
   if (!hasSeenTip && COLLECTIONS.length > 0 && !id) {
@@ -1532,6 +1536,71 @@ function renderFilterSheet() {
   }
 }
 
+// ── MODAL FIELD TIPS ─────────────────────────────────────────
+const MODAL_TIPS = [
+  { target: 'f-url',         title: 'Paste a URL', text: 'Any website URL — Sitesave captures a screenshot automatically.', position: 'below' },
+  { target: 'f-name',        title: 'Name', text: 'Auto-filled from the domain. Edit it to something more descriptive if you like.', position: 'below' },
+  { target: 'tag-wrap',      title: 'Tags', text: 'Add keywords to organise your collection. Press Enter or comma to add each one.', position: 'below' },
+  { target: 'col-select-wrap', title: 'Collections', text: 'Assign this site to one or more collections to group related saves together.', position: 'above' },
+];
+let _modalTipStep = 0;
+
+function startModalTips() {
+  if (localStorage.getItem('sitesave-modal-tip')) return;
+  _modalTipStep = 0;
+  showModalTip();
+}
+
+function showModalTip() {
+  removeModalTip();
+  if (_modalTipStep >= MODAL_TIPS.length) { finishModalTips(); return; }
+  const tip = MODAL_TIPS[_modalTipStep];
+  const target = document.getElementById(tip.target);
+  if (!target) { _modalTipStep++; showModalTip(); return; }
+
+  const el = document.createElement('div');
+  el.id = 'modal-tip';
+  el.className = 'modal-tip';
+  el.innerHTML = `
+    <div class="ob-title">${tip.title}</div>
+    <div class="ob-text">${tip.text}</div>
+    <div class="ob-foot">
+      <span class="ob-step">${_modalTipStep + 1} of ${MODAL_TIPS.length}</span>
+      <button class="ob-btn" onclick="nextModalTip()">${_modalTipStep + 1 < MODAL_TIPS.length ? 'Next' : 'Done'}</button>
+      <button class="ob-skip" onclick="finishModalTips()">Skip</button>
+    </div>`;
+
+  // Position relative to target within modal
+  target.appendChild(el);
+  el.style.position = 'absolute';
+  el.style.left = '0';
+  el.style.right = '0';
+  el.style.zIndex = '600';
+  if (tip.position === 'below') {
+    el.style.top = 'calc(100% + 6px)';
+  } else {
+    el.style.bottom = 'calc(100% + 6px)';
+    el.style.top = 'auto';
+  }
+  target.style.position = 'relative';
+  target.style.zIndex = '2';
+}
+
+function nextModalTip() {
+  removeModalTip();
+  _modalTipStep++;
+  showModalTip();
+}
+
+function finishModalTips() {
+  removeModalTip();
+  localStorage.setItem('sitesave-modal-tip', 'true');
+}
+
+function removeModalTip() {
+  document.getElementById('modal-tip')?.remove();
+}
+
 // ── ONBOARDING TOOLTIPS ───────────────────────────────────────
 const ONBOARDING_STEPS = [
   {
@@ -1567,14 +1636,16 @@ function startOnboarding() {
 function showOnboardingStep() {
   removeOnboardingTooltip();
   const isMobile = window.innerWidth <= 640;
-  let step = null;
-  while (_onboardingStep < ONBOARDING_STEPS.length) {
-    const s = ONBOARDING_STEPS[_onboardingStep];
-    if (s.mobileOnly && !isMobile) { _onboardingStep++; continue; }
-    if (s.desktopOnly && isMobile) { _onboardingStep++; continue; }
-    step = s; break;
-  }
-  if (!step) { finishOnboarding(); return; }
+  // Build list of applicable steps for this device
+  const applicableSteps = ONBOARDING_STEPS.filter(s => {
+    if (s.mobileOnly && !isMobile) return false;
+    if (s.desktopOnly && isMobile) return false;
+    return true;
+  });
+  if (_onboardingStep >= applicableSteps.length) { finishOnboarding(); return; }
+  const step = applicableSteps[_onboardingStep];
+  const total = applicableSteps.length;
+  const current = _onboardingStep + 1;
 
   const target = document.getElementById(step.target);
   if (!target) { _onboardingStep++; showOnboardingStep(); return; }
@@ -1586,9 +1657,9 @@ function showOnboardingStep() {
     <div class="ob-title">${step.title}</div>
     <div class="ob-text">${step.text}</div>
     <div class="ob-foot">
-      <span class="ob-step">${_onboardingStep + 1} of ${ONBOARDING_STEPS.filter(s => isMobile ? !s.desktopOnly : !s.mobileOnly).length}</span>
+      <span class="ob-step">${current} of ${total}</span>
       <button class="ob-btn" onclick="nextOnboardingStep()">
-        ${_onboardingStep + 1 < ONBOARDING_STEPS.length ? 'Next' : 'Done'}
+        ${current < total ? 'Next' : 'Done'}
       </button>
       <button class="ob-skip" onclick="finishOnboarding()">Skip</button>
     </div>`;
@@ -1619,7 +1690,13 @@ function showOnboardingStep() {
 }
 
 function nextOnboardingStep() {
-  const target = ONBOARDING_STEPS[_onboardingStep]?.target;
+  const isMobile = window.innerWidth <= 640;
+  const applicableSteps = ONBOARDING_STEPS.filter(s => {
+    if (s.mobileOnly && !isMobile) return false;
+    if (s.desktopOnly && isMobile) return false;
+    return true;
+  });
+  const target = applicableSteps[_onboardingStep]?.target;
   if (target) document.getElementById(target)?.classList.remove('onboarding-highlight');
   _onboardingStep++;
   showOnboardingStep();
