@@ -601,43 +601,28 @@ function card(b, i) {
 }
 
 // ── SCREENSHOT LOADING ────────────────────────────────────────
-// ── SCREENSHOT QUEUE ─────────────────────────────────────────
-const _shotQueue = [];
-let _shotActive = 0;
-const _shotConcurrent = 4; // max simultaneous screenshot requests
+// ── SCREENSHOT LAZY LOADING ──────────────────────────────────
+const _shotObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const img = entry.target;
+    const url = img.dataset.src;
+    if (!url) return;
+    _shotObserver.unobserve(img);
+    const shimmer = document.getElementById('shimmer-' + img.id.replace('shot-', ''));
+    const errEl   = document.getElementById('err-'    + img.id.replace('shot-', ''));
+    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
+    img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
+    img.src = url;
+  });
+}, { rootMargin: '200px' }); // start loading 200px before entering viewport
 
 function loadScreenshot(id, url) {
-  _shotQueue.push({ id, url });
-  _processScreenshotQueue();
-}
-
-function _processScreenshotQueue() {
-  while (_shotActive < _shotConcurrent && _shotQueue.length > 0) {
-    const { id, url } = _shotQueue.shift();
-    _shotActive++;
-    _fetchScreenshot(id, url);
-  }
-}
-
-function _fetchScreenshot(id, url) {
-  const img     = document.getElementById('shot-' + id);
-  const shimmer = document.getElementById('shimmer-' + id);
-  const errEl   = document.getElementById('err-' + id);
-  if (!img) { _shotActive--; _processScreenshotQueue(); return; }
+  const img = document.getElementById('shot-' + id);
+  if (!img) return;
   const apiUrl = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
-  img.onload = () => {
-    if (shimmer) shimmer.style.display = 'none';
-    img.classList.add('loaded');
-    _shotActive--;
-    _processScreenshotQueue();
-  };
-  img.onerror = () => {
-    if (shimmer) shimmer.style.display = 'none';
-    if (errEl) errEl.style.display = 'flex';
-    _shotActive--;
-    _processScreenshotQueue();
-  };
-  img.src = apiUrl;
+  img.dataset.src = apiUrl;
+  _shotObserver.observe(img);
 }
 
 // ── PREVIEW MODAL ─────────────────────────────────────────────
