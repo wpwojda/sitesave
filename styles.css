@@ -1505,7 +1505,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   border-top: 1px solid var(--border);
 }
 .explainer-item { text-align: center; }
-.explainer-header { display: flex; flex-direction: column; align-items: center; }
+.explainer-header { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .explainer-icon {
   font-size: 24px; color: var(--text3);
   margin-bottom: 12px; display: block;
@@ -1535,19 +1535,20 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .explainer-item {
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-start;
+    align-items: flex-start !important;
     gap: 6px;
     text-align: left;
   }
   .explainer-item .explainer-header {
-    display: flex;
-    align-items: center;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
     gap: 10px;
   }
   .explainer-icon {
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
     flex-shrink: 0;
   }
-  .explainer-title { margin-bottom: 0; }
-  .explainer-text { padding-left: 34px; }
+  .explainer-title { margin-bottom: 0; text-align: left; }
+  .explainer-text { padding-left: 0; text-align: left; }
 }
