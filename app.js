@@ -448,9 +448,12 @@ function renderCards() {
     const isFiltered = S.filter !== 'all' || document.getElementById('q').value.trim();
 
     if (isFiltered) {
+      const q = document.getElementById('q').value.trim();
       let emptyIcon = '◫';
-      let emptyTitle = 'No sites found';
-      let emptySub = 'Try a different search or filter.';
+      let emptyTitle = q ? `No results for "${q}"` : 'No sites found';
+      let emptySub = q
+        ? `<span>We couldn't find anything matching that search. <button class="empty-clear-btn" onclick="document.getElementById('q').value='';renderCards()">Clear search</button></span>`
+        : 'Try a different filter.';
 
       if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
         emptyIcon = '♡';
@@ -473,7 +476,7 @@ function renderCards() {
       g.innerHTML = `<div class="empty" style="grid-column:1/-1">
         <div class="empty-icon">${emptyIcon}</div>
         <div class="empty-title">${emptyTitle}</div>
-        <div class="empty-sub">${emptySub}</div>
+        <div class="empty-sub empty-sub-html">${emptySub}</div>
       </div>`;
     } else {
       g.innerHTML = `<div class="empty empty-welcome" style="grid-column:1/-1">
