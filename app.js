@@ -112,6 +112,7 @@ function enterGuest() {
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
+  const isFirstSignIn = !localStorage.getItem('sitesave-returning');
   localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
@@ -121,6 +122,7 @@ async function enterApp() {
   updateUserAvatar();
   await loadCollections();
   await loadBookmarks();
+  if (isFirstSignIn) setTimeout(startOnboarding, 800);
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -455,7 +457,12 @@ function renderCards() {
         ? `<span>We couldn't find anything matching that search. <button class="empty-clear-btn" onclick="document.getElementById('q').value='';renderCards()">Clear search</button></span>`
         : 'Try a different filter.';
 
-      if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
+      if (S.filter.startsWith('col:') && !document.getElementById('q').value.trim()) {
+        const col = COLLECTIONS.find(c => c.id === S.filter.slice(4));
+        emptyIcon = '▤';
+        emptyTitle = `${col ? col.name : 'This collection'} is empty`;
+        emptySub = `<span>Open any card and tap <strong>✎ Edit</strong> to add it to this collection.</span>`;
+      } else if (S.filter === 'fav' && !document.getElementById('q').value.trim()) {
         emptyIcon = '♡';
         emptyTitle = 'No favourites yet';
         emptySub = 'Click the ♥ on any card to save it here.';
@@ -1027,6 +1034,11 @@ function openModal(id = null) {
   modalCollections = [];
   document.body.style.overflow = 'hidden';
   document.getElementById('m-title').textContent = id ? 'Edit site' : 'Save a site';
+  // Show URL hint for new users on first save
+  const urlHint = document.getElementById('url-hint');
+  if (urlHint) {
+    urlHint.style.display = (!id && !localStorage.getItem('sitesave-saved')) ? '' : 'none';
+  }
   // Show first-time collections tooltip if user has collections and hasn't seen it yet
   const hasSeenTip = localStorage.getItem('sitesave-col-tip');
   if (!hasSeenTip && COLLECTIONS.length > 0 && !id) {
@@ -1192,6 +1204,7 @@ async function saveBM() {
     toast('Updated');
     closeModal(); render();
   } else {
+    localStorage.setItem('sitesave-saved', 'true');
     const row = await dbInsert({ url, name, tags, color: '#111110', fav: false });
     resetBtn();
     if (!row) return;
@@ -1517,4 +1530,107 @@ function renderFilterSheet() {
       </div>`;
     }).join('');
   }
+}
+
+// ── ONBOARDING TOOLTIPS ───────────────────────────────────────
+const ONBOARDING_STEPS = [
+  {
+    target: 'btn-save-site',
+    title: 'Save any website',
+    text: 'Paste a URL and Sitesave captures a screenshot automatically.',
+    position: 'bottom-left',
+  },
+  {
+    target: 'filter-btn',
+    title: 'Filter your collection',
+    text: 'Browse by favourites, tags, collections and more.',
+    position: 'bottom-right',
+    mobileOnly: true,
+  },
+  {
+    target: 'sb-collections',
+    title: 'Create collections',
+    text: 'Group saved sites by project, client or theme — and share them with others.',
+    position: 'right',
+    desktopOnly: true,
+  },
+];
+
+let _onboardingStep = 0;
+
+function startOnboarding() {
+  if (localStorage.getItem('sitesave-onboarded')) return;
+  _onboardingStep = 0;
+  showOnboardingStep();
+}
+
+function showOnboardingStep() {
+  removeOnboardingTooltip();
+  const isMobile = window.innerWidth <= 640;
+  let step = null;
+  while (_onboardingStep < ONBOARDING_STEPS.length) {
+    const s = ONBOARDING_STEPS[_onboardingStep];
+    if (s.mobileOnly && !isMobile) { _onboardingStep++; continue; }
+    if (s.desktopOnly && isMobile) { _onboardingStep++; continue; }
+    step = s; break;
+  }
+  if (!step) { finishOnboarding(); return; }
+
+  const target = document.getElementById(step.target);
+  if (!target) { _onboardingStep++; showOnboardingStep(); return; }
+
+  const tip = document.createElement('div');
+  tip.id = 'onboarding-tip';
+  tip.className = `onboarding-tip onboarding-${step.position}`;
+  tip.innerHTML = `
+    <div class="ob-title">${step.title}</div>
+    <div class="ob-text">${step.text}</div>
+    <div class="ob-foot">
+      <span class="ob-step">${_onboardingStep + 1} of ${ONBOARDING_STEPS.filter(s => isMobile ? !s.desktopOnly : !s.mobileOnly).length}</span>
+      <button class="ob-btn" onclick="nextOnboardingStep()">
+        ${_onboardingStep + 1 < ONBOARDING_STEPS.length ? 'Next' : 'Done'}
+      </button>
+      <button class="ob-skip" onclick="finishOnboarding()">Skip</button>
+    </div>`;
+
+  document.body.appendChild(tip);
+
+  // Position relative to target
+  const rect = target.getBoundingClientRect();
+  const tipW = 260;
+  let top, left;
+
+  if (step.position === 'bottom-left') {
+    top = rect.bottom + 10;
+    left = rect.left;
+  } else if (step.position === 'bottom-right') {
+    top = rect.bottom + 10;
+    left = rect.right - tipW;
+  } else if (step.position === 'right') {
+    top = rect.top;
+    left = rect.right + 12;
+  }
+
+  tip.style.top = Math.max(10, top) + 'px';
+  tip.style.left = Math.max(10, Math.min(left, window.innerWidth - tipW - 10)) + 'px';
+
+  // Highlight target
+  target.classList.add('onboarding-highlight');
+}
+
+function nextOnboardingStep() {
+  const target = ONBOARDING_STEPS[_onboardingStep]?.target;
+  if (target) document.getElementById(target)?.classList.remove('onboarding-highlight');
+  _onboardingStep++;
+  showOnboardingStep();
+}
+
+function finishOnboarding() {
+  removeOnboardingTooltip();
+  ONBOARDING_STEPS.forEach(s => document.getElementById(s.target)?.classList.remove('onboarding-highlight'));
+  localStorage.setItem('sitesave-onboarded', 'true');
+}
+
+function removeOnboardingTooltip() {
+  document.getElementById('onboarding-tip')?.remove();
 }
