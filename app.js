@@ -601,14 +601,42 @@ function card(b, i) {
 }
 
 // ── SCREENSHOT LOADING ────────────────────────────────────────
+// ── SCREENSHOT QUEUE ─────────────────────────────────────────
+const _shotQueue = [];
+let _shotActive = 0;
+const _shotConcurrent = 4; // max simultaneous screenshot requests
+
 function loadScreenshot(id, url) {
+  _shotQueue.push({ id, url });
+  _processScreenshotQueue();
+}
+
+function _processScreenshotQueue() {
+  while (_shotActive < _shotConcurrent && _shotQueue.length > 0) {
+    const { id, url } = _shotQueue.shift();
+    _shotActive++;
+    _fetchScreenshot(id, url);
+  }
+}
+
+function _fetchScreenshot(id, url) {
   const img     = document.getElementById('shot-' + id);
   const shimmer = document.getElementById('shimmer-' + id);
   const errEl   = document.getElementById('err-' + id);
-  if (!img) return;
+  if (!img) { _shotActive--; _processScreenshotQueue(); return; }
   const apiUrl = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
-  img.onload = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
-  img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
+  img.onload = () => {
+    if (shimmer) shimmer.style.display = 'none';
+    img.classList.add('loaded');
+    _shotActive--;
+    _processScreenshotQueue();
+  };
+  img.onerror = () => {
+    if (shimmer) shimmer.style.display = 'none';
+    if (errEl) errEl.style.display = 'flex';
+    _shotActive--;
+    _processScreenshotQueue();
+  };
   img.src = apiUrl;
 }
 
