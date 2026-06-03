@@ -1498,9 +1498,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   border-radius: 8px; padding: 12px 14px;
   box-shadow: 0 6px 20px rgba(0,0,0,.18);
   animation: mu .15s ease;
-  width: 100%;
-  box-sizing: border-box;
+  margin-top: 8px;
 }
+.modal-tip .ob-title { font-size: 14px; }
+.modal-tip .ob-text { font-size: 13px; }
 
 /* ── URL HINT IN MODAL ───────────────────────────────────────── */
 .url-hint {
