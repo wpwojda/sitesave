@@ -602,6 +602,23 @@ function card(b, i) {
 
 // ── SCREENSHOT LOADING ────────────────────────────────────────
 // ── SCREENSHOT LAZY LOADING ──────────────────────────────────
+let _shotQueue = [];
+let _shotActive = 0;
+const _shotMax = 3;
+
+function _processQueue() {
+  while (_shotActive < _shotMax && _shotQueue.length > 0) {
+    const { img, url } = _shotQueue.shift();
+    _shotActive++;
+    const id = img.id.replace('shot-', '');
+    const shimmer = document.getElementById('shimmer-' + id);
+    const errEl   = document.getElementById('err-' + id);
+    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); _shotActive--; _processQueue(); };
+    img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; _shotActive--; _processQueue(); };
+    img.src = url;
+  }
+}
+
 const _shotObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
@@ -609,13 +626,11 @@ const _shotObserver = new IntersectionObserver((entries) => {
     const url = img.dataset.src;
     if (!url) return;
     _shotObserver.unobserve(img);
-    const shimmer = document.getElementById('shimmer-' + img.id.replace('shot-', ''));
-    const errEl   = document.getElementById('err-'    + img.id.replace('shot-', ''));
-    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
-    img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
-    img.src = url;
+    delete img.dataset.src;
+    _shotQueue.push({ img, url });
+    _processQueue();
   });
-}, { rootMargin: '200px' }); // start loading 200px before entering viewport
+}, { rootMargin: '0px' }); // only load when actually visible
 
 function loadScreenshot(id, url) {
   const img = document.getElementById('shot-' + id);
