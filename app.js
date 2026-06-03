@@ -663,7 +663,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    img.src = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${b.url}`;
+    img.src = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(b.url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
   }
 
   const tryBtn = document.getElementById('preview-try-live');
@@ -745,7 +745,7 @@ function showPreviewFallback(url, showMsg = true) {
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
-    img.src = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${url}`;
+    img.src = `https://pageshot.site/v1/screenshot?url=${encodeURIComponent(url)}&width=1440&height=900&format=jpeg&block_ads=true&hide_banners=true`;
   }
 }
 
