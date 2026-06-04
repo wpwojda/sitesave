@@ -594,6 +594,7 @@ function card(b, i) {
         <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
       <span>Preview unavailable</span>
+      ${isPlaceholder ? '' : `<button class="retry-shot-btn" onclick="event.stopPropagation();retryScreenshot('${b.id}','${x(b.url)}')" title="Retry screenshot">↺ Retry</button>`}
     </div>
     ${actions}
   </div>
@@ -687,7 +688,37 @@ async function captureAndStore(id, url) {
   }
 }
 
-// ── PREVIEW MODAL ─────────────────────────────────────────────
+// Retry a failed screenshot manually from the card
+async function retryScreenshot(id, url) {
+  const errEl   = document.getElementById('err-' + id);
+  const shimmer = document.getElementById('shimmer-' + id);
+  const img     = document.getElementById('shot-' + id);
+  if (!errEl || !img) return;
+
+  // Show shimmer, hide error
+  errEl.style.display = 'none';
+  if (shimmer) shimmer.style.display = '';
+
+  try {
+    const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error('502');
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    img.onload = () => {
+      if (shimmer) shimmer.style.display = 'none';
+      img.classList.add('loaded');
+      URL.revokeObjectURL(objectUrl);
+    };
+    img.src = objectUrl;
+    // Store to Supabase in background
+    await captureAndStore(id, url);
+  } catch (e) {
+    if (shimmer) shimmer.style.display = 'none';
+    errEl.style.display = 'flex';
+    toast('Still unavailable — site may block screenshots');
+  }
+}
 function openPreview(id) {
   const b = BM.find(b => b.id == id);
   if (!b) return;
