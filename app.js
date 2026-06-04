@@ -687,7 +687,7 @@ function loadScreenshot(id, url) {
     return;
   }
   // No stored screenshot — fetch once, display it AND store it from the same response
-  const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+  const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
   img.dataset.fetchUrl = apiUrl;
   _shotObserver.observe(img);
 }
@@ -716,7 +716,7 @@ async function storeScreenshot(id, url, blob) {
 async function captureAndStore(id, url) {
   if (!CURRENT_USER) return;
   try {
-    const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
     const res = await fetch(apiUrl);
     if (!res.ok) return;
     const blob = await res.blob();
@@ -737,7 +737,7 @@ async function retryScreenshot(id, url) {
   if (shimmer) shimmer.style.display = '';
 
   try {
-    const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
     const res = await fetch(apiUrl);
     if (!res.ok) throw new Error('502');
     const blob = await res.blob();
@@ -777,7 +777,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    const screenshotSrc = b.screenshot_url || `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(b.url)}`;
+    const screenshotSrc = b.screenshot_url || `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(b.url)}`;
     img.src = screenshotSrc;
   }
 
@@ -861,7 +861,7 @@ function showPreviewFallback(url, showMsg = true) {
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
     const bm = BM.find(b => b.url === url);
-    img.src = bm?.screenshot_url || `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
+    img.src = bm?.screenshot_url || `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
   }
 }
 
