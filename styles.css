@@ -283,6 +283,20 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .thumb-error svg { opacity: .3; }
 .thumb-error span { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .04em; }
+.retry-shot-btn {
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: 'Geist Mono', monospace;
+  background: transparent;
+  border: 1px solid var(--text3);
+  color: var(--text2);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity .15s;
+}
+.retry-shot-btn:hover { opacity: 1; }
 
 /* card action buttons — sit top-right of the thumb */
 .card-actions {
