@@ -613,51 +613,22 @@ function card(b, i) {
 
 // ── SCREENSHOT LOADING ────────────────────────────────────────
 // ── SCREENSHOT LAZY LOADING ──────────────────────────────────
+const WORKER_URL = 'https://sitesave-screenshots.wpwojda.workers.dev';
+
 let _shotQueue = [];
 let _shotActive = 0;
 const _shotMax = 3;
 
 function _processQueue() {
   while (_shotActive < _shotMax && _shotQueue.length > 0) {
-    const { img, fetchUrl, storedUrl } = _shotQueue.shift();
+    const { img, url } = _shotQueue.shift();
     _shotActive++;
     const id = img.id.replace('shot-', '');
     const shimmer = document.getElementById('shimmer-' + id);
     const errEl   = document.getElementById('err-' + id);
-
-    const onDone = () => { _shotActive--; _processQueue(); };
-
-    if (storedUrl) {
-      // Serve from Supabase Storage directly
-      img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); onDone(); };
-      img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; onDone(); };
-      img.src = storedUrl;
-    } else {
-      // Fetch from Render, display and store from the same blob
-      fetch(fetchUrl)
-        .then(res => {
-          if (!res.ok) throw new Error('502');
-          return res.blob();
-        })
-        .then(blob => {
-          const objectUrl = URL.createObjectURL(blob);
-          img.onload = () => {
-            if (shimmer) shimmer.style.display = 'none';
-            img.classList.add('loaded');
-            URL.revokeObjectURL(objectUrl);
-            onDone();
-          };
-          img.src = objectUrl;
-          // Store to Supabase using the same blob — no second Render request
-          const bm = BM.find(b => b.id == id);
-          if (bm && CURRENT_USER) storeScreenshot(id, bm.url, blob);
-        })
-        .catch(() => {
-          if (shimmer) shimmer.style.display = 'none';
-          if (errEl) errEl.style.display = 'flex';
-          onDone();
-        });
-    }
+    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); _shotActive--; _processQueue(); };
+    img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; _shotActive--; _processQueue(); };
+    img.src = url;
   }
 }
 
@@ -665,13 +636,11 @@ const _shotObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
     const img = entry.target;
-    const storedUrl = img.dataset.src;
-    const fetchUrl  = img.dataset.fetchUrl;
-    if (!storedUrl && !fetchUrl) return;
+    const url = img.dataset.src;
+    if (!url) return;
     _shotObserver.unobserve(img);
     delete img.dataset.src;
-    delete img.dataset.fetchUrl;
-    _shotQueue.push({ img, fetchUrl, storedUrl });
+    _shotQueue.push({ img, url });
     _processQueue();
   });
 }, { rootMargin: '0px' });
@@ -679,81 +648,21 @@ const _shotObserver = new IntersectionObserver((entries) => {
 function loadScreenshot(id, url) {
   const img = document.getElementById('shot-' + id);
   if (!img) return;
-  const bm = BM.find(b => b.id == id);
-  // If we already have a stored screenshot, use it directly — no Render call needed
-  if (bm?.screenshot_url) {
-    img.dataset.src = bm.screenshot_url;
-    _shotObserver.observe(img);
-    return;
-  }
-  // No stored screenshot — fetch once, display it AND store it from the same response
-  const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
-  img.dataset.fetchUrl = apiUrl;
+  img.dataset.src = `${WORKER_URL}/?url=${encodeURIComponent(url)}`;
   _shotObserver.observe(img);
 }
 
-// Upload blob to Supabase Storage and save public URL to DB
-async function storeScreenshot(id, url, blob) {
-  if (!CURRENT_USER) return;
-  try {
-    const path = `${CURRENT_USER.id}/${id}.jpg`;
-    const { error: upErr } = await sb.storage.from('screenshots').upload(path, blob, {
-      contentType: 'image/jpeg',
-      upsert: true,
-    });
-    if (upErr) { console.warn('Storage upload failed:', upErr.message); return; }
-    const { data: { publicUrl } } = sb.storage.from('screenshots').getPublicUrl(path);
-    await sb.from('bookmarks').update({ screenshot_url: publicUrl }).eq('id', id);
-    const bm = BM.find(b => b.id == id);
-    if (bm) bm.screenshot_url = publicUrl;
-    console.log('Stored screenshot for', url);
-  } catch (e) {
-    console.warn('storeScreenshot failed:', e.message);
-  }
-}
-
-// Fetch screenshot from Render, upload to Supabase Storage, save URL to DB
-async function captureAndStore(id, url) {
-  if (!CURRENT_USER) return;
-  try {
-    const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
-    const res = await fetch(apiUrl);
-    if (!res.ok) return;
-    const blob = await res.blob();
-    await storeScreenshot(id, url, blob);
-  } catch (e) {
-    console.warn('captureAndStore failed:', e.message);
-  }
-}
-
 // Retry a failed screenshot manually from the card
-async function retryScreenshot(id, url) {
+function retryScreenshot(id, url) {
   const errEl   = document.getElementById('err-' + id);
   const shimmer = document.getElementById('shimmer-' + id);
   const img     = document.getElementById('shot-' + id);
   if (!errEl || !img) return;
-
   errEl.style.display = 'none';
   if (shimmer) shimmer.style.display = '';
-
-  try {
-    const apiUrl = `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
-    const res = await fetch(apiUrl);
-    if (!res.ok) throw new Error('502');
-    const blob = await res.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    img.onload = () => {
-      if (shimmer) shimmer.style.display = 'none';
-      img.classList.add('loaded');
-      URL.revokeObjectURL(objectUrl);
-    };
-    img.src = objectUrl;
-    await storeScreenshot(id, url, blob);
-  } catch (e) {
-    if (shimmer) shimmer.style.display = 'none';
-    errEl.style.display = 'flex';
-    toast('Still unavailable — site may block screenshots');
-  }
+  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
+  img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; errEl.style.display = 'flex'; toast('Still unavailable — site may block screenshots'); };
+  img.src = `${WORKER_URL}/?url=${encodeURIComponent(url)}&bust=${Date.now()}`;
 }
 function openPreview(id) {
   const b = BM.find(b => b.id == id);
@@ -777,7 +686,7 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
-    const screenshotSrc = b.screenshot_url || `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(b.url)}`;
+    const screenshotSrc = b.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(b.url)}`;
     img.src = screenshotSrc;
   }
 
@@ -861,7 +770,7 @@ function showPreviewFallback(url, showMsg = true) {
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
     const bm = BM.find(b => b.url === url);
-    img.src = bm?.screenshot_url || `https://image.thum.io/get/auth/77860-sitesave-woj/width/1440/crop/900/${encodeURIComponent(url)}`;
+    img.src = bm?.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(url)}`;
   }
 }
 
@@ -1380,12 +1289,6 @@ async function toggleFav(id) {
 
 async function delBM(id) {
   if (!confirm('Remove this site?')) return;
-  // Delete screenshot from Storage if one exists
-  const bm = BM.find(b => b.id == id);
-  if (bm?.screenshot_url && CURRENT_USER) {
-    const path = `${CURRENT_USER.id}/${id}.jpg`;
-    await sb.storage.from('screenshots').remove([path]).catch(() => {});
-  }
   await dbDelete(id);
   BM = BM.filter(b => b.id != id);
   render(); toast('Removed');
