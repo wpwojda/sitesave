@@ -619,14 +619,45 @@ const _shotMax = 3;
 
 function _processQueue() {
   while (_shotActive < _shotMax && _shotQueue.length > 0) {
-    const { img, url } = _shotQueue.shift();
+    const { img, fetchUrl, storedUrl } = _shotQueue.shift();
     _shotActive++;
     const id = img.id.replace('shot-', '');
     const shimmer = document.getElementById('shimmer-' + id);
     const errEl   = document.getElementById('err-' + id);
-    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); _shotActive--; _processQueue(); };
-    img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; _shotActive--; _processQueue(); };
-    img.src = url;
+
+    const onDone = () => { _shotActive--; _processQueue(); };
+
+    if (storedUrl) {
+      // Serve from Supabase Storage directly
+      img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); onDone(); };
+      img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; onDone(); };
+      img.src = storedUrl;
+    } else {
+      // Fetch from Render, display and store from the same blob
+      fetch(fetchUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('502');
+          return res.blob();
+        })
+        .then(blob => {
+          const objectUrl = URL.createObjectURL(blob);
+          img.onload = () => {
+            if (shimmer) shimmer.style.display = 'none';
+            img.classList.add('loaded');
+            URL.revokeObjectURL(objectUrl);
+            onDone();
+          };
+          img.src = objectUrl;
+          // Store to Supabase using the same blob — no second Render request
+          const bm = BM.find(b => b.id == id);
+          if (bm && CURRENT_USER) storeScreenshot(id, bm.url, blob);
+        })
+        .catch(() => {
+          if (shimmer) shimmer.style.display = 'none';
+          if (errEl) errEl.style.display = 'flex';
+          onDone();
+        });
+    }
   }
 }
 
@@ -634,11 +665,13 @@ const _shotObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
     const img = entry.target;
-    const url = img.dataset.src;
-    if (!url) return;
+    const storedUrl = img.dataset.src;
+    const fetchUrl  = img.dataset.fetchUrl;
+    if (!storedUrl && !fetchUrl) return;
     _shotObserver.unobserve(img);
     delete img.dataset.src;
-    _shotQueue.push({ img, url });
+    delete img.dataset.fetchUrl;
+    _shotQueue.push({ img, fetchUrl, storedUrl });
     _processQueue();
   });
 }, { rootMargin: '0px' });
@@ -653,15 +686,30 @@ function loadScreenshot(id, url) {
     _shotObserver.observe(img);
     return;
   }
-  // No stored screenshot — queue a Render request, then store the result
+  // No stored screenshot — fetch once, display it AND store it from the same response
   const apiUrl = `https://sitesave-screenshots.onrender.com/screenshot?url=${encodeURIComponent(url)}`;
-  img.dataset.src = apiUrl;
-  // After the image loads, upload it to Supabase Storage in the background
-  img.addEventListener('load', async function onFirstLoad() {
-    img.removeEventListener('load', onFirstLoad);
-    await captureAndStore(id, url);
-  }, { once: true });
+  img.dataset.fetchUrl = apiUrl;
   _shotObserver.observe(img);
+}
+
+// Upload blob to Supabase Storage and save public URL to DB
+async function storeScreenshot(id, url, blob) {
+  if (!CURRENT_USER) return;
+  try {
+    const path = `${CURRENT_USER.id}/${id}.jpg`;
+    const { error: upErr } = await sb.storage.from('screenshots').upload(path, blob, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+    if (upErr) { console.warn('Storage upload failed:', upErr.message); return; }
+    const { data: { publicUrl } } = sb.storage.from('screenshots').getPublicUrl(path);
+    await sb.from('bookmarks').update({ screenshot_url: publicUrl }).eq('id', id);
+    const bm = BM.find(b => b.id == id);
+    if (bm) bm.screenshot_url = publicUrl;
+    console.log('Stored screenshot for', url);
+  } catch (e) {
+    console.warn('storeScreenshot failed:', e.message);
+  }
 }
 
 // Fetch screenshot from Render, upload to Supabase Storage, save URL to DB
@@ -672,17 +720,7 @@ async function captureAndStore(id, url) {
     const res = await fetch(apiUrl);
     if (!res.ok) return;
     const blob = await res.blob();
-    const path = `${CURRENT_USER.id}/${id}.jpg`;
-    const { error: upErr } = await sb.storage.from('screenshots').upload(path, blob, {
-      contentType: 'image/jpeg',
-      upsert: true,
-    });
-    if (upErr) { console.warn('Storage upload failed:', upErr.message); return; }
-    const { data: { publicUrl } } = sb.storage.from('screenshots').getPublicUrl(path);
-    await sb.from('bookmarks').update({ screenshot_url: publicUrl }).eq('id', id);
-    // Update in-memory bookmark so future renders use the stored URL
-    const bm = BM.find(b => b.id == id);
-    if (bm) bm.screenshot_url = publicUrl;
+    await storeScreenshot(id, url, blob);
   } catch (e) {
     console.warn('captureAndStore failed:', e.message);
   }
@@ -695,7 +733,6 @@ async function retryScreenshot(id, url) {
   const img     = document.getElementById('shot-' + id);
   if (!errEl || !img) return;
 
-  // Show shimmer, hide error
   errEl.style.display = 'none';
   if (shimmer) shimmer.style.display = '';
 
@@ -711,8 +748,7 @@ async function retryScreenshot(id, url) {
       URL.revokeObjectURL(objectUrl);
     };
     img.src = objectUrl;
-    // Store to Supabase in background
-    await captureAndStore(id, url);
+    await storeScreenshot(id, url, blob);
   } catch (e) {
     if (shimmer) shimmer.style.display = 'none';
     errEl.style.display = 'flex';
