@@ -42,7 +42,9 @@
     <div class="share-title" id="share-title"></div>
     <div class="share-topbar">
       <div class="share-count" id="share-count"></div>
-      <div class="grid-btns">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="share-import-btn"></div>
+        <div class="grid-btns">
         <button class="grid-btn on" data-cols="2" onclick="setGridCols(2)" title="2 columns">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
@@ -64,9 +66,10 @@
             <rect x="11" y="1" width="2" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
           </svg>
         </button>
+        </div>
+        </div>
       </div>
-    </div>
-    <div class="pills" id="share-pills"></div>
+    </div></div>
   </div>
   <div id="share-error" style="display:none" class="share-error">
     <div class="empty-icon">◫</div>
@@ -130,7 +133,7 @@
   </div>
 </div>
 
-
+<footer class="site-footer">
   <span>© 2026 Sitesave. All rights reserved.</span>
   <a href="https://sitesave.co.uk/privacy.html" style="margin-left:16px;color:var(--text3);font-size:11px;font-family:'Geist Mono',monospace;text-decoration:none;letter-spacing:.04em;" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">Privacy Policy</a>
 </footer>
@@ -185,15 +188,15 @@ async function initAuth() {
 
 function renderCTA() {
   const cta = document.getElementById('share-cta');
-  if (!cta) return;
+  const importBtn = document.getElementById('share-import-btn');
   if (CURRENT_USER) {
-    cta.innerHTML = `
-      <p class="share-cta-text">Add to your library</p>
-      <p class="share-cta-sub">Import all bookmarks from this collection into your Sitesave library.</p>
-      <button class="btn-add share-cta-btn" onclick="importCollection()">Add to my library</button>
-    `;
+    // Logged in — show compact button in topbar, hide bottom banner
+    if (importBtn) importBtn.innerHTML = `<button class="btn-add" style="height:32px;padding:0 14px;font-size:13px;" onclick="importCollection()">+ Add to my library</button>`;
+    if (cta) cta.style.display = 'none';
   } else {
-    cta.innerHTML = `
+    // Logged out — hide topbar button, show full bottom banner
+    if (importBtn) importBtn.innerHTML = '';
+    if (cta) cta.innerHTML = `
       <p class="share-cta-text">Like what you see?</p>
       <p class="share-cta-sub">Save your own references and organise them into collections.</p>
       <a class="btn-add share-cta-btn" href="https://sitesave.co.uk/">Start saving</a>
@@ -203,18 +206,14 @@ function renderCTA() {
 
 async function importCollection() {
   if (!CURRENT_USER) return;
-  const btn = document.querySelector('.share-cta-btn');
+  const importBtn = document.getElementById('share-import-btn');
+  const btn = importBtn?.querySelector('button');
   if (btn) { btn.textContent = 'Importing…'; btn.disabled = true; }
 
   try {
-    // Get collection name for the new collection
     const collectionName = document.getElementById('share-title')?.textContent?.trim() || 'Imported collection';
-
-    // Fetch user's existing URLs to detect duplicates
     const { data: existing } = await sb.from('bookmarks').select('url').eq('user_id', CURRENT_USER.id);
     const existingUrls = new Set((existing || []).map(b => b.url));
-
-    // Filter out duplicates
     const toImport = BM.filter(b => !existingUrls.has(b.url));
     const skipped = BM.length - toImport.length;
 
@@ -223,13 +222,11 @@ async function importCollection() {
       return;
     }
 
-    // Create a new collection
     const { data: col, error: colErr } = await sb.from('collections')
       .insert({ name: collectionName, user_id: CURRENT_USER.id })
       .select().single();
     if (colErr) throw colErr;
 
-    // Insert bookmarks
     const rows = toImport.map(b => ({
       url:     b.url,
       name:    b.name,
@@ -240,7 +237,6 @@ async function importCollection() {
     const { data: inserted, error: bmErr } = await sb.from('bookmarks').insert(rows).select('id');
     if (bmErr) throw bmErr;
 
-    // Link bookmarks to the new collection
     const links = inserted.map(r => ({ bookmark_id: r.id, collection_id: col.id }));
     await sb.from('bookmark_collections').insert(links);
 
@@ -248,15 +244,18 @@ async function importCollection() {
       ? `Imported ${toImport.length} bookmarks (${skipped} duplicate${skipped > 1 ? 's' : ''} skipped)`
       : `Imported ${toImport.length} bookmarks`;
 
-    const cta = document.getElementById('share-cta');
-    cta.innerHTML = `
-      <p class="share-cta-text">Done!</p>
-      <p class="share-cta-sub">${msg}. Find them in your library under "${collectionName}".</p>
-      <a class="btn-add share-cta-btn" href="https://sitesave.co.uk/">Go to my library</a>
-    `;
+    if (importBtn) importBtn.innerHTML = `<a class="btn-add" style="height:32px;padding:0 14px;font-size:13px;text-decoration:none;" href="https://sitesave.co.uk/">View my library</a>`;
+
+    // Show a simple toast
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;font-family:Geist,sans-serif;';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+
   } catch (e) {
     console.error('Import failed:', e);
-    if (btn) { btn.textContent = 'Import failed — try again'; btn.disabled = false; }
+    if (btn) { btn.textContent = '+ Add to my library'; btn.disabled = false; }
   }
 }
 
