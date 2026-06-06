@@ -347,5 +347,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<!-- DELETE COLLECTION MODAL -->
+<div class="del-col-ov hidden" id="del-col-ov" onclick="if(event.target===this)closeDelColModal()">
+  <div class="del-col-modal">
+    <div class="del-col-title" id="del-col-title"></div>
+    <div class="del-col-msg">Choose how to delete this collection.</div>
+    <div class="del-col-btns">
+      <button class="del-col-cancel" onclick="closeDelColModal()">Cancel</button>
+      <button class="del-col-only" id="del-col-only-btn"></button>
+      <button class="del-col-all hidden" id="del-col-all-btn"></button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
