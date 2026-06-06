@@ -955,24 +955,38 @@ async function renameCollection(id) {
   toast('Collection renamed');
 }
 
-async function deleteCollectionFromSheet(id) {
+function openDelColModal(id) {
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
   document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
   const bmIds = BM.filter(b => (b.collections || []).includes(id)).map(b => b.id);
-  // Ensure sheet is open so showSheetConfirm has somewhere to render
-  const sheetOv = document.getElementById('sheet-ov');
-  if (sheetOv.classList.contains('hidden')) {
-    openFilterSheet();
+
+  document.getElementById('del-col-title').textContent = `Delete "${col.name}"?`;
+  const onlyBtn = document.getElementById('del-col-only-btn');
+  const allBtn  = document.getElementById('del-col-all-btn');
+
+  onlyBtn.textContent = 'Delete collection only';
+  onlyBtn.onclick = () => { closeDelColModal(); deleteCollection(id, false); };
+
+  if (bmIds.length > 0) {
+    allBtn.textContent = `Delete collection and ${bmIds.length} bookmark${bmIds.length !== 1 ? 's' : ''}`;
+    allBtn.onclick = () => { closeDelColModal(); deleteCollection(id, true); };
+    allBtn.classList.remove('hidden');
+  } else {
+    allBtn.classList.add('hidden');
   }
-  showSheetConfirm(
-    `Delete "${col.name}"?`,
-    `Choose how to delete this collection.`,
-    () => deleteCollection(id, false),
-    `Delete collection only`,
-    bmIds.length > 0 ? () => deleteCollection(id, true) : null,
-    bmIds.length > 0 ? `Delete collection and ${bmIds.length} bookmark${bmIds.length !== 1 ? 's' : ''}` : null,
-  );
+
+  document.getElementById('del-col-ov').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDelColModal() {
+  document.getElementById('del-col-ov').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function deleteCollectionFromSheet(id) {
+  openDelColModal(id);
 }
 
 async function deleteCollection(id, withBookmarks = false) {
