@@ -283,6 +283,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .thumb-error svg { opacity: .3; }
 .thumb-error span { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .04em; }
+.thumb-error-sub { opacity: .5; margin-top: 2px; }
 
 /* card action buttons — sit top-right of the thumb */
 .card-actions {
