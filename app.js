@@ -123,6 +123,7 @@ async function enterApp() {
   await loadCollections();
   await loadBookmarks();
   if (isFirstSignIn) setTimeout(startOnboarding, 800);
+  else if (window.innerWidth > 640) setTimeout(showKeyboardHint, 1000);
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -1813,8 +1814,39 @@ function finishOnboarding() {
   removeOnboardingTooltip();
   ONBOARDING_STEPS.forEach(s => document.getElementById(s.target)?.classList.remove('onboarding-highlight'));
   localStorage.setItem('sitesave-onboarded', 'true');
+  // Show keyboard shortcuts hint on desktop after onboarding
+  if (window.innerWidth > 640) showKeyboardHint();
 }
 
 function removeOnboardingTooltip() {
   document.getElementById('onboarding-tip')?.remove();
+}
+
+function showKeyboardHint() {
+  if (localStorage.getItem('sitesave-kb-hint')) return;
+  if (window.innerWidth <= 640) return;
+  const hint = document.createElement('div');
+  hint.id = 'kb-hint';
+  hint.className = 'kb-hint';
+  hint.innerHTML = `
+    <div class="kb-hint-title">Keyboard shortcuts</div>
+    <div class="kb-hint-row"><kbd>N</kbd><span>Save a new site</span></div>
+    <div class="kb-hint-row"><kbd>/</kbd><span>Search</span></div>
+    <button class="kb-hint-close" onclick="dismissKeyboardHint()" title="Dismiss">✕</button>
+  `;
+  document.body.appendChild(hint);
+
+  // Dismiss when user actually uses a shortcut
+  const onKey = (e) => {
+    if ((e.key === 'n' || e.key === '/') && e.target === document.body) {
+      dismissKeyboardHint();
+      document.removeEventListener('keydown', onKey);
+    }
+  };
+  document.addEventListener('keydown', onKey);
+}
+
+function dismissKeyboardHint() {
+  document.getElementById('kb-hint')?.remove();
+  localStorage.setItem('sitesave-kb-hint', 'true');
 }
