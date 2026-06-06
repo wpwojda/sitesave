@@ -1611,3 +1611,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .del-col-all:hover { opacity: 1; }
 .del-col-all.hidden { display: none; }
+
+/* ── DUPLICATE URL WARNING ───────────────────────────────────── */
+.url-dup-warn {
+  font-size: 12px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--danger);
+  margin-top: 6px;
+  letter-spacing: .02em;
+}
