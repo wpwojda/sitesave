@@ -74,6 +74,9 @@
     <div class="empty-sub">This link may have expired or been revoked.</div>
   </div>
   <div id="share-grid" class="grid"></div>
+  <div class="share-cta" id="share-cta">
+    <!-- Content injected by JS based on auth state -->
+  </div>
 </div>
 
 <!-- PREVIEW MODAL -->
@@ -127,12 +130,7 @@
   </div>
 </div>
 
-<div class="share-cta" id="share-cta">
-  <!-- Content injected by JS based on auth state -->
-</div>
-</div>
 
-<footer class="site-footer">
   <span>© 2026 Sitesave. All rights reserved.</span>
   <a href="https://sitesave.co.uk/privacy.html" style="margin-left:16px;color:var(--text3);font-size:11px;font-family:'Geist Mono',monospace;text-decoration:none;letter-spacing:.04em;" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">Privacy Policy</a>
 </footer>
@@ -157,8 +155,16 @@ function toggleTheme() {
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
-// Primary client — checks if visitor is logged in
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+// Primary client — checks if visitor is logged in, using same storage key as main app
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    storage: window.localStorage,
+    storageKey: 'sitesave-auth',
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  }
+});
 
 // Anon client for reading shared collection data (no auth bleed)
 const sbAnon = supabase.createClient(SUPA_URL, SUPA_KEY, {
