@@ -1162,6 +1162,7 @@ function openModal(id = null) {
     dupWarn.style.display = 'none';
     fUrl.oninput = null;
   }
+}
 
 function showCollectionTip() {
   const wrap = document.getElementById('col-select-wrap');
