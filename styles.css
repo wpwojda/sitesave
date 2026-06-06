@@ -1194,7 +1194,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   margin-bottom: 12px;
 }
 .sheet-confirm-btns {
-  display: flex; gap: 8px; justify-content: flex-end;
+  display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;
 }
 .sheet-confirm-cancel {
   height: 34px; padding: 0 14px;
@@ -1210,6 +1210,13 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   cursor: pointer; transition: opacity .15s;
 }
 .sheet-confirm-ok:hover { opacity: .85; }
+.sheet-confirm-ok2 {
+  height: 34px; padding: 0 14px;
+  background: var(--danger); border: none; border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: #fff;
+  cursor: pointer; transition: opacity .15s; opacity: .75;
+}
+.sheet-confirm-ok2:hover { opacity: 1; }
 
 .sheet-rename-input {
   width: 100%; margin-top: 8px;
@@ -1377,8 +1384,9 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* ── SHARE PAGE CTA ──────────────────────────────────────────── */
 .share-cta {
+  grid-column: 1 / -1;
   width: 100%;
-  margin: 80px 0 60px;
+  margin: 40px 0 20px;
   padding: 48px 36px;
   background: var(--bg2);
   border: 1px solid var(--border);
