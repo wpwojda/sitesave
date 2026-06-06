@@ -1144,7 +1144,24 @@ function openModal(id = null) {
   renderCollectionDropdown();
   document.getElementById('m-ov').classList.remove('hidden');
   setTimeout(() => document.getElementById('f-url').focus(), 80);
-}
+
+  // Wire up duplicate URL detection on the URL field (new saves only)
+  const fUrl = document.getElementById('f-url');
+  const dupWarn = document.getElementById('url-dup-warn');
+  if (!id && dupWarn) {
+    fUrl.oninput = () => {
+      const val = fUrl.value.trim();
+      const exists = val && BM.some(b => b.url === val || b.url === val.replace(/\/$/, '') || b.url.replace(/\/$/, '') === val);
+      dupWarn.style.display = exists ? '' : 'none';
+      if (exists) {
+        const match = BM.find(b => b.url === val || b.url === val.replace(/\/$/, '') || b.url.replace(/\/$/, '') === val);
+        dupWarn.textContent = `Already saved as "${match.name || host(match.url)}"`;
+      }
+    };
+  } else if (dupWarn) {
+    dupWarn.style.display = 'none';
+    fUrl.oninput = null;
+  }
 
 function showCollectionTip() {
   const wrap = document.getElementById('col-select-wrap');
