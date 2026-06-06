@@ -128,9 +128,8 @@
 </div>
 
 <div class="share-cta" id="share-cta">
-  <p class="share-cta-text">Like what you see?</p>
-  <p class="share-cta-sub">Save your own references and organise them into collections.</p>
-  <a class="btn-add share-cta-btn" href="https://sitesave.co.uk/">Start saving</a>
+  <!-- Content injected by JS based on auth state -->
+</div>
 </div>
 
 <footer class="site-footer">
@@ -158,15 +157,102 @@ function toggleTheme() {
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
-// Use anonymous-only client — no auth persistence, so shared collections
-// never bleed into a signed-in user's session or account
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+// Primary client — checks if visitor is logged in
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Anon client for reading shared collection data (no auth bleed)
+const sbAnon = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false,
   }
 });
+
+let CURRENT_USER = null;
+
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  CURRENT_USER = session?.user || null;
+  renderCTA();
+}
+
+function renderCTA() {
+  const cta = document.getElementById('share-cta');
+  if (!cta) return;
+  if (CURRENT_USER) {
+    cta.innerHTML = `
+      <p class="share-cta-text">Add to your library</p>
+      <p class="share-cta-sub">Import all bookmarks from this collection into your Sitesave library.</p>
+      <button class="btn-add share-cta-btn" onclick="importCollection()">Add to my library</button>
+    `;
+  } else {
+    cta.innerHTML = `
+      <p class="share-cta-text">Like what you see?</p>
+      <p class="share-cta-sub">Save your own references and organise them into collections.</p>
+      <a class="btn-add share-cta-btn" href="https://sitesave.co.uk/">Start saving</a>
+    `;
+  }
+}
+
+async function importCollection() {
+  if (!CURRENT_USER) return;
+  const btn = document.querySelector('.share-cta-btn');
+  if (btn) { btn.textContent = 'Importing…'; btn.disabled = true; }
+
+  try {
+    // Get collection name for the new collection
+    const collectionName = document.getElementById('share-title')?.textContent?.trim() || 'Imported collection';
+
+    // Fetch user's existing URLs to detect duplicates
+    const { data: existing } = await sb.from('bookmarks').select('url').eq('user_id', CURRENT_USER.id);
+    const existingUrls = new Set((existing || []).map(b => b.url));
+
+    // Filter out duplicates
+    const toImport = BM.filter(b => !existingUrls.has(b.url));
+    const skipped = BM.length - toImport.length;
+
+    if (toImport.length === 0) {
+      if (btn) { btn.textContent = 'Already in your library'; btn.disabled = false; }
+      return;
+    }
+
+    // Create a new collection
+    const { data: col, error: colErr } = await sb.from('collections')
+      .insert({ name: collectionName, user_id: CURRENT_USER.id })
+      .select().single();
+    if (colErr) throw colErr;
+
+    // Insert bookmarks
+    const rows = toImport.map(b => ({
+      url:     b.url,
+      name:    b.name,
+      tags:    b.tags || [],
+      user_id: CURRENT_USER.id,
+      fav:     false,
+    }));
+    const { data: inserted, error: bmErr } = await sb.from('bookmarks').insert(rows).select('id');
+    if (bmErr) throw bmErr;
+
+    // Link bookmarks to the new collection
+    const links = inserted.map(r => ({ bookmark_id: r.id, collection_id: col.id }));
+    await sb.from('bookmark_collections').insert(links);
+
+    const msg = skipped > 0
+      ? `Imported ${toImport.length} bookmarks (${skipped} duplicate${skipped > 1 ? 's' : ''} skipped)`
+      : `Imported ${toImport.length} bookmarks`;
+
+    const cta = document.getElementById('share-cta');
+    cta.innerHTML = `
+      <p class="share-cta-text">Done!</p>
+      <p class="share-cta-sub">${msg}. Find them in your library under "${collectionName}".</p>
+      <a class="btn-add share-cta-btn" href="https://sitesave.co.uk/">Go to my library</a>
+    `;
+  } catch (e) {
+    console.error('Import failed:', e);
+    if (btn) { btn.textContent = 'Import failed — try again'; btn.disabled = false; }
+  }
+}
 
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
 function x(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -227,7 +313,7 @@ async function init() {
   if (!token) { showError(); return; }
 
   // Fetch collection by share token
-  const { data: col, error: colErr } = await sb
+  const { data: col, error: colErr } = await sbAnon
     .from('collections')
     .select('id, name')
     .eq('share_token', token)
@@ -236,7 +322,7 @@ async function init() {
   if (colErr || !col) { showError(); return; }
 
   // Fetch bookmark ids in this collection
-  const { data: bcData, error: bcErr } = await sb
+  const { data: bcData, error: bcErr } = await sbAnon
     .from('bookmark_collections')
     .select('bookmark_id')
     .eq('collection_id', col.id);
@@ -249,7 +335,7 @@ async function init() {
   const ids = bcData.map(r => r.bookmark_id);
 
   // Fetch the bookmarks
-  const { data: bmData, error: bmErr } = await sb
+  const { data: bmData, error: bmErr } = await sbAnon
     .from('bookmarks')
     .select('id, url, name, tags, color, fav, created_at')
     .in('id', ids);
@@ -451,6 +537,7 @@ pOv.addEventListener('mouseup',   e => { if (_pDown && e.target === pOv) closePr
 // ── Mobile close button ───────────────────────────────────────
 // Handled via onclick in HTML
 
+initAuth();
 init();
 </script>
 </body>
