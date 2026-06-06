@@ -594,7 +594,8 @@ function card(b, i) {
         <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
       <span>Preview unavailable</span>
-      ${isPlaceholder ? '' : `<button class="retry-shot-btn" onclick="event.stopPropagation();retryScreenshot('${b.id}','${x(b.url)}')" title="Retry screenshot">↺ Retry</button>`}
+      <span class="thumb-error-sub">This site blocks screenshot tools.</span>
+      ${isPlaceholder ? '' : `<button class="retry-shot-btn" onclick="event.stopPropagation();retryScreenshot('${b.id}','${x(b.url)}')" title="Try capturing the screenshot again">↺ Retry</button>`}
     </div>
     ${actions}
   </div>
@@ -1037,7 +1038,7 @@ async function revokeSharing(id) {
 
 function copyShareLink(token) {
   const url = `${location.origin}/share.html?c=${token}`;
-  navigator.clipboard.writeText(url).then(() => toast('Link copied to clipboard'));
+  navigator.clipboard.writeText(url).then(() => toast('Link copied — anyone can view this collection without an account'));
 }
 
 async function createCollection() {
