@@ -958,7 +958,13 @@ async function renameCollection(id) {
 async function deleteCollectionFromSheet(id) {
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
+  document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
   const bmIds = BM.filter(b => (b.collections || []).includes(id)).map(b => b.id);
+  // Ensure sheet is open so showSheetConfirm has somewhere to render
+  const sheetOv = document.getElementById('sheet-ov');
+  if (sheetOv.classList.contains('hidden')) {
+    openFilterSheet();
+  }
   showSheetConfirm(
     `Delete "${col.name}"?`,
     `Choose how to delete this collection.`,
