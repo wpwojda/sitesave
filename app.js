@@ -1139,6 +1139,9 @@ function openModal(id = null) {
   } else {
     document.getElementById('f-url').value  = '';
     document.getElementById('f-name').value = '';
+    // Clear any leftover duplicate warning
+    const dupWarn = document.getElementById('url-dup-warn');
+    if (dupWarn) { dupWarn.style.display = 'none'; dupWarn.textContent = ''; }
   }
   renderTagTokens();
   renderCollectionDropdown();
@@ -1180,6 +1183,8 @@ function closeModal() {
   document.getElementById('m-ov').classList.add('hidden');
   document.body.style.overflow = '';
   S.editId = null; modalTags = []; modalCollections = [];
+  const dupWarn = document.getElementById('url-dup-warn');
+  if (dupWarn) { dupWarn.style.display = 'none'; dupWarn.textContent = ''; }
 }
 
 function renderTagTokens() {
