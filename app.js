@@ -851,7 +851,7 @@ function renderSidebar() {
                    <button class="col-dd-danger" onclick="event.stopPropagation();revokeSharing('${col.id}')">Revoke link</button>`
                 : `<button onclick="event.stopPropagation();enableSharing('${col.id}')">Share</button>`
               }
-              <button class="col-dd-danger" onclick="event.stopPropagation();deleteCollection('${col.id}')">Delete</button>
+              <button class="col-dd-danger" onclick="event.stopPropagation();deleteCollectionFromSheet('${col.id}')">Delete</button>
             </div>
           </div>
         </span>
@@ -958,20 +958,29 @@ async function renameCollection(id) {
 async function deleteCollectionFromSheet(id) {
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
-  const count = BM.filter(b => (b.collections || []).includes(id)).length;
+  const bmIds = BM.filter(b => (b.collections || []).includes(id)).map(b => b.id);
   showSheetConfirm(
     `Delete "${col.name}"?`,
-    `Your saved sites will not be deleted — they will remain in All.`,
-    () => deleteCollection(id)
+    `Choose how to delete this collection.`,
+    () => deleteCollection(id, false),
+    `Delete collection only`,
+    bmIds.length > 0 ? () => deleteCollection(id, true) : null,
+    bmIds.length > 0 ? `Delete collection and ${bmIds.length} bookmark${bmIds.length !== 1 ? 's' : ''}` : null,
   );
 }
 
-async function deleteCollection(id) {
+async function deleteCollection(id, withBookmarks = false) {
   document.querySelectorAll('.col-dropdown').forEach(d => d.classList.add('hidden'));
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
-  const confirmed = confirm(`Delete "${col.name}"?\n\nYour saved sites will not be deleted — they will remain in All.`);
-  if (!confirmed) return;
+  const bmIds = BM.filter(b => (b.collections || []).includes(id)).map(b => b.id);
+
+  if (withBookmarks && bmIds.length > 0) {
+    // Delete all bookmarks in this collection first
+    await sb.from('bookmarks').delete().in('id', bmIds).eq('user_id', CURRENT_USER.id);
+    BM = BM.filter(b => !bmIds.includes(b.id));
+  }
+
   await dbDeleteCollection(id);
   COLLECTIONS = COLLECTIONS.filter(c => c.id !== id);
   BM.forEach(b => { b.collections = (b.collections || []).filter(cid => cid !== id); });
@@ -980,7 +989,7 @@ async function deleteCollection(id) {
   if (!document.getElementById('sheet-ov').classList.contains('hidden')) {
     renderFilterSheet();
   }
-  toast(`"${col.name}" deleted`);
+  toast(withBookmarks ? `"${col.name}" and its bookmarks deleted` : `"${col.name}" deleted`);
 }
 
 async function enableSharing(id) {
@@ -1455,7 +1464,7 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
 init();
 
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
-function showSheetConfirm(title, message, onConfirm) {
+function showSheetConfirm(title, message, onConfirm, confirmLabel = 'Delete', onConfirm2 = null, confirm2Label = null) {
   document.getElementById('sheet-confirm')?.remove();
 
   const el = document.createElement('div');
@@ -1466,7 +1475,8 @@ function showSheetConfirm(title, message, onConfirm) {
     <div class="sheet-confirm-msg">${x(message)}</div>
     <div class="sheet-confirm-btns">
       <button class="sheet-confirm-cancel">Cancel</button>
-      <button class="sheet-confirm-ok">Delete</button>
+      <button class="sheet-confirm-ok">${x(confirmLabel)}</button>
+      ${onConfirm2 ? `<button class="sheet-confirm-ok2">${x(confirm2Label)}</button>` : ''}
     </div>`;
 
   // Stop ALL clicks inside the confirm panel bubbling to the overlay
@@ -1477,6 +1487,13 @@ function showSheetConfirm(title, message, onConfirm) {
     el.remove();
     onConfirm();
   });
+
+  if (onConfirm2) {
+    el.querySelector('.sheet-confirm-ok2').addEventListener('click', () => {
+      el.remove();
+      onConfirm2();
+    });
+  }
 
   // Prepend so it appears at the top of the sheet, not the bottom
   const sheet = document.getElementById('filter-sheet');
