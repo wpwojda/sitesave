@@ -1148,7 +1148,22 @@ function openModal(id = null) {
   renderTagTokens();
   renderCollectionDropdown();
   document.getElementById('m-ov').classList.remove('hidden');
-  setTimeout(() => document.getElementById('f-url').focus(), 80);
+  setTimeout(async () => {
+    const urlField = document.getElementById('f-url');
+    urlField.focus();
+    // Auto-fill URL from clipboard if it looks like a URL and field is empty
+    if (!id && !urlField.value) {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text && /^https?:\/\/.+/.test(text.trim())) {
+          urlField.value = text.trim();
+          urlField.dispatchEvent(new Event('input'));
+        }
+      } catch (e) {
+        // Clipboard access denied — fail silently
+      }
+    }
+  }, 80);
 
   // Wire up duplicate URL detection on the URL field (new saves only)
   const fUrl = document.getElementById('f-url');
