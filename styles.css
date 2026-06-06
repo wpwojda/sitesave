@@ -1561,3 +1561,51 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   .explainer-title { margin-bottom: 0; text-align: left; }
   .explainer-text { padding-left: 0; text-align: left; }
 }
+
+/* ── DELETE COLLECTION MODAL ─────────────────────────────────── */
+.del-col-ov {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.del-col-ov.hidden { display: none; }
+.del-col-modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 24px 20px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12);
+}
+.del-col-title {
+  font-size: 16px; font-weight: 600; letter-spacing: -.02em;
+  color: var(--text); margin-bottom: 6px;
+}
+.del-col-msg {
+  font-size: 14px; color: var(--text2); margin-bottom: 20px; line-height: 1.5;
+}
+.del-col-btns {
+  display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;
+}
+.del-col-cancel {
+  height: 34px; padding: 0 14px;
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text2);
+  cursor: pointer; transition: var(--trans);
+}
+.del-col-cancel:hover { border-color: var(--border-md); color: var(--text); }
+.del-col-only {
+  height: 34px; padding: 0 14px;
+  background: var(--danger); border: none; border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: #fff;
+  cursor: pointer; transition: opacity .15s;
+}
+.del-col-only:hover { opacity: .85; }
+.del-col-all {
+  height: 34px; padding: 0 14px;
+  background: var(--danger); border: none; border-radius: 6px;
+  font-family: 'Geist', sans-serif; font-size: 14px; color: #fff;
+  cursor: pointer; opacity: .7; transition: opacity .15s;
+}
+.del-col-all:hover { opacity: 1; }
+.del-col-all.hidden { display: none; }
