@@ -567,6 +567,10 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   white-space: nowrap; font-family: 'Geist Mono', monospace; letter-spacing: .02em;
   animation: ti .18s ease, to .18s ease 2.2s both;
   transition: background .18s, color .18s;
+  max-width: calc(100vw - 32px);
+}
+@media (max-width: 640px) {
+  .toast { white-space: normal; text-align: center; font-size: 12px; }
 }
 @keyframes ti { from{opacity:0;transform:translateX(-50%) translateY(6px)} to{opacity:1;transform:translateX(-50%)} }
 @keyframes to  { to{opacity:0} }
