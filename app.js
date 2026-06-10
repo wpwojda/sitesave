@@ -181,7 +181,11 @@ function checkPasswordMatch() {
   else { el.textContent = 'Passwords do not match'; el.className = 'auth-match no-match'; }
 }
 
-function openAuthModal(view = 'signup') {
+function openAuthModal(view) {
+  // Default to sign in for returning users, sign up for new visitors
+  if (!view) {
+    view = localStorage.getItem('sitesave-returning') ? 'signin' : 'signup';
+  }
   showAuthView(view);
   // Clear all form fields
   ['signin-email', 'signin-password', 'signup-email', 'signup-password', 'signup-password2', 'forgot-email'].forEach(id => {
