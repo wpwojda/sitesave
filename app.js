@@ -92,6 +92,13 @@ async function init() {
       enterGuest();
     } else if (event === 'PASSWORD_RECOVERY') {
       window.location.href = 'reset-password.html';
+    } else if (event === 'USER_UPDATED') {
+      // Email confirmed — refresh session to pick up the confirmed user
+      if (session?.user && !_authHandled) {
+        _authHandled = true;
+        CURRENT_USER = session.user;
+        await enterApp();
+      }
     }
   });
 }
