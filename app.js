@@ -64,6 +64,17 @@ let _authHandled = false;
 async function init() {
   _authHandled = false;
 
+  // If the URL contains an auth token (email confirmation or OAuth callback),
+  // clear any existing session first so the new one takes over correctly
+  const hasAuthToken = window.location.hash.includes('access_token') ||
+                       window.location.search.includes('code=') ||
+                       window.location.search.includes('token=');
+
+  if (hasAuthToken) {
+    await sb.auth.signOut({ scope: 'local' });
+    localStorage.removeItem('sitesave-auth');
+  }
+
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
