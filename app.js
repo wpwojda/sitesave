@@ -183,6 +183,16 @@ function checkPasswordMatch() {
 
 function openAuthModal(view = 'signup') {
   showAuthView(view);
+  // Clear all form fields
+  ['signin-email', 'signin-password', 'signup-email', 'signup-password', 'signup-password2', 'forgot-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Clear strength and match indicators
+  const strength = document.getElementById('signup-strength');
+  const match = document.getElementById('signup-match');
+  if (strength) { strength.textContent = ''; strength.className = 'auth-strength'; }
+  if (match) { match.textContent = ''; match.className = 'auth-match'; }
   document.getElementById('auth-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
@@ -216,6 +226,20 @@ function showAuthView(view) {
   });
   document.getElementById('auth-view-' + view)?.classList.remove('hidden');
   clearAuthErrors();
+  // Clear fields for the view being shown
+  const fieldMap = {
+    signin: ['signin-email', 'signin-password'],
+    signup: ['signup-email', 'signup-password', 'signup-password2'],
+    forgot: ['forgot-email'],
+  };
+  (fieldMap[view] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const strength = document.getElementById('signup-strength');
+  const match = document.getElementById('signup-match');
+  if (strength) { strength.textContent = ''; strength.className = 'auth-strength'; }
+  if (match) { match.textContent = ''; match.className = 'auth-match'; }
 }
 
 function clearAuthErrors() {
