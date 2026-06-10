@@ -130,6 +130,39 @@ async function enterApp() {
 
 // ── AUTH ──────────────────────────────────────────────────────
 // ── AUTH MODAL ────────────────────────────────────────────────
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  btn.querySelector('.eye-show').classList.toggle('hidden', isPassword);
+  btn.querySelector('.eye-hide').classList.toggle('hidden', !isPassword);
+}
+
+function checkPasswordStrength(value) {
+  const el = document.getElementById('signup-strength');
+  if (!el) return;
+  if (!value) { el.textContent = ''; el.className = 'auth-strength'; return; }
+  let strength = 0;
+  if (value.length >= 8) strength++;
+  if (value.length >= 12) strength++;
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) strength++;
+  if (/[0-9]/.test(value)) strength++;
+  if (/[^A-Za-z0-9]/.test(value)) strength++;
+  if (strength <= 1) { el.textContent = 'Weak password'; el.className = 'auth-strength weak'; }
+  else if (strength <= 3) { el.textContent = 'Good password'; el.className = 'auth-strength good'; }
+  else { el.textContent = 'Strong password'; el.className = 'auth-strength strong'; }
+}
+
+function checkPasswordMatch() {
+  const el = document.getElementById('signup-match');
+  if (!el) return;
+  const p1 = document.getElementById('signup-password')?.value;
+  const p2 = document.getElementById('signup-password2')?.value;
+  if (!p2) { el.textContent = ''; el.className = 'auth-match'; return; }
+  if (p1 === p2) { el.textContent = 'Passwords match'; el.className = 'auth-match match'; }
+  else { el.textContent = 'Passwords do not match'; el.className = 'auth-match no-match'; }
+}
+
 function openAuthModal(view = 'signup') {
   showAuthView(view);
   document.getElementById('auth-ov').classList.remove('hidden');
