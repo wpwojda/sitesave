@@ -64,6 +64,11 @@ let _authHandled = false;
 async function init() {
   _authHandled = false;
 
+  // Clean up any error hashes Supabase leaves in the URL
+  if (window.location.hash.includes('error=') || window.location.hash.includes('error_code=')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+
   // If the URL contains an auth token (email confirmation or OAuth callback),
   // clear any existing session first so the new one takes over correctly
   const hasAuthToken = window.location.hash.includes('access_token') ||
