@@ -90,6 +90,8 @@ async function init() {
       BM = [];
       COLLECTIONS = [];
       enterGuest();
+    } else if (event === 'PASSWORD_RECOVERY') {
+      window.location.href = 'reset-password.html';
     }
   });
 }
@@ -127,10 +129,68 @@ async function enterApp() {
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
+// ── AUTH MODAL ────────────────────────────────────────────────
+function openAuthModal(view = 'signup') {
+  showAuthView(view);
+  document.getElementById('auth-ov').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    const firstInput = document.querySelector('#auth-view-' + view + ' .auth-input');
+    if (firstInput) firstInput.focus();
+  }, 80);
+}
+
+// Enter key support for auth inputs
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const authOv = document.getElementById('auth-ov');
+  if (!authOv || authOv.classList.contains('hidden')) return;
+  if (!['auth-view-signin', 'auth-view-signup', 'auth-view-forgot'].some(
+    id => !document.getElementById(id)?.classList.contains('hidden')
+  )) return;
+  if (!document.getElementById('auth-view-signin').classList.contains('hidden')) signInWithEmail();
+  else if (!document.getElementById('auth-view-signup').classList.contains('hidden')) signUpWithEmail();
+  else if (!document.getElementById('auth-view-forgot').classList.contains('hidden')) sendPasswordReset();
+});
+
+function closeAuthModal() {
+  document.getElementById('auth-ov').classList.add('hidden');
+  document.body.style.overflow = '';
+  clearAuthErrors();
+}
+
+function showAuthView(view) {
+  ['signin', 'signup', 'forgot', 'check-email'].forEach(v => {
+    document.getElementById('auth-view-' + v)?.classList.add('hidden');
+  });
+  document.getElementById('auth-view-' + view)?.classList.remove('hidden');
+  clearAuthErrors();
+}
+
+function clearAuthErrors() {
+  ['signin-error', 'signup-error', 'forgot-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ''; el.classList.add('hidden'); }
+  });
+}
+
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function setAuthLoading(submitId, loading) {
+  const btn = document.getElementById(submitId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.style.opacity = loading ? '.6' : '';
+}
+
 async function signInWithGoogle() {
   const btn = document.getElementById('btn-sign-in');
-  btn.textContent = 'Signing in…';
-  btn.disabled = true;
+  if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -140,9 +200,59 @@ async function signInWithGoogle() {
   });
   if (error) {
     toast('Sign in failed — ' + error.message);
-    btn.textContent = 'Sign in';
-    btn.disabled = false;
+    if (btn) { btn.textContent = 'Sign in'; btn.disabled = false; }
   }
+}
+
+async function signInWithEmail() {
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  if (!email || !password) { showAuthError('signin-error', 'Please enter your email and password.'); return; }
+  setAuthLoading('signin-submit', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  setAuthLoading('signin-submit', false);
+  if (error) {
+    showAuthError('signin-error', error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password.'
+      : error.message);
+    return;
+  }
+  closeAuthModal();
+}
+
+async function signUpWithEmail() {
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const password2 = document.getElementById('signup-password2').value;
+  if (!email || !password || !password2) { showAuthError('signup-error', 'Please fill in all fields.'); return; }
+  if (password.length < 8) { showAuthError('signup-error', 'Password must be at least 8 characters.'); return; }
+  if (password !== password2) { showAuthError('signup-error', 'Passwords do not match.'); return; }
+  setAuthLoading('signup-submit', true);
+  const { error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: 'https://sitesave.co.uk/' }
+  });
+  setAuthLoading('signup-submit', false);
+  if (error) { showAuthError('signup-error', error.message); return; }
+  document.getElementById('auth-check-email-msg').textContent =
+    `We've sent a confirmation link to ${email}. Please check your inbox and click the link to activate your account.`;
+  showAuthView('check-email');
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) { showAuthError('forgot-error', 'Please enter your email address.'); return; }
+  setAuthLoading('forgot-submit', true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://sitesave.co.uk/reset-password.html'
+  });
+  setAuthLoading('forgot-submit', false);
+  if (error) { showAuthError('forgot-error', error.message); return; }
+  document.getElementById('auth-check-email-msg').textContent =
+    `We've sent a password reset link to ${email}. Please check your inbox.`;
+  showAuthView('check-email');
+}
 }
 
 async function signOut() {
@@ -539,7 +649,7 @@ function renderCards() {
 // ── SIGNUP PROMPT CARD ────────────────────────────────────────
 function signupPromptCard() {
   return `
-<div class="card card-signup-prompt" onclick="signInWithGoogle()">
+<div class="card card-signup-prompt" onclick="openAuthModal('signup')">
   <div class="card-thumb signup-thumb">
     <div class="signup-prompt-inner">
       <div class="signup-icon">
@@ -1113,7 +1223,7 @@ let modalTags = [];
 let modalCollections = []; // collection ids selected in modal
 
 function openModal(id = null) {
-  if (S.guestMode) { signInWithGoogle(); return; }
+  if (S.guestMode) { openAuthModal('signup'); return; }
   S.editId = id;
   modalTags = [];
   modalCollections = [];
