@@ -1767,3 +1767,32 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
   font-size: 13px; color: var(--accent); font-family: 'Geist', sans-serif;
   text-decoration: underline;
 }
+
+/* ── AUTH PASSWORD FIELDS ────────────────────────────────────── */
+.auth-input-wrap {
+  position: relative;
+  display: flex; align-items: center;
+}
+.auth-input-wrap .auth-input {
+  padding-right: 40px;
+  width: 100%;
+}
+.auth-eye {
+  position: absolute; right: 10px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); padding: 4px;
+  display: flex; align-items: center;
+  transition: color .15s;
+}
+.auth-eye:hover { color: var(--text2); }
+.auth-strength, .auth-match {
+  font-size: 12px; font-family: 'Geist Mono', monospace;
+  letter-spacing: .02em; margin-top: 5px; min-height: 16px;
+}
+.auth-strength.weak { color: var(--danger); }
+.auth-strength.good { color: #e8930a; }
+.auth-strength.strong { color: #2a9d5c; }
+.auth-match.match { color: #2a9d5c; }
+.auth-match.no-match { color: var(--danger); }
+.eye-show, .eye-hide { display: block; }
+.eye-show.hidden, .eye-hide.hidden { display: none; }
