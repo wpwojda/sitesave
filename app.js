@@ -253,7 +253,6 @@ async function sendPasswordReset() {
     `We've sent a password reset link to ${email}. Please check your inbox.`;
   showAuthView('check-email');
 }
-}
 
 async function signOut() {
   _authHandled = false;
