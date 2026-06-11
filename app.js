@@ -254,6 +254,20 @@ function closeAuthModal() {
   clearAuthErrors();
 }
 
+// Only close the auth modal if the click both started AND ended on the overlay
+// — prevents accidental dismissal when user drags/selects text out of the modal
+let _authOvMousedownOnOverlay = false;
+document.addEventListener('mousedown', e => {
+  _authOvMousedownOnOverlay = e.target === document.getElementById('auth-ov');
+});
+document.addEventListener('mouseup', e => {
+  if (!_authOvMousedownOnOverlay) return;
+  if (e.target !== document.getElementById('auth-ov')) return;
+  const resetView = document.getElementById('auth-view-reset-password');
+  if (resetView && !resetView.classList.contains('hidden')) return; // locked during reset
+  closeAuthModal();
+});
+
 function showAuthView(view) {
   ['signin', 'signup', 'forgot', 'check-email', 'reset-password', 'reset-success'].forEach(v => {
     document.getElementById('auth-view-' + v)?.classList.add('hidden');
