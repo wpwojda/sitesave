@@ -69,26 +69,7 @@ async function init() {
     history.replaceState(null, '', window.location.pathname);
   }
 
-  // If the URL contains an email confirmation token, let onAuthStateChange handle it
-  // Note: Google OAuth uses code= but that's handled differently — don't intercept it
-  const hasEmailToken = window.location.hash.includes('access_token') &&
-                        window.location.hash.includes('type=signup');
-
-  if (hasEmailToken) {
-    // Show landing page while token is being processed
-    enterGuest();
-    return;
-  }
-
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    _authHandled = true;
-    CURRENT_USER = session.user;
-    await enterApp();
-  } else {
-    enterGuest();
-  }
-
+  // Register auth state listener first — before anything else
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       _authHandled = true;
@@ -104,7 +85,6 @@ async function init() {
     } else if (event === 'PASSWORD_RECOVERY') {
       window.location.href = 'reset-password.html';
     } else if (event === 'USER_UPDATED') {
-      // Email confirmed — refresh session to pick up the confirmed user
       if (session?.user && !_authHandled) {
         _authHandled = true;
         CURRENT_USER = session.user;
@@ -112,6 +92,26 @@ async function init() {
       }
     }
   });
+
+  // If the URL contains an email confirmation token, let onAuthStateChange handle it
+  // Supabase will process the hash and fire SIGNED_IN automatically
+  const hasEmailToken = window.location.hash.includes('access_token') &&
+                        window.location.hash.includes('type=signup');
+
+  if (hasEmailToken) {
+    enterGuest();
+    return;
+  }
+
+  // No token in URL — check for existing session normally
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    _authHandled = true;
+    CURRENT_USER = session.user;
+    await enterApp();
+  } else {
+    enterGuest();
+  }
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
