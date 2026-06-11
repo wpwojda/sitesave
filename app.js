@@ -93,7 +93,9 @@ async function init() {
       COLLECTIONS = [];
       enterGuest();
     } else if (event === 'PASSWORD_RECOVERY') {
-      window.location.href = 'reset-password.html';
+      // Stay on this page — open the reset modal directly so the session isn't lost
+      history.replaceState(null, '', window.location.pathname);
+      openAuthModal('reset-password');
     } else if (event === 'USER_UPDATED') {
       if (session?.user && !_authHandled) {
         _authHandled = true;
@@ -137,7 +139,6 @@ function enterGuest() {
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
-  const isFirstSignIn = !localStorage.getItem('sitesave-returning') || !localStorage.getItem(`sitesave-onboarded-${CURRENT_USER?.id}`);
   localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
@@ -151,7 +152,9 @@ async function enterApp() {
   updateUserAvatar();
   await loadCollections();
   await loadBookmarks();
-  if (isFirstSignIn) setTimeout(startOnboarding, 800);
+  const uid = CURRENT_USER?.id;
+  const seenOnboarding = uid ? localStorage.getItem(`sitesave-onboarded-${uid}`) : localStorage.getItem('sitesave-onboarded');
+  if (!seenOnboarding && BM.length === 0) setTimeout(startOnboarding, 800);
   else if (window.innerWidth > 640) setTimeout(showKeyboardHint, 1000);
 }
 
@@ -219,12 +222,13 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const authOv = document.getElementById('auth-ov');
   if (!authOv || authOv.classList.contains('hidden')) return;
-  if (!['auth-view-signin', 'auth-view-signup', 'auth-view-forgot'].some(
+  if (!['auth-view-signin', 'auth-view-signup', 'auth-view-forgot', 'auth-view-reset-password'].some(
     id => !document.getElementById(id)?.classList.contains('hidden')
   )) return;
   if (!document.getElementById('auth-view-signin').classList.contains('hidden')) signInWithEmail();
   else if (!document.getElementById('auth-view-signup').classList.contains('hidden')) signUpWithEmail();
   else if (!document.getElementById('auth-view-forgot').classList.contains('hidden')) sendPasswordReset();
+  else if (!document.getElementById('auth-view-reset-password').classList.contains('hidden')) submitPasswordReset();
 });
 
 function closeAuthModal() {
@@ -234,10 +238,20 @@ function closeAuthModal() {
 }
 
 function showAuthView(view) {
-  ['signin', 'signup', 'forgot', 'check-email'].forEach(v => {
+  ['signin', 'signup', 'forgot', 'check-email', 'reset-password', 'reset-success'].forEach(v => {
     document.getElementById('auth-view-' + v)?.classList.add('hidden');
   });
   document.getElementById('auth-view-' + view)?.classList.remove('hidden');
+  // Hide close button on reset-password view so user can't accidentally discard the session
+  const closeBtn = document.querySelector('.auth-close');
+  if (closeBtn) closeBtn.style.visibility = (view === 'reset-password') ? 'hidden' : '';
+  // Reset strength/match indicators when opening reset view
+  if (view === 'reset-password') {
+    ['reset-new-password', 'reset-new-password2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const s = document.getElementById('reset-strength'); if (s) { s.textContent = ''; s.className = 'auth-strength'; }
+    const m = document.getElementById('reset-match'); if (m) { m.textContent = ''; m.className = 'auth-match'; }
+    setTimeout(() => document.getElementById('reset-new-password')?.focus(), 50);
+  }
   clearAuthErrors();
   // Clear fields for the view being shown
   const fieldMap = {
@@ -256,7 +270,7 @@ function showAuthView(view) {
 }
 
 function clearAuthErrors() {
-  ['signin-error', 'signup-error', 'forgot-error'].forEach(id => {
+  ['signin-error', 'signup-error', 'forgot-error', 'reset-error'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.textContent = ''; el.classList.add('hidden'); }
   });
@@ -328,13 +342,52 @@ async function sendPasswordReset() {
   if (!email) { showAuthError('forgot-error', 'Please enter your email address.'); return; }
   setAuthLoading('forgot-submit', true);
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://sitesave.co.uk/reset-password.html'
+    redirectTo: 'https://sitesave.co.uk/'
   });
   setAuthLoading('forgot-submit', false);
   if (error) { showAuthError('forgot-error', error.message); return; }
   document.getElementById('auth-check-email-msg').textContent =
     `We've sent a password reset link to ${email}. Please check your inbox.`;
   showAuthView('check-email');
+}
+
+function checkResetStrength() {
+  const el = document.getElementById('reset-strength');
+  const value = document.getElementById('reset-new-password').value;
+  if (!value) { el.textContent = ''; el.className = 'auth-strength'; return; }
+  let strength = 0;
+  if (value.length >= 8) strength++;
+  if (value.length >= 12) strength++;
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) strength++;
+  if (/[0-9]/.test(value)) strength++;
+  if (/[^A-Za-z0-9]/.test(value)) strength++;
+  if (strength <= 1) { el.textContent = 'Weak password'; el.className = 'auth-strength weak'; }
+  else if (strength <= 3) { el.textContent = 'Good password'; el.className = 'auth-strength good'; }
+  else { el.textContent = 'Strong password'; el.className = 'auth-strength strong'; }
+  if (document.getElementById('reset-new-password2').value) checkResetMatch();
+}
+
+function checkResetMatch() {
+  const el = document.getElementById('reset-match');
+  const p1 = document.getElementById('reset-new-password').value;
+  const p2 = document.getElementById('reset-new-password2').value;
+  if (!p2) { el.textContent = ''; el.className = 'auth-match'; return; }
+  if (p1 === p2) { el.textContent = 'Passwords match'; el.className = 'auth-match match'; }
+  else { el.textContent = 'Passwords do not match'; el.className = 'auth-match no-match'; }
+}
+
+async function submitPasswordReset() {
+  const password = document.getElementById('reset-new-password').value;
+  const password2 = document.getElementById('reset-new-password2').value;
+  if (!password || !password2) { showAuthError('reset-error', 'Please fill in both fields.'); return; }
+  if (password.length < 8) { showAuthError('reset-error', 'Password must be at least 8 characters.'); return; }
+  if (password !== password2) { showAuthError('reset-error', 'Passwords do not match.'); return; }
+  const btn = document.getElementById('reset-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await sb.auth.updateUser({ password });
+  btn.disabled = false; btn.textContent = 'Set new password';
+  if (error) { showAuthError('reset-error', error.message); return; }
+  showAuthView('reset-success');
 }
 
 async function signOut() {
@@ -1937,9 +1990,6 @@ const ONBOARDING_STEPS = [
 let _onboardingStep = 0;
 
 function startOnboarding() {
-  const uid = CURRENT_USER?.id;
-  if (uid && localStorage.getItem(`sitesave-onboarded-${uid}`)) return;
-  // Legacy key fallback — if old key set but no user key, still run for new accounts
   _onboardingStep = 0;
   showOnboardingStep();
 }
