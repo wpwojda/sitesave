@@ -71,6 +71,14 @@ async function init() {
     history.replaceState(null, '', window.location.pathname);
   }
 
+  // Auto-open forgot password view if linked from expired reset page
+  const _params = new URLSearchParams(window.location.search);
+  if (_params.get('forgot') === '1') {
+    history.replaceState(null, '', window.location.pathname);
+    // Will open after auth modal initialises — deferred below
+    window._autoOpenForgot = true;
+  }
+
   // Register auth state listener first
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
@@ -103,6 +111,10 @@ async function init() {
     await enterApp();
   } else {
     enterGuest();
+    if (window._autoOpenForgot) {
+      delete window._autoOpenForgot;
+      setTimeout(() => { openAuthModal('forgot'); }, 100);
+    }
   }
 }
 
@@ -125,7 +137,7 @@ function enterGuest() {
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
-  const isFirstSignIn = !localStorage.getItem('sitesave-returning');
+  const isFirstSignIn = !localStorage.getItem('sitesave-returning') || !localStorage.getItem(`sitesave-onboarded-${CURRENT_USER?.id}`);
   localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
@@ -1925,7 +1937,9 @@ const ONBOARDING_STEPS = [
 let _onboardingStep = 0;
 
 function startOnboarding() {
-  if (localStorage.getItem('sitesave-onboarded')) return;
+  const uid = CURRENT_USER?.id;
+  if (uid && localStorage.getItem(`sitesave-onboarded-${uid}`)) return;
+  // Legacy key fallback — if old key set but no user key, still run for new accounts
   _onboardingStep = 0;
   showOnboardingStep();
 }
@@ -2002,6 +2016,9 @@ function nextOnboardingStep() {
 function finishOnboarding() {
   removeOnboardingTooltip();
   ONBOARDING_STEPS.forEach(s => document.getElementById(s.target)?.classList.remove('onboarding-highlight'));
+  // Write per-user key (and legacy key for backwards compat)
+  const uid = CURRENT_USER?.id;
+  if (uid) localStorage.setItem(`sitesave-onboarded-${uid}`, 'true');
   localStorage.setItem('sitesave-onboarded', 'true');
   // Show keyboard shortcuts hint on desktop after onboarding
   if (window.innerWidth > 640) showKeyboardHint();
