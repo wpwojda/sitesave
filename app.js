@@ -69,24 +69,21 @@ async function init() {
     history.replaceState(null, '', window.location.pathname);
   }
 
-  // If the URL contains an auth token (email confirmation or OAuth callback),
-  // clear any existing session first so the new one takes over correctly
-  const hasAuthToken = window.location.hash.includes('access_token') ||
-                       window.location.search.includes('code=') ||
-                       window.location.search.includes('token=');
+  // If the URL contains an email confirmation token, let onAuthStateChange handle it
+  // Note: Google OAuth uses code= but that's handled differently — don't intercept it
+  const hasEmailToken = window.location.hash.includes('access_token') &&
+                        window.location.hash.includes('type=signup');
 
-  if (hasAuthToken) {
-    await sb.auth.signOut({ scope: 'local' });
-    localStorage.removeItem('sitesave-auth');
+  if (hasEmailToken) {
+    // Show landing page while token is being processed
+    enterGuest();
+    return;
   }
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
     CURRENT_USER = session.user;
-    if (window.location.hash.includes('access_token')) {
-      history.replaceState(null, '', window.location.pathname);
-    }
     await enterApp();
   } else {
     enterGuest();
@@ -96,9 +93,7 @@ async function init() {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       _authHandled = true;
       CURRENT_USER = session.user;
-      if (window.location.hash.includes('access_token')) {
-        history.replaceState(null, '', window.location.pathname);
-      }
+      history.replaceState(null, '', window.location.pathname);
       await enterApp();
     } else if (event === 'SIGNED_OUT') {
       _authHandled = false;
