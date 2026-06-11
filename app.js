@@ -82,6 +82,8 @@ async function init() {
   // Register auth state listener first
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
+      // If PASSWORD_RECOVERY is about to fire (code in URL), don't enterApp yet
+      if (window.location.search.includes('code=') || window.location.hash.includes('type=recovery')) return;
       _authHandled = true;
       CURRENT_USER = session.user;
       history.replaceState(null, '', window.location.pathname);
@@ -106,6 +108,21 @@ async function init() {
   });
 
   // Check for existing session
+  // If there's a recovery code in the URL, skip getSession — let the
+  // PASSWORD_RECOVERY auth event handle it to avoid consuming the code early
+  const _isRecovery = window.location.search.includes('code=') ||
+                      window.location.hash.includes('type=recovery');
+  if (_isRecovery) {
+    // Fallback: if PASSWORD_RECOVERY doesn't fire within 5s, load normally
+    setTimeout(async () => {
+      if (!_authHandled && document.getElementById('auth-ov')?.classList.contains('hidden')) {
+        const { data: { session: s } } = await sb.auth.getSession();
+        if (s?.user) { _authHandled = true; CURRENT_USER = s.user; await enterApp(); }
+        else enterGuest();
+      }
+    }, 5000);
+    return;
+  }
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
