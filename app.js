@@ -80,12 +80,13 @@ async function init() {
     window._autoOpenForgot = true;
   }
 
-  // Handle token_hash recovery flow — used when email scanner (e.g. Sophos) would
-  // otherwise consume a direct Supabase verify link before the user clicks it.
-  // The email template sends ?token_hash=...&type=recovery to this page instead,
-  // and we exchange it ourselves via verifyOtp().
-  const _tokenHash = _params.get('token_hash');
-  const _tokenType = _params.get('type');
+  // Handle token_hash recovery flow.
+  // Token is passed in the URL fragment (#) so email scanners (Sophos, Proofpoint etc)
+  // can't consume it — browsers never send fragments to servers.
+  // Email template: {{ .SiteURL }}#token_hash={{ .TokenHash }}&type=recovery
+  const _hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const _tokenHash = _hashParams.get('token_hash');
+  const _tokenType = _hashParams.get('type');
   if (_tokenHash && _tokenType === 'recovery') {
     history.replaceState(null, '', window.location.pathname);
     const { error } = await sb.auth.verifyOtp({ token_hash: _tokenHash, type: 'recovery' });
@@ -135,8 +136,7 @@ async function init() {
   // If there's a recovery code/token in the URL, skip getSession — let the
   // PASSWORD_RECOVERY auth event handle it to avoid consuming the code early
   const _isRecovery = window.location.search.includes('code=') ||
-                      window.location.hash.includes('type=recovery') ||
-                      (_params.get('token_hash') && _params.get('type') === 'recovery');
+                      window.location.hash.includes('type=recovery');
   if (_isRecovery) {
     // Fallback: if PASSWORD_RECOVERY doesn't fire within 5s, load normally
     setTimeout(async () => {
