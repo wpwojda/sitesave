@@ -96,10 +96,9 @@ async function init() {
       setTimeout(() => { openAuthModal('forgot'); }, 100);
       return;
     }
-    // verifyOtp succeeded — open the reset modal directly.
-    // Don't fall through to getSession; it would race with PASSWORD_RECOVERY
-    // and call enterApp() instead of showing the reset form.
-    enterGuest();
+    // verifyOtp succeeded — session is now active, PASSWORD_RECOVERY will fire
+    // via onAuthStateChange. Just open the modal; don't call enterGuest() as that
+    // would cause SIGNED_IN to race and load the library behind the modal.
     setTimeout(() => { openAuthModal('reset-password'); }, 100);
     return;
   }
@@ -181,6 +180,10 @@ function enterGuest() {
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
+  BM = []; // clear placeholders immediately so they don't render into the app grid
+  // Ensure modal is closed regardless of which auth path led here
+  const authOv = document.getElementById('auth-ov');
+  if (authOv) { authOv.classList.add('hidden'); document.body.style.overflow = ''; }
   localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
