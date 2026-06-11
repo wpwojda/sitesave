@@ -103,8 +103,9 @@ async function init() {
   // Register auth state listener first
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
-      // If PASSWORD_RECOVERY is about to fire (code in URL), don't enterApp yet
-      if (window.location.search.includes('code=') || window.location.hash.includes('type=recovery')) return;
+      // If another tab is mid-reset, ignore this SIGNED_IN — it's from verifyOtp()
+      // in that tab leaking via localStorage. That tab handles its own auth flow.
+      if (localStorage.getItem('sitesave-reset-in-progress')) return;
       _authHandled = true;
       CURRENT_USER = session.user;
       history.replaceState(null, '', window.location.pathname);
@@ -121,35 +122,16 @@ async function init() {
       history.replaceState(null, '', window.location.pathname);
       openAuthModal('reset-password');
     } else if (event === 'USER_UPDATED') {
-      // Always re-enter app after password update — _authHandled may already be true
-      // but the token was reissued so we need to refresh state.
-      // Keep _isResettingPassword true until enterApp completes so any SIGNED_OUT
-      // that fires during the async execution is still suppressed.
       if (session?.user) {
         _authHandled = true;
         CURRENT_USER = session.user;
         await enterApp();
         _isResettingPassword = false;
+        localStorage.removeItem('sitesave-reset-in-progress');
       }
     }
   });
 
-  // Check for existing session
-  // If there's a recovery code/token in the URL, skip getSession — let the
-  // PASSWORD_RECOVERY auth event handle it to avoid consuming the code early
-  const _isRecovery = window.location.search.includes('code=') ||
-                      window.location.hash.includes('type=recovery');
-  if (_isRecovery) {
-    // Fallback: if PASSWORD_RECOVERY doesn't fire within 5s, load normally
-    setTimeout(async () => {
-      if (!_authHandled && document.getElementById('auth-ov')?.classList.contains('hidden')) {
-        const { data: { session: s } } = await sb.auth.getSession();
-        if (s?.user) { _authHandled = true; CURRENT_USER = s.user; await enterApp(); }
-        else enterGuest();
-      }
-    }, 5000);
-    return;
-  }
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
@@ -453,12 +435,15 @@ async function submitPasswordReset() {
   // This is the first point at which a session is established — after the
   // user has proven intent by submitting a new password.
   if (window._pendingRecoveryToken) {
+    // Signal other tabs to ignore the SIGNED_IN that verifyOtp will broadcast
+    localStorage.setItem('sitesave-reset-in-progress', '1');
     const { error: otpError } = await sb.auth.verifyOtp({
       token_hash: window._pendingRecoveryToken,
       type: 'recovery'
     });
     window._pendingRecoveryToken = null;
     if (otpError) {
+      localStorage.removeItem('sitesave-reset-in-progress');
       btn.disabled = false; btn.textContent = 'Set new password';
       showAuthError('reset-error', 'This reset link has expired. Please request a new one.');
       setTimeout(() => { showAuthView('forgot'); }, 2000);
@@ -476,24 +461,10 @@ async function submitPasswordReset() {
 async function signOut() {
   _authHandled = false;
   document.getElementById('user-dropdown').classList.add('hidden');
-  localStorage.removeItem('sitesave-auth');
+  localStorage.removeItem('sitesave-reset-in-progress');
   document.getElementById('kb-hint')?.remove();
-  try {
-    await Promise.race([
-      sb.auth.signOut({ scope: 'local' }),
-      new Promise(resolve => setTimeout(resolve, 3000))
-    ]);
-  } catch(e) {
-    console.warn('Sign out error:', e);
-  }
-  // enterGuest() is called by the SIGNED_OUT event in onAuthStateChange
-  // but call it directly as fallback in case the event doesn't fire
-  if (!S.guestMode) {
-    CURRENT_USER = null;
-    BM = [];
-    COLLECTIONS = [];
-    enterGuest();
-  }
+  // Sign out — SIGNED_OUT event fires and calls enterGuest() cleanly
+  await sb.auth.signOut({ scope: 'local' });
 }
 
 async function deleteAccount() {
@@ -1846,23 +1817,20 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
 init();
 
 // ── CROSS-TAB SESSION SYNC ────────────────────────────────────
-// When a reset link is opened in a new tab, localStorage session changes
-// are picked up by any other open tabs. Reload the background tab when it
-// comes back into focus so it enters the correct state cleanly.
+// Listen for Supabase session changes written to localStorage by other tabs.
+// This fires when another tab signs in or out, so we can react cleanly.
 (function() {
-  let _lastUserId = null;
-
-  // Track current user after init resolves
-  setTimeout(() => { _lastUserId = CURRENT_USER?.id || null; }, 1000);
-
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible') return;
+  window.addEventListener('storage', async (e) => {
+    // Supabase writes to its storageKey — any change means auth state changed elsewhere
+    if (e.key !== 'sitesave-auth') return;
+    // Ignore if we're mid-reset — the reset tab handles its own auth
+    if (localStorage.getItem('sitesave-reset-in-progress')) return;
     const { data: { session } } = await sb.auth.getSession();
     const newUserId = session?.user?.id || null;
-    if (newUserId !== _lastUserId) {
-      // Session changed in another tab — reload cleanly
-      window.location.reload();
-    }
+    const currentUserId = CURRENT_USER?.id || null;
+    if (newUserId === currentUserId) return; // no real change
+    // Session changed in another tab — reload cleanly into correct state
+    window.location.reload();
   });
 })();
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
