@@ -64,12 +64,14 @@ let _authHandled = false;
 async function init() {
   _authHandled = false;
 
-  // Clean up any error hashes Supabase leaves in the URL
-  if (window.location.hash.includes('error=') || window.location.hash.includes('error_code=')) {
+  // Clean up any error hashes or tokens Supabase leaves in the URL
+  if (window.location.hash.includes('error=') ||
+      window.location.hash.includes('error_code=') ||
+      window.location.hash.includes('access_token')) {
     history.replaceState(null, '', window.location.pathname);
   }
 
-  // Register auth state listener first — before anything else
+  // Register auth state listener first
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       _authHandled = true;
@@ -93,20 +95,7 @@ async function init() {
     }
   });
 
-  // If the URL contains an email confirmation token, let onAuthStateChange handle it
-  // Supabase sends tokens either as hash fragments or query params depending on config
-  const hash = window.location.hash;
-  const search = window.location.search;
-  const hasEmailToken = (hash.includes('access_token') && hash.includes('type=signup')) ||
-                        (search.includes('token_hash=') && search.includes('type=signup')) ||
-                        (search.includes('token=') && search.includes('type=signup'));
-
-  if (hasEmailToken) {
-    enterGuest();
-    return;
-  }
-
-  // No token in URL — check for existing session normally
+  // Check for existing session
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     _authHandled = true;
@@ -315,16 +304,11 @@ async function signUpWithEmail() {
   if (password.length < 8) { showAuthError('signup-error', 'Password must be at least 8 characters.'); return; }
   if (password !== password2) { showAuthError('signup-error', 'Passwords do not match.'); return; }
   setAuthLoading('signup-submit', true);
-  const { error } = await sb.auth.signUp({
-    email,
-    password,
-    options: { emailRedirectTo: 'https://sitesave.co.uk/' }
-  });
+  const { error } = await sb.auth.signUp({ email, password });
   setAuthLoading('signup-submit', false);
   if (error) { showAuthError('signup-error', error.message); return; }
-  document.getElementById('auth-check-email-msg').textContent =
-    `We've sent a confirmation link to ${email}. Please check your inbox and click the link to activate your account.`;
-  showAuthView('check-email');
+  // Email confirmation is off — user is signed in immediately
+  closeAuthModal();
 }
 
 async function sendPasswordReset() {
