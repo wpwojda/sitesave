@@ -425,6 +425,10 @@ document.addEventListener('click', e => {
 
 // ── DATABASE — BOOKMARKS ───────────────────────────────────────
 async function loadBookmarks() {
+  // Force clear search to prevent browser autofill contaminating results
+  const qEl = document.getElementById('q');
+  if (qEl) qEl.value = '';
+
   const { data, error } = await sb
     .from('bookmarks')
     .select('*')
