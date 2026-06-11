@@ -8,7 +8,6 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce',
   }
 });
 
