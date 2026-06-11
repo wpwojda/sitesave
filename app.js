@@ -95,7 +95,12 @@ async function init() {
       setTimeout(() => { openAuthModal('forgot'); }, 100);
       return;
     }
-    // verifyOtp success fires PASSWORD_RECOVERY via onAuthStateChange — fall through
+    // verifyOtp succeeded — open the reset modal directly.
+    // Don't fall through to getSession; it would race with PASSWORD_RECOVERY
+    // and call enterApp() instead of showing the reset form.
+    enterGuest();
+    setTimeout(() => { openAuthModal('reset-password'); }, 100);
+    return;
   }
 
   // Register auth state listener first
