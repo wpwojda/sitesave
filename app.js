@@ -81,6 +81,42 @@ async function init() {
     window._autoOpenForgot = true;
   }
 
+  // Register auth state listener — must be before any early returns so events
+  // from verifyOtp/updateUser on this tab are always caught.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
+      // Ignore SIGNED_IN if this tab has a pending recovery token (not submitted yet)
+      // or if a reset is in progress (verifyOtp just ran in submitPasswordReset).
+      // USER_UPDATED will handle enterApp() for the reset tab.
+      if (window._pendingRecoveryToken) return; // this tab has a pending reset token — USER_UPDATED handles enterApp
+      if (localStorage.getItem('sitesave-reset-in-progress')) return;
+      _authHandled = true;
+      CURRENT_USER = session.user;
+      history.replaceState(null, '', window.location.pathname);
+      await enterApp();
+    } else if (event === 'SIGNED_OUT') {
+      if (_isResettingPassword) return; // token reissue during password update — ignore
+      _authHandled = false;
+      CURRENT_USER = null;
+      BM = [];
+      COLLECTIONS = [];
+      enterGuest();
+    } else if (event === 'USER_UPDATED') {
+      // Fires after updateUser({ password }) completes.
+      // The reset-success view is already showing — enterApp() must not close the modal.
+      // We use a flag to tell enterApp() to preserve the modal this one time.
+      if (session?.user) {
+        _authHandled = true;
+        CURRENT_USER = session.user;
+        window._preserveModalOnEnterApp = true;
+        await enterApp();
+        window._preserveModalOnEnterApp = false;
+        _isResettingPassword = false;
+        localStorage.removeItem('sitesave-reset-in-progress');
+      }
+    }
+  });
+
   // Handle token_hash recovery flow.
   // Token is passed in the URL fragment (#) so email scanners (Sophos, Proofpoint etc)
   // can't consume it — browsers never send fragments to servers.
@@ -99,38 +135,6 @@ async function init() {
     setTimeout(() => { openAuthModal('reset-password'); }, 100);
     return;
   }
-
-  // Register auth state listener first
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
-      // If another tab is mid-reset, ignore this SIGNED_IN — it's from verifyOtp()
-      // in that tab leaking via localStorage. That tab handles its own auth flow.
-      if (localStorage.getItem('sitesave-reset-in-progress')) return;
-      _authHandled = true;
-      CURRENT_USER = session.user;
-      history.replaceState(null, '', window.location.pathname);
-      await enterApp();
-    } else if (event === 'SIGNED_OUT') {
-      if (_isResettingPassword) return; // password update causes token reissue — ignore
-      _authHandled = false;
-      CURRENT_USER = null;
-      BM = [];
-      COLLECTIONS = [];
-      enterGuest();
-    } else if (event === 'PASSWORD_RECOVERY') {
-      // Stay on this page — open the reset modal directly so the session isn't lost
-      history.replaceState(null, '', window.location.pathname);
-      openAuthModal('reset-password');
-    } else if (event === 'USER_UPDATED') {
-      if (session?.user) {
-        _authHandled = true;
-        CURRENT_USER = session.user;
-        await enterApp();
-        _isResettingPassword = false;
-        localStorage.removeItem('sitesave-reset-in-progress');
-      }
-    }
-  });
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
@@ -168,9 +172,13 @@ async function enterApp() {
   BM = []; // clear placeholders immediately so they don't render into the app grid
   COLLECTIONS = [];
   render(); // flush placeholder cards out of the grid before showing app shell
-  // Ensure modal is closed regardless of which auth path led here
-  const authOv = document.getElementById('auth-ov');
-  if (authOv) { authOv.classList.add('hidden'); document.body.style.overflow = ''; }
+  // Close auth modal unless we're entering app after a password reset —
+  // in that case the reset-success confirmation is showing and the user
+  // dismisses it themselves via the "Continue to Sitesave" button.
+  if (!window._preserveModalOnEnterApp) {
+    const authOv = document.getElementById('auth-ov');
+    if (authOv) { authOv.classList.add('hidden'); document.body.style.overflow = ''; }
+  }
   localStorage.setItem('sitesave-returning', 'true');
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
