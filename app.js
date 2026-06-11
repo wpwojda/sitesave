@@ -94,9 +94,12 @@ async function init() {
   });
 
   // If the URL contains an email confirmation token, let onAuthStateChange handle it
-  // Supabase will process the hash and fire SIGNED_IN automatically
-  const hasEmailToken = window.location.hash.includes('access_token') &&
-                        window.location.hash.includes('type=signup');
+  // Supabase sends tokens either as hash fragments or query params depending on config
+  const hash = window.location.hash;
+  const search = window.location.search;
+  const hasEmailToken = (hash.includes('access_token') && hash.includes('type=signup')) ||
+                        (search.includes('token_hash=') && search.includes('type=signup')) ||
+                        (search.includes('token=') && search.includes('type=signup'));
 
   if (hasEmailToken) {
     enterGuest();
@@ -348,10 +351,14 @@ async function signOut() {
   } catch(e) {
     console.warn('Sign out error:', e);
   }
-  CURRENT_USER = null;
-  BM = [];
-  COLLECTIONS = [];
-  enterGuest();
+  // enterGuest() is called by the SIGNED_OUT event in onAuthStateChange
+  // but call it directly as fallback in case the event doesn't fire
+  if (!S.guestMode) {
+    CURRENT_USER = null;
+    BM = [];
+    COLLECTIONS = [];
+    enterGuest();
+  }
 }
 
 async function deleteAccount() {
