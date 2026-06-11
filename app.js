@@ -89,17 +89,13 @@ async function init() {
   const _tokenHash = _hashParams.get('token_hash');
   const _tokenType = _hashParams.get('type');
   if (_tokenHash && _tokenType === 'recovery') {
+    // Store the token in memory only — do NOT exchange it yet.
+    // Calling verifyOtp() here would establish a session in localStorage immediately,
+    // which leaks to any other open tabs before the user has set a new password.
+    // The token is exchanged only when the user submits their new password.
     history.replaceState(null, '', window.location.pathname);
-    const { error } = await sb.auth.verifyOtp({ token_hash: _tokenHash, type: 'recovery' });
-    if (error) {
-      // Token invalid or already used — show guest + open forgot view
-      enterGuest();
-      setTimeout(() => { openAuthModal('forgot'); }, 100);
-      return;
-    }
-    // verifyOtp succeeded — session is now active, PASSWORD_RECOVERY will fire
-    // via onAuthStateChange. Just open the modal; don't call enterGuest() as that
-    // would cause SIGNED_IN to race and load the library behind the modal.
+    window._pendingRecoveryToken = _tokenHash;
+    enterGuest();
     setTimeout(() => { openAuthModal('reset-password'); }, 100);
     return;
   }
@@ -452,6 +448,24 @@ async function submitPasswordReset() {
   if (password !== password2) { showAuthError('reset-error', 'Passwords do not match.'); return; }
   const btn = document.getElementById('reset-submit');
   btn.disabled = true; btn.textContent = 'Saving…';
+
+  // If we have a pending token (deferred from page load), exchange it now.
+  // This is the first point at which a session is established — after the
+  // user has proven intent by submitting a new password.
+  if (window._pendingRecoveryToken) {
+    const { error: otpError } = await sb.auth.verifyOtp({
+      token_hash: window._pendingRecoveryToken,
+      type: 'recovery'
+    });
+    window._pendingRecoveryToken = null;
+    if (otpError) {
+      btn.disabled = false; btn.textContent = 'Set new password';
+      showAuthError('reset-error', 'This reset link has expired. Please request a new one.');
+      setTimeout(() => { showAuthView('forgot'); }, 2000);
+      return;
+    }
+  }
+
   _isResettingPassword = true;
   const { error } = await sb.auth.updateUser({ password });
   btn.disabled = false; btn.textContent = 'Set new password';
@@ -1831,6 +1845,26 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
 
 init();
 
+// ── CROSS-TAB SESSION SYNC ────────────────────────────────────
+// When a reset link is opened in a new tab, localStorage session changes
+// are picked up by any other open tabs. Reload the background tab when it
+// comes back into focus so it enters the correct state cleanly.
+(function() {
+  let _lastUserId = null;
+
+  // Track current user after init resolves
+  setTimeout(() => { _lastUserId = CURRENT_USER?.id || null; }, 1000);
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    const { data: { session } } = await sb.auth.getSession();
+    const newUserId = session?.user?.id || null;
+    if (newUserId !== _lastUserId) {
+      // Session changed in another tab — reload cleanly
+      window.location.reload();
+    }
+  });
+})();
 // ── SHEET INLINE CONFIRM ─────────────────────────────────────
 function showSheetConfirm(title, message, onConfirm, confirmLabel = 'Delete', onConfirm2 = null, confirm2Label = null) {
   document.getElementById('sheet-confirm')?.remove();
