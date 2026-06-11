@@ -126,12 +126,14 @@ async function init() {
       openAuthModal('reset-password');
     } else if (event === 'USER_UPDATED') {
       // Always re-enter app after password update — _authHandled may already be true
-      // but the token was reissued so we need to refresh state
+      // but the token was reissued so we need to refresh state.
+      // Keep _isResettingPassword true until enterApp completes so any SIGNED_OUT
+      // that fires during the async execution is still suppressed.
       if (session?.user) {
-        _isResettingPassword = false;
         _authHandled = true;
         CURRENT_USER = session.user;
         await enterApp();
+        _isResettingPassword = false;
       }
     }
   });
