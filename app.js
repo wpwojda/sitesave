@@ -142,6 +142,9 @@ async function enterApp() {
   document.getElementById('btn-save-site').classList.remove('hidden');
   document.getElementById('user-menu').classList.remove('hidden');
   document.querySelector('.search-wrap').classList.remove('hidden');
+  // Explicitly clear search to prevent browser autofill contaminating results
+  const searchEl = document.getElementById('q');
+  if (searchEl) searchEl.value = '';
   const newColBtn = document.getElementById('btn-new-collection'); if (newColBtn) newColBtn.style.display = '';
   hideLanding();
   updateUserAvatar();
