@@ -119,6 +119,7 @@ function enterGuest() {
   BM = [...PLACEHOLDERS];
   document.getElementById('btn-save-site').classList.add('hidden');
   document.getElementById('user-menu').classList.add('hidden');
+  document.querySelector('.search-wrap').classList.add('hidden');
   const newColBtnG = document.getElementById('btn-new-collection'); if (newColBtnG) newColBtnG.style.display = 'none';
   const signInBtn = document.getElementById('btn-sign-in');
   signInBtn.classList.remove('hidden');
@@ -137,6 +138,7 @@ async function enterApp() {
   document.getElementById('btn-sign-in').classList.add('hidden');
   document.getElementById('btn-save-site').classList.remove('hidden');
   document.getElementById('user-menu').classList.remove('hidden');
+  document.querySelector('.search-wrap').classList.remove('hidden');
   const newColBtn = document.getElementById('btn-new-collection'); if (newColBtn) newColBtn.style.display = '';
   hideLanding();
   updateUserAvatar();
