@@ -61,6 +61,7 @@ let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 
 // ── BOOT ─────────────────────────────────────────────────────
 let _authHandled = false;
+let _isResettingPassword = false; // suppress SIGNED_OUT during password update
 
 async function init() {
   _authHandled = false;
@@ -113,6 +114,7 @@ async function init() {
       history.replaceState(null, '', window.location.pathname);
       await enterApp();
     } else if (event === 'SIGNED_OUT') {
+      if (_isResettingPassword) return; // password update causes token reissue — ignore
       _authHandled = false;
       CURRENT_USER = null;
       BM = [];
@@ -123,7 +125,10 @@ async function init() {
       history.replaceState(null, '', window.location.pathname);
       openAuthModal('reset-password');
     } else if (event === 'USER_UPDATED') {
-      if (session?.user && !_authHandled) {
+      // Always re-enter app after password update — _authHandled may already be true
+      // but the token was reissued so we need to refresh state
+      if (session?.user) {
+        _isResettingPassword = false;
         _authHandled = true;
         CURRENT_USER = session.user;
         await enterApp();
@@ -181,6 +186,8 @@ function enterGuest() {
 async function enterApp() {
   S.guestMode = false;
   BM = []; // clear placeholders immediately so they don't render into the app grid
+  COLLECTIONS = [];
+  render(); // flush placeholder cards out of the grid before showing app shell
   // Ensure modal is closed regardless of which auth path led here
   const authOv = document.getElementById('auth-ov');
   if (authOv) { authOv.classList.add('hidden'); document.body.style.overflow = ''; }
@@ -443,9 +450,10 @@ async function submitPasswordReset() {
   if (password !== password2) { showAuthError('reset-error', 'Passwords do not match.'); return; }
   const btn = document.getElementById('reset-submit');
   btn.disabled = true; btn.textContent = 'Saving…';
+  _isResettingPassword = true;
   const { error } = await sb.auth.updateUser({ password });
   btn.disabled = false; btn.textContent = 'Set new password';
-  if (error) { showAuthError('reset-error', error.message); return; }
+  if (error) { _isResettingPassword = false; showAuthError('reset-error', error.message); return; }
   showAuthView('reset-success');
 }
 
