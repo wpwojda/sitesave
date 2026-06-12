@@ -137,8 +137,20 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
+    // getSession() returns the cached session without verifying it server-side.
+    // If the tab was asleep overnight, the access token may have expired and
+    // failed to auto-refresh. Validate with getUser(), which checks against
+    // Supabase's auth server. If it fails, the session is stale — sign out
+    // cleanly rather than leaving the user in a broken half-signed-in state.
+    const { data: userData, error: userError } = await sb.auth.getUser();
+    if (userError || !userData?.user) {
+      await sb.auth.signOut({ scope: 'local' });
+      enterGuest();
+      toast('Your session expired — please sign in again');
+      return;
+    }
     _authHandled = true;
-    CURRENT_USER = session.user;
+    CURRENT_USER = userData.user;
     await enterApp();
   } else {
     enterGuest();
