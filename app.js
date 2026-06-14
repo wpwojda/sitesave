@@ -1867,8 +1867,11 @@ init();
     const { data: { session } } = await sb.auth.getSession();
     const newUserId = session?.user?.id || null;
     const currentUserId = CURRENT_USER?.id || null;
+    console.log('[SS] storage event: currentUserId=', currentUserId, 'newUserId=', newUserId);
     if (newUserId === currentUserId) return; // no real change
-    // Session changed in another tab — reload cleanly into correct state
+    // Only reload if this is a genuine user switch (both non-null) or a sign-out
+    // Don't reload if going null→user (token refresh in another tab while this tab is loading)
+    if (!currentUserId && newUserId) return; // this tab hasn't loaded yet — ignore
     window.location.reload();
   });
 })();
