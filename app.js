@@ -137,36 +137,8 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
-    // getSession() returns the cached local session. Use getUser() to verify
-    // it's still valid server-side — it refreshes the token automatically if
-    // needed, but unlike refreshSession() it doesn't fail on every call if
-    // the token is still within its validity window.
-    const { data: userData, error: userError } = await sb.auth.getUser();
-    if (userError || !userData?.user) {
-      // Only sign out on genuine auth errors (expired/invalid token).
-      // Network errors (fetch failed, Supabase temporarily unreachable) should
-      // not sign the user out — just proceed with the cached session.
-      const isAuthError = userError?.status === 401 ||
-                          userError?.message?.includes('JWT') ||
-                          userError?.message?.includes('token') ||
-                          userError?.name === 'AuthSessionMissingError';
-      if (isAuthError) {
-        await sb.auth.signOut({ scope: 'local' });
-        enterGuest();
-        setTimeout(() => {
-          openAuthModal('signin');
-          showAuthError('signin-error', 'Your session expired — please sign in again.');
-        }, 100);
-        return;
-      }
-      // Network error — proceed with cached session optimistically
-      _authHandled = true;
-      CURRENT_USER = session.user;
-      await enterApp();
-      return;
-    }
     _authHandled = true;
-    CURRENT_USER = userData.user;
+    CURRENT_USER = session.user;
     await enterApp();
   } else {
     enterGuest();
