@@ -64,6 +64,7 @@ let _isResettingPassword = false; // suppress SIGNED_OUT during password update
 
 async function init() {
   _authHandled = false;
+  console.log('[SS] init() started');
 
   // Clean up any error hashes or tokens Supabase leaves in the URL
   if (window.location.hash.includes('error=') ||
@@ -83,6 +84,7 @@ async function init() {
   // Register auth state listener — must be before any early returns so events
   // from verifyOtp/updateUser on this tab are always caught.
   sb.auth.onAuthStateChange(async (event, session) => {
+    console.log('[SS] auth event:', event, 'user:', session?.user?.id?.slice(0,8), '_authHandled:', _authHandled);
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       // Ignore SIGNED_IN if this tab has a pending recovery token (not submitted yet)
       // or if a reset is in progress (verifyOtp just ran in submitPasswordReset).
@@ -136,11 +138,15 @@ async function init() {
   }
 
   const { data: { session } } = await sb.auth.getSession();
+  console.log('[SS] getSession result:', session ? 'has session, user=' + session.user?.id?.slice(0,8) : 'no session');
   if (session?.user) {
     _authHandled = true;
     CURRENT_USER = session.user;
+    console.log('[SS] calling enterApp()');
     await enterApp();
+    console.log('[SS] enterApp() completed');
   } else {
+    console.log('[SS] no session, calling enterGuest()');
     enterGuest();
     if (window._autoOpenForgot) {
       delete window._autoOpenForgot;
@@ -551,6 +557,7 @@ document.addEventListener('click', e => {
 
 // ── DATABASE — BOOKMARKS ───────────────────────────────────────
 async function loadBookmarks() {
+  console.log('[SS] loadBookmarks() started, CURRENT_USER:', CURRENT_USER?.id?.slice(0,8));
   // Force clear search to prevent browser autofill contaminating results
   const qEl = document.getElementById('q');
   if (qEl) qEl.value = '';
@@ -560,6 +567,7 @@ async function loadBookmarks() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  console.log('[SS] bookmarks query result: data length=', data?.length, 'error=', error?.message);
   if (error) {
     // If it's an auth error, the session has gone stale mid-session.
     // Sign out cleanly and prompt the user to sign back in.
