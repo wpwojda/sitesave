@@ -16,7 +16,7 @@
 <meta name="twitter:description" content="Sitesave captures a screenshot of every site you save, so you can browse your references visually. For creatives who collect.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=1.7">
+<link rel="stylesheet" href="styles.css?v=1.8">
 </head>
 <body>
 
@@ -263,9 +263,10 @@
 <div class="m-ov hidden" id="m-ov">
   <div class="modal">
     <div class="m-title" id="m-title">Save a site</div>
+    <form autocomplete="off" onsubmit="return false;">
     <div class="fg">
       <label class="flabel">URL</label>
-      <input class="finput" id="f-url" placeholder="https://" oninput="hintName()">
+      <input class="finput" id="f-url" type="url" name="bookmark-url" placeholder="https://" oninput="hintName()" autocomplete="off">
       <div class="url-dup-warn" id="url-dup-warn" style="display:none"></div>
       <div class="url-hint" id="url-hint" style="display:none">
         Paste any URL — we'll capture a screenshot automatically.
@@ -273,14 +274,15 @@
     </div>
     <div class="fg">
       <label class="flabel">Name</label>
-      <input class="finput" id="f-name" placeholder="Auto-filled from domain">
+      <input class="finput" id="f-name" type="text" name="bookmark-name" placeholder="Auto-filled from domain" autocomplete="off">
     </div>
     <div class="fg">
       <label class="flabel">Tags — Enter or comma to add</label>
       <div class="tag-input-wrap" id="tag-wrap" onclick="document.getElementById('tag-bare').focus()">
         <input class="tag-bare-input" id="tag-bare"
+               type="text" name="bookmark-tags"
                placeholder="e.g. typography, layouts…"
-               onkeydown="handleTagKey(event)" list="tag-dl">
+               onkeydown="handleTagKey(event)" list="tag-dl" autocomplete="off">
         <datalist id="tag-dl"></datalist>
       </div>
     </div>
@@ -289,6 +291,7 @@
       <div class="col-select-wrap" id="col-select-wrap"></div>
     </div>
 
+    </form>
     <div class="m-foot">
       <button class="btn-ghost" id="btn-cancel-modal">Cancel</button>
       <button class="btn-add" id="btn-save-modal">
@@ -341,7 +344,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=1.8"></script>
+<script src="app.js?v=1.9"></script>
 <!-- DELETE COLLECTION MODAL -->
 <div class="del-col-ov hidden" id="del-col-ov" onclick="if(event.target===this)closeDelColModal()">
   <div class="del-col-modal">
