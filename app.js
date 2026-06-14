@@ -1045,6 +1045,15 @@ function openPreview(id) {
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
+  // Sync mobile footer buttons
+  const mobileOpen = document.getElementById('preview-ext-link-mobile');
+  if (mobileOpen) mobileOpen.href = b.url;
+  const mobileLive = document.getElementById('preview-try-live-mobile');
+  if (mobileLive) {
+    mobileLive.style.display = 'inline-flex';
+    mobileLive.onclick = () => tryLivePreview(b);
+  }
+
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
   const msgEl = document.getElementById('preview-blocked-msg');
@@ -1153,6 +1162,8 @@ function closePreview() {
   iframe.style.height = '';
   const tryBtn = document.getElementById('preview-try-live');
   if (tryBtn) { tryBtn.style.display = 'none'; tryBtn.onclick = null; }
+  const mobileLive = document.getElementById('preview-try-live-mobile');
+  if (mobileLive) { mobileLive.style.display = 'none'; mobileLive.onclick = null; }
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.add('hidden');
   const ss = document.getElementById('preview-screenshot');
@@ -1884,6 +1895,51 @@ document.getElementById('sheet-ov').addEventListener('click', e => {
     } else {
       sheet.style.transform = '';
       setTimeout(() => { sheet.style.transition = ''; }, 250);
+    }
+    dragY = 0;
+  });
+})();
+
+// ── PREVIEW PANEL DRAG TO CLOSE (mobile) ─────────────────────
+(function() {
+  const panel = document.getElementById('preview-panel');
+  let startY = 0, dragY = 0, dragging = false;
+  const THRESHOLD = 100;
+
+  panel.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    dragY = 0;
+    dragging = false;
+  }, { passive: true });
+
+  panel.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - startY;
+    if (!dragging) {
+      if (dy > 8 && panel.scrollTop <= 0) {
+        dragging = true;
+        panel.style.transition = 'none';
+      } else {
+        return;
+      }
+    }
+    dragY = Math.max(0, dy);
+    panel.style.transform = `translateY(${dragY}px)`;
+  }, { passive: true });
+
+  panel.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.transition = 'transform .25s ease';
+    if (dragY > THRESHOLD) {
+      panel.style.transform = `translateY(100%)`;
+      setTimeout(() => {
+        panel.style.transform = '';
+        panel.style.transition = '';
+        closePreview();
+      }, 250);
+    } else {
+      panel.style.transform = '';
+      setTimeout(() => { panel.style.transition = ''; }, 250);
     }
     dragY = 0;
   });
