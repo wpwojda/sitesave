@@ -94,7 +94,7 @@ async function init() {
       _authHandled = true;
       CURRENT_USER = session.user;
       history.replaceState(null, '', window.location.pathname);
-      await enterApp();
+      try { await enterApp(); } catch(e) { console.error('[SS] enterApp error in SIGNED_IN handler:', e); }
     } else if (event === 'SIGNED_OUT') {
       if (_isResettingPassword) return; // token reissue during password update — ignore
       _authHandled = false;
