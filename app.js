@@ -1061,7 +1061,14 @@ function openPreview(id) {
   if (img) {
     img.removeAttribute('src');
     img.style.display = '';
+    img.onerror = null;
+    const errEl = document.getElementById('preview-ss-error');
+    if (errEl) errEl.style.display = 'none';
     const screenshotSrc = b.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(b.url)}`;
+    img.onerror = () => {
+      img.style.display = 'none';
+      if (errEl) errEl.style.display = 'flex';
+    };
     img.src = screenshotSrc;
   }
 }
@@ -1098,8 +1105,12 @@ function showScreenshot(b) {
   ss.style.display = 'flex';
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl) msgEl.classList.add('hidden');
+  const errEl = document.getElementById('preview-ss-error');
+  if (errEl) errEl.style.display = 'none';
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
+    img.style.display = '';
+    img.onerror = () => { img.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
     img.src = b.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(b.url)}`;
   }
   // Flip button back to "Live preview"
@@ -1183,8 +1194,12 @@ function showPreviewFallback(url, showMsg = true) {
   ss.style.display = 'flex';
   const msgEl = document.getElementById('preview-blocked-msg');
   if (msgEl && showMsg) msgEl.classList.remove('hidden');
+  const errEl = document.getElementById('preview-ss-error');
+  if (errEl) errEl.style.display = 'none';
   const img = ss.querySelector('img');
   if (img && !img.getAttribute('src')) {
+    img.style.display = '';
+    img.onerror = () => { img.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
     const bm = BM.find(b => b.url === url);
     img.src = bm?.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(url)}`;
   }
@@ -1208,7 +1223,7 @@ function closePreview() {
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'none';
   const img = ss.querySelector('img');
-  if (img) { img.removeAttribute('src'); img.style.display = ''; }
+  if (img) { img.onerror = null; img.removeAttribute('src'); img.style.display = ''; }
   const errEl = document.getElementById('preview-ss-error');
   if (errEl) errEl.style.display = 'none';
 }
