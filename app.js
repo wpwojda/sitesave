@@ -137,20 +137,22 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
-    // getSession() returns the cached session without verifying it server-side.
-    // If the tab was asleep overnight, the access token may have expired and
-    // failed to auto-refresh. Validate with getUser(), which checks against
-    // Supabase's auth server. If it fails, the session is stale — sign out
-    // cleanly rather than leaving the user in a broken half-signed-in state.
-    const { data: userData, error: userError } = await sb.auth.getUser();
-    if (userError || !userData?.user) {
+    // getSession() returns the cached session without verifying server-side.
+    // refreshSession() both validates AND guarantees a fresh access token —
+    // critical after overnight sleep when the token may have expired.
+    // If it fails, the session is dead — sign out cleanly with a clear message.
+    const { data: refreshData, error: refreshError } = await sb.auth.refreshSession();
+    if (refreshError || !refreshData?.session?.user) {
       await sb.auth.signOut({ scope: 'local' });
       enterGuest();
-      toast('Your session expired — please sign in again');
+      setTimeout(() => {
+        openAuthModal('signin');
+        showAuthError('signin-error', 'Your session expired — please sign in again.');
+      }, 100);
       return;
     }
     _authHandled = true;
-    CURRENT_USER = userData.user;
+    CURRENT_USER = refreshData.session.user;
     await enterApp();
   } else {
     enterGuest();
@@ -573,7 +575,18 @@ async function loadBookmarks() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    showStatus('Unable to load your collection right now — our servers may be temporarily busy. Please refresh to try again.', 'error');
+    // If it's an auth error, the session has gone stale mid-session.
+    // Sign out cleanly and prompt the user to sign back in.
+    if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.status === 401) {
+      await sb.auth.signOut({ scope: 'local' });
+      enterGuest();
+      setTimeout(() => {
+        openAuthModal('signin');
+        showAuthError('signin-error', 'Your session expired — please sign in again.');
+      }, 100);
+      return;
+    }
+    showStatus('Unable to load your collection right now — please refresh to try again.', 'error');
     console.error(error);
     render();
     return;
