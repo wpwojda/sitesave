@@ -64,6 +64,7 @@ let _isResettingPassword = false; // suppress SIGNED_OUT during password update
 
 async function init() {
   _authHandled = false;
+  window._initComplete = false;
   console.log('[SS] init() started');
 
   // Clean up any error hashes or tokens Supabase leaves in the URL
@@ -91,10 +92,19 @@ async function init() {
       // USER_UPDATED will handle enterApp() for the reset tab.
       if (window._pendingRecoveryToken) return; // this tab has a pending reset token — USER_UPDATED handles enterApp
       if (localStorage.getItem('sitesave-reset-in-progress')) return;
+      // If getSession() hasn't run yet (init still in progress), let it handle
+      // the initial app load — it's more reliable than SIGNED_IN on page refresh.
+      // SIGNED_IN on refresh fires before getSession() and is prone to being
+      // killed by browser extensions. We only want SIGNED_IN to handle
+      // genuine new sign-ins from the auth modal (after init has completed).
+      if (!window._initComplete) {
+        console.log('[SS] SIGNED_IN fired before init complete — deferring to getSession()');
+        return;
+      }
       _authHandled = true;
       CURRENT_USER = session.user;
       history.replaceState(null, '', window.location.pathname);
-      try { await enterApp(); } catch(e) { console.error('[SS] enterApp error in SIGNED_IN handler:', e); }
+      await enterApp();
     } else if (event === 'SIGNED_OUT') {
       if (_isResettingPassword) return; // token reissue during password update — ignore
       _authHandled = false;
@@ -163,6 +173,8 @@ async function init() {
       setTimeout(() => { openAuthModal('forgot'); }, 100);
     }
   }
+  window._initComplete = true;
+  console.log('[SS] init() complete');
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
