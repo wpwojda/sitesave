@@ -1045,14 +1045,12 @@ function openPreview(id) {
   document.getElementById('preview-ov').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Sync mobile footer buttons
+  // Sync mobile footer open button
   const mobileOpen = document.getElementById('preview-ext-link-mobile');
   if (mobileOpen) mobileOpen.href = b.url;
-  const mobileLive = document.getElementById('preview-try-live-mobile');
-  if (mobileLive) {
-    mobileLive.style.display = 'inline-flex';
-    mobileLive.onclick = () => tryLivePreview(b);
-  }
+
+  // Set live/screenshot toggle buttons to initial "Live preview" state
+  setLiveBtn('live', b);
 
   const ss = document.getElementById('preview-screenshot');
   ss.style.display = 'flex';
@@ -1066,17 +1064,51 @@ function openPreview(id) {
     const screenshotSrc = b.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(b.url)}`;
     img.src = screenshotSrc;
   }
+}
 
-  const tryBtn = document.getElementById('preview-try-live');
-  if (tryBtn) {
-    tryBtn.style.display = 'inline-flex';
-    tryBtn.onclick = () => tryLivePreview(b);
+// Sets both desktop and mobile live/screenshot toggle buttons to a given mode.
+// mode: 'live' — shows "Live preview" (launches iframe)
+// mode: 'screenshot' — shows "Screenshot" (returns to static preview)
+function setLiveBtn(mode, b) {
+  const liveSVG = `<svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 4.5l3.5 2L5 8.5V4.5z" fill="currentColor"/></svg>`;
+  const shotSVG = `<svg width="11" height="11" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="2.5" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 2.5V1.5M9 2.5V1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  const label  = mode === 'live' ? 'Live preview' : 'Screenshot';
+  const svg    = mode === 'live' ? liveSVG : shotSVG;
+  const action = mode === 'live' ? () => tryLivePreview(b) : () => showScreenshot(b);
+
+  ['preview-try-live', 'preview-try-live-mobile'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.innerHTML = svg + ' ' + label;
+    btn.onclick = action;
+    btn.style.display = 'inline-flex';
+  });
+}
+
+function showScreenshot(b) {
+  // Tear down iframe
+  const iframe = document.getElementById('preview-iframe');
+  iframe.onload  = null;
+  iframe.onerror = null;
+  iframe.removeAttribute('src');
+  iframe.style.display = 'none';
+  iframe.style.height  = '';
+  // Show screenshot
+  const ss = document.getElementById('preview-screenshot');
+  ss.style.display = 'flex';
+  const msgEl = document.getElementById('preview-blocked-msg');
+  if (msgEl) msgEl.classList.add('hidden');
+  const img = ss.querySelector('img');
+  if (img && !img.getAttribute('src')) {
+    img.src = b.screenshot_url || `${WORKER_URL}/?url=${encodeURIComponent(b.url)}`;
   }
+  // Flip button back to "Live preview"
+  setLiveBtn('live', b);
 }
 
 function tryLivePreview(b) {
-  const tryBtn = document.getElementById('preview-try-live');
-  if (tryBtn) { tryBtn.style.display = 'none'; }
+  // Flip button to "Screenshot" so user can get back
+  setLiveBtn('screenshot', b);
 
   document.getElementById('preview-loading').style.display = 'flex';
   document.getElementById('preview-screenshot').style.display = 'none';
@@ -1097,11 +1129,13 @@ function tryLivePreview(b) {
         if (loc.startsWith('chrome-error://') || loc.includes('chromewebdata')) {
           resolved = true;
           showPreviewFallback(b.url, true);
+          setLiveBtn('live', b); // iframe failed — back to "Live preview"
           return;
         }
         if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
           resolved = true;
           showPreviewFallback(b.url, true);
+          setLiveBtn('live', b);
         } else {
           resolved = true;
           document.getElementById('preview-loading').style.display = 'none';
@@ -1122,10 +1156,15 @@ function tryLivePreview(b) {
       if (resolved) return;
       resolved = true;
       showPreviewFallback(b.url, true);
+      setLiveBtn('live', b);
     };
 
     setTimeout(() => {
-      if (!resolved) { resolved = true; showPreviewFallback(b.url, true); }
+      if (!resolved) {
+        resolved = true;
+        showPreviewFallback(b.url, true);
+        setLiveBtn('live', b);
+      }
     }, 12000);
 
     resolved = false;

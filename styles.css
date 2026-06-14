@@ -424,7 +424,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* Primary "Open site" button — filled accent */
 .preview-btn-primary {
-  height: 32px; padding: 0 14px;
+  height: 36px; padding: 0 14px;
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--accent); color: var(--accent-fg);
   border: none; border-radius: 6px;
@@ -436,7 +436,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 
 /* Ghost "Close" button */
 .preview-btn {
-  height: 32px; padding: 0 12px;
+  height: 36px; padding: 0 12px;
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
   font-family: 'Geist', sans-serif; font-size: 13px; color: var(--text2);
@@ -1018,7 +1018,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 /* ── TRY LIVE PREVIEW BUTTON ─────────────────────────────────── */
 .preview-btn-secondary {
   display: inline-flex; align-items: center; gap: 5px;
-  height: 32px; padding: 0 12px;
+  height: 36px; padding: 0 12px;
   background: var(--bg2); border: 1px solid var(--border-md);
   border-radius: 6px; font-size: 13px; font-weight: 500;
   color: var(--text2); cursor: pointer; white-space: nowrap;
