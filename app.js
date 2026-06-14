@@ -137,12 +137,13 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
-    // getSession() returns the cached session without verifying server-side.
-    // refreshSession() both validates AND guarantees a fresh access token —
-    // critical after overnight sleep when the token may have expired.
-    // If it fails, the session is dead — sign out cleanly with a clear message.
-    const { data: refreshData, error: refreshError } = await sb.auth.refreshSession();
-    if (refreshError || !refreshData?.session?.user) {
+    // getSession() returns the cached local session. Use getUser() to verify
+    // it's still valid server-side — it refreshes the token automatically if
+    // needed, but unlike refreshSession() it doesn't fail on every call if
+    // the token is still within its validity window.
+    const { data: userData, error: userError } = await sb.auth.getUser();
+    if (userError || !userData?.user) {
+      // Token is genuinely invalid — sign out cleanly
       await sb.auth.signOut({ scope: 'local' });
       enterGuest();
       setTimeout(() => {
@@ -152,7 +153,7 @@ async function init() {
       return;
     }
     _authHandled = true;
-    CURRENT_USER = refreshData.session.user;
+    CURRENT_USER = userData.user;
     await enterApp();
   } else {
     enterGuest();
