@@ -59,6 +59,19 @@ let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 
 
 // ── BOOT ─────────────────────────────────────────────────────
+const INACTIVITY_LIMIT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const INACTIVITY_KEY = 'sitesave-last-active';
+
+function touchActivity() {
+  localStorage.setItem(INACTIVITY_KEY, Date.now());
+}
+
+function isSessionInactive() {
+  const last = parseInt(localStorage.getItem(INACTIVITY_KEY) || '0', 10);
+  if (!last) return false; // no record yet — don't sign out new users
+  return (Date.now() - last) > INACTIVITY_LIMIT_MS;
+}
+
 let _authHandled = false;
 let _isResettingPassword = false; // suppress SIGNED_OUT during password update
 
@@ -146,6 +159,17 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
+    // Check for inactivity — sign out if user hasn't interacted in 30 days
+    if (isSessionInactive()) {
+      await sb.auth.signOut({ scope: 'local' });
+      localStorage.removeItem(INACTIVITY_KEY);
+      enterGuest();
+      setTimeout(() => {
+        openAuthModal('signin');
+        showAuthError('signin-error', "You've been signed out after 30 days of inactivity.");
+      }, 100);
+      return;
+    }
     // Guard against race: if SIGNED_IN already fired and handled auth, don't call enterApp() again
     if (_authHandled) {
       return;
@@ -186,6 +210,7 @@ function enterGuest() {
 // ── APP MODE ──────────────────────────────────────────────────
 async function enterApp() {
   S.guestMode = false;
+  touchActivity(); // record activity timestamp on every successful app load
   BM = []; // clear placeholders immediately so they don't render into the app grid
   COLLECTIONS = [];
   render(); // flush placeholder cards out of the grid before showing app shell
@@ -1625,6 +1650,7 @@ function addTag(t) {
 function removeTag(i) { modalTags.splice(i, 1); renderTagTokens(); }
 
 async function saveBM() {
+  touchActivity();
   // Close collection dropdown if open
   document.getElementById('col-dropdown-list')?.classList.add('hidden');
 
@@ -1675,6 +1701,7 @@ function hintName() {
 
 // ── ACTIONS ───────────────────────────────────────────────────
 async function toggleFav(id) {
+  touchActivity();
   const b = BM.find(b => b.id == id);
   if (!b) return;
   b.fav = !b.fav;
