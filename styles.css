@@ -283,12 +283,12 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .thumb-fallback-text { line-height: 1.1; word-break: break-word; }
 .thumb-fallback-sld {
-  font-size: clamp(13px, 3.5vw, 26px);
+  font-size: clamp(15px, 3.5vw, 26px);
   font-weight: 600; letter-spacing: -.02em;
   color: #fff;
 }
 .thumb-fallback-tld {
-  font-size: clamp(13px, 3.5vw, 26px);
+  font-size: clamp(15px, 3.5vw, 26px);
   font-weight: 600; letter-spacing: -.02em;
   color: rgba(255,255,255,.35);
 }
