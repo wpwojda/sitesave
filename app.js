@@ -929,7 +929,7 @@ function card(b, i) {
 <div class="card" style="animation-delay:${i * .03}s" onclick="openPreview('${b.id}')">
   <div class="card-thumb" id="thumb-${b.id}">
     <div class="thumb-shimmer" id="shimmer-${b.id}"></div>
-    <img id="shot-${b.id}" alt="${x(b.name)} preview" style="display:none">
+    <img id="shot-${b.id}" alt="${x(b.name)} preview">
     <div class="thumb-error" id="err-${b.id}" style="background:${dc};">
       <div class="thumb-fallback-text">
         <span class="thumb-fallback-sld">${h.replace(/\.\w+(\.\w+)?$/, '')}</span><span class="thumb-fallback-tld">${h.match(/\.\w+(\.\w+)?$/)?.[0] || ''}</span>
@@ -966,7 +966,7 @@ function _processQueue() {
     const id = img.id.replace('shot-', '');
     const shimmer = document.getElementById('shimmer-' + id);
     const errEl   = document.getElementById('err-' + id);
-    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.style.display = ''; img.classList.add('loaded'); _shotActive--; _processQueue(); };
+    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); _shotActive--; _processQueue(); };
     img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; _shotActive--; _processQueue(); };
     img.src = url;
   }
@@ -1000,7 +1000,7 @@ function retryScreenshot(id, url) {
   if (!errEl || !img) return;
   errEl.style.display = 'none';
   if (shimmer) shimmer.style.display = '';
-  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.style.display = ''; img.classList.add('loaded'); };
+  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; errEl.style.display = 'flex'; toast('Still unavailable — site may block screenshots'); };
   img.src = `${WORKER_URL}/?url=${encodeURIComponent(url)}&bust=${Date.now()}`;
 }
