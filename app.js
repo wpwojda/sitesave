@@ -65,7 +65,6 @@ let _isResettingPassword = false; // suppress SIGNED_OUT during password update
 async function init() {
   _authHandled = false;
   window._initComplete = false;
-  console.log('[SS] init() started');
 
   // Clean up any error hashes or tokens Supabase leaves in the URL
   if (window.location.hash.includes('error=') ||
@@ -85,7 +84,6 @@ async function init() {
   // Register auth state listener — must be before any early returns so events
   // from verifyOtp/updateUser on this tab are always caught.
   sb.auth.onAuthStateChange(async (event, session) => {
-    console.log('[SS] auth event:', event, 'user:', session?.user?.id?.slice(0,8), '_authHandled:', _authHandled);
     if (event === 'SIGNED_IN' && session?.user && !_authHandled) {
       // Ignore SIGNED_IN if this tab has a pending recovery token (not submitted yet)
       // or if a reset is in progress (verifyOtp just ran in submitPasswordReset).
@@ -98,7 +96,6 @@ async function init() {
       // killed by browser extensions. We only want SIGNED_IN to handle
       // genuine new sign-ins from the auth modal (after init has completed).
       if (!window._initComplete) {
-        console.log('[SS] SIGNED_IN fired before init complete — deferring to getSession()');
         return;
       }
       _authHandled = true;
@@ -148,25 +145,19 @@ async function init() {
   }
 
   const { data: { session } } = await sb.auth.getSession();
-  console.log('[SS] getSession result:', session ? 'has session, user=' + session.user?.id?.slice(0,8) : 'no session', '_authHandled:', _authHandled);
   if (session?.user) {
     // Guard against race: if SIGNED_IN already fired and handled auth, don't call enterApp() again
     if (_authHandled) {
-      console.log('[SS] _authHandled already true — SIGNED_IN beat getSession(), skipping duplicate enterApp()');
       return;
     }
     _authHandled = true;
     CURRENT_USER = session.user;
-    console.log('[SS] calling enterApp()');
     await enterApp();
-    console.log('[SS] enterApp() completed');
   } else {
     // Only call enterGuest if SIGNED_IN hasn't already handled auth
     if (_authHandled) {
-      console.log('[SS] _authHandled already true — skipping enterGuest()');
       return;
     }
-    console.log('[SS] no session, calling enterGuest()');
     enterGuest();
     if (window._autoOpenForgot) {
       delete window._autoOpenForgot;
@@ -174,7 +165,6 @@ async function init() {
     }
   }
   window._initComplete = true;
-  console.log('[SS] init() complete');
 }
 
 // ── GUEST MODE ────────────────────────────────────────────────
@@ -579,7 +569,6 @@ document.addEventListener('click', e => {
 
 // ── DATABASE — BOOKMARKS ───────────────────────────────────────
 async function loadBookmarks() {
-  console.log('[SS] loadBookmarks() started, CURRENT_USER:', CURRENT_USER?.id?.slice(0,8));
   // Force clear search to prevent browser autofill contaminating results
   const qEl = document.getElementById('q');
   if (qEl) qEl.value = '';
@@ -588,8 +577,6 @@ async function loadBookmarks() {
     .from('bookmarks')
     .select('*')
     .order('created_at', { ascending: false });
-
-  console.log('[SS] bookmarks query result: data length=', data?.length, 'error=', error?.message);
   if (error) {
     // If it's an auth error, the session has gone stale mid-session.
     // Sign out cleanly and prompt the user to sign back in.
@@ -1889,7 +1876,6 @@ init();
     const { data: { session } } = await sb.auth.getSession();
     const newUserId = session?.user?.id || null;
     const currentUserId = CURRENT_USER?.id || null;
-    console.log('[SS] storage event: currentUserId=', currentUserId, 'newUserId=', newUserId);
     if (newUserId === currentUserId) return; // no real change
     // Only reload if this is a genuine user switch (both non-null) or a sign-out
     // Don't reload if going null→user (token refresh in another tab while this tab is loading)
