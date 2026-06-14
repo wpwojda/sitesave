@@ -896,6 +896,7 @@ function signupPromptCard() {
 // ── CARD TEMPLATE ─────────────────────────────────────────────
 function card(b, i) {
   const h = host(b.url);
+  const dc = domainColor(h);
   const isPlaceholder = String(b.id).startsWith('placeholder-');
   // Tag chips removed from cards — filtering via pills/sidebar only
   const actions = isPlaceholder ? '' : `
@@ -915,15 +916,12 @@ function card(b, i) {
 <div class="card" style="animation-delay:${i * .03}s" onclick="openPreview('${b.id}')">
   <div class="card-thumb" id="thumb-${b.id}">
     <div class="thumb-shimmer" id="shimmer-${b.id}"></div>
-    <img id="shot-${b.id}" alt="${x(b.name)} preview">
-    <div class="thumb-error" id="err-${b.id}">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/>
-        <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <span>Preview unavailable</span>
-      <span class="thumb-error-sub">This site blocks screenshot tools.</span>
-      ${isPlaceholder ? '' : `<button class="retry-shot-btn" onclick="event.stopPropagation();retryScreenshot('${b.id}','${x(b.url)}')" title="Try capturing the screenshot again">↺ Retry</button>`}
+    <img id="shot-${b.id}" alt="${x(b.name)} preview" style="display:none">
+    <div class="thumb-error" id="err-${b.id}" style="background:${dc};">
+      <div class="thumb-fallback-text">
+        <span class="thumb-fallback-sld">${h.replace(/\.\w+(\.\w+)?$/, '')}</span><span class="thumb-fallback-tld">${h.match(/\.\w+(\.\w+)?$/)?.[0] || ''}</span>
+      </div>
+      ${isPlaceholder ? '' : `<button class="thumb-retry-btn" onclick="event.stopPropagation();retryScreenshot('${b.id}','${x(b.url)}')" title="Retry screenshot">↺ Retry</button>`}
     </div>
     ${actions}
   </div>
@@ -955,7 +953,7 @@ function _processQueue() {
     const id = img.id.replace('shot-', '');
     const shimmer = document.getElementById('shimmer-' + id);
     const errEl   = document.getElementById('err-' + id);
-    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); _shotActive--; _processQueue(); };
+    img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.style.display = ''; img.classList.add('loaded'); _shotActive--; _processQueue(); };
     img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; _shotActive--; _processQueue(); };
     img.src = url;
   }
@@ -989,7 +987,7 @@ function retryScreenshot(id, url) {
   if (!errEl || !img) return;
   errEl.style.display = 'none';
   if (shimmer) shimmer.style.display = '';
-  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
+  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.style.display = ''; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; errEl.style.display = 'flex'; toast('Still unavailable — site may block screenshots'); };
   img.src = `${WORKER_URL}/?url=${encodeURIComponent(url)}&bust=${Date.now()}`;
 }
@@ -1709,6 +1707,21 @@ function showSuccess(msg) {
 function uid()   { return Math.random().toString(36).slice(2, 10); }
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
 function x(s)    { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Deterministic background colour from domain — same domain always same colour
+function domainColor(domain) {
+  const palette = [
+    '#1a1a2e','#1e2a1e','#2a1a2e','#1a2a2e',
+    '#2e1a1a','#1a2035','#252525','#2e2a1a',
+    '#1a2e2a','#2e1a2a',
+  ];
+  let hash = 0;
+  for (let i = 0; i < domain.length; i++) {
+    hash = ((hash << 5) - hash) + domain.charCodeAt(i);
+    hash |= 0;
+  }
+  return palette[Math.abs(hash) % palette.length];
+}
 
 let _tt;
 function toast(msg) {

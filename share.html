@@ -257,6 +257,20 @@ async function importCollection() {
 }
 
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
+
+function domainColor(domain) {
+  const palette = [
+    '#1a1a2e','#1e2a1e','#2a1a2e','#1a2a2e',
+    '#2e1a1a','#1a2035','#252525','#2e2a1a',
+    '#1a2e2a','#2e1a2a',
+  ];
+  let hash = 0;
+  for (let i = 0; i < domain.length; i++) {
+    hash = ((hash << 5) - hash) + domain.charCodeAt(i);
+    hash |= 0;
+  }
+  return palette[Math.abs(hash) % palette.length];
+}
 function x(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 let BM = [];
@@ -386,17 +400,16 @@ function renderCards() {
 
   g.innerHTML = list.map((b, i) => {
     const h = host(b.url);
+    const dc = domainColor(h);
     return `
 <div class="card" style="animation-delay:${i * .03}s" onclick="openPreview('${b.id}')">
   <div class="card-thumb" id="thumb-${b.id}">
     <div class="thumb-shimmer" id="shimmer-${b.id}"></div>
-    <img id="shot-${b.id}" alt="${x(b.name)} preview">
-    <div class="thumb-error" id="err-${b.id}">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/>
-        <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <span>Preview unavailable</span>
+    <img id="shot-${b.id}" alt="${x(b.name)} preview" style="display:none">
+    <div class="thumb-error" id="err-${b.id}" style="background:${dc};">
+      <div class="thumb-fallback-text">
+        <span class="thumb-fallback-sld">${h.replace(/\.\w+(\.\w+)?$/, '')}</span><span class="thumb-fallback-tld">${h.match(/\.\w+(\.\w+)?$/)?.[0] || ''}</span>
+      </div>
     </div>
   </div>
   <div class="card-foot">
@@ -418,7 +431,7 @@ function loadScreenshot(id, url) {
   const shimmer = document.getElementById('shimmer-' + id);
   const errEl   = document.getElementById('err-' + id);
   if (!img) return;
-  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.classList.add('loaded'); };
+  img.onload  = () => { if (shimmer) shimmer.style.display = 'none'; img.style.display = ''; img.classList.add('loaded'); };
   img.onerror = () => { if (shimmer) shimmer.style.display = 'none'; if (errEl) errEl.style.display = 'flex'; };
   img.src = `https://sitesave-screenshots.wpwojda.workers.dev/?url=${encodeURIComponent(url)}`;
 }
