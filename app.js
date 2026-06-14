@@ -138,14 +138,24 @@ async function init() {
   }
 
   const { data: { session } } = await sb.auth.getSession();
-  console.log('[SS] getSession result:', session ? 'has session, user=' + session.user?.id?.slice(0,8) : 'no session');
+  console.log('[SS] getSession result:', session ? 'has session, user=' + session.user?.id?.slice(0,8) : 'no session', '_authHandled:', _authHandled);
   if (session?.user) {
+    // Guard against race: if SIGNED_IN already fired and handled auth, don't call enterApp() again
+    if (_authHandled) {
+      console.log('[SS] _authHandled already true — SIGNED_IN beat getSession(), skipping duplicate enterApp()');
+      return;
+    }
     _authHandled = true;
     CURRENT_USER = session.user;
     console.log('[SS] calling enterApp()');
     await enterApp();
     console.log('[SS] enterApp() completed');
   } else {
+    // Only call enterGuest if SIGNED_IN hasn't already handled auth
+    if (_authHandled) {
+      console.log('[SS] _authHandled already true — skipping enterGuest()');
+      return;
+    }
     console.log('[SS] no session, calling enterGuest()');
     enterGuest();
     if (window._autoOpenForgot) {
