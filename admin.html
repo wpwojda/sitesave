@@ -149,7 +149,7 @@
   <div class="wrap">
     <div class="section-title">Overview</div>
     <div class="metrics">
-      <div class="metric"><div class="metric-label">Total users</div><div class="metric-value" id="m-users">—</div><div class="metric-sub">users who have at least 1 bookmark</div></div>
+      <div class="metric"><div class="metric-label">Total users</div><div class="metric-value" id="m-users">—</div></div>
       <div class="metric"><div class="metric-label">Total saves</div><div class="metric-value" id="m-saves">—</div></div>
       <div class="metric"><div class="metric-label">Avg saves / user</div><div class="metric-value" id="m-avg">—</div></div>
       <div class="metric"><div class="metric-label">At limit (50)</div><div class="metric-value" id="m-limit">—</div><div class="metric-sub">potential paid converts</div></div>
@@ -221,6 +221,11 @@
           <div class="cost-out-label">Break-even</div>
           <div class="cost-out-value" id="c-breakeven">—</div>
           <div class="cost-out-sub">paid users needed</div>
+        </div>
+        <div class="cost-out" id="c-db-card">
+          <div class="cost-out-label">Supabase DB est.</div>
+          <div class="cost-out-value" id="c-db">—</div>
+          <div class="cost-out-sub" id="c-db-sub">500MB free tier limit</div>
         </div>
       </div>
 
@@ -542,7 +547,25 @@ function calc() {
   const yearlyCost = monthlyCost * 12;
   const breakEven  = price > 0 ? Math.ceil(yearlyCost / price) : 0;
 
-  // ── Update output cards ──
+  // ── Supabase DB size estimate ──
+  // Each bookmark row: ~500 bytes (url avg 80 chars, name 40, tags JSONB 100, metadata ~280)
+  // Each user row in auth.users: ~200 bytes
+  // Collections, bookmark_collections: ~100 bytes per bookmark
+  // Total per bookmark: ~600 bytes. Per user: ~200 bytes overhead.
+  const bytesPerBookmark = 600;
+  const bytesPerUser = 200;
+  const avgSavesPerUser = 50; // assume users fill toward the free cap over time
+  const dbBytes = (users * avgSavesPerUser * bytesPerBookmark) + (users * bytesPerUser);
+  const dbMB = dbBytes / (1024 * 1024);
+  const dbPct = (dbMB / 500 * 100); // 500MB free tier
+  const dbWarning = dbPct > 80; // warn at 80% of free tier
+
+  const dbCard = document.getElementById('c-db-card');
+  dbCard.className = 'cost-out ' + (dbWarning ? 'profit-neg' : '');
+  document.getElementById('c-db').textContent = dbMB < 1 ? (dbMB * 1024).toFixed(0) + ' KB' : dbMB.toFixed(1) + ' MB';
+  document.getElementById('c-db-sub').textContent = `${dbPct.toFixed(1)}% of 500MB free tier`;
+
+
   const pfx = period === 'yearly' ? 'Annual' : 'Monthly';
   document.getElementById('c-cost-label').textContent   = pfx + ' cost';
   document.getElementById('c-rev-label').textContent    = pfx + ' revenue';
@@ -579,7 +602,8 @@ function calc() {
   document.getElementById('c-notes').innerHTML =
     `Thum.io API calls/mo: <strong>${Math.round(thumioHits).toLocaleString()}</strong> (${Math.round(cache*100)}% cache hit) &nbsp;·&nbsp; ` +
     `R2 storage est: <strong>${storageMB} MB</strong> &nbsp;·&nbsp; ` +
-    `Supabase free tier covers up to 500 users &nbsp;·&nbsp; ` +
+    `DB est: <strong>${dbMB.toFixed(1)} MB</strong> at ${users} users × 50 avg saves &nbsp;·&nbsp; ` +
+    `Supabase free tier: 500MB DB — upgrade needed ~${Math.floor(500 / (50 * bytesPerBookmark / (1024*1024))).toLocaleString()} users &nbsp;·&nbsp; ` +
     `Revenue model: one-time payment, amortised &nbsp;·&nbsp; USD → GBP at 0.79`;
 }
 
