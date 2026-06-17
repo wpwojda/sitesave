@@ -13,62 +13,132 @@
       --border-md:rgba(0,0,0,.15);--text:#111110;--text2:#4a4a47;--text3:#7a7874;
       --accent:#0000EE;--accent-fg:#ffffff;--danger:#c0392b;--r:8px;
       --success:#1a7a3f;--warn:#7a5c00;--warn-bg:#fef3cd;--warn-border:#f5c842;
+      --success-bg:rgba(26,122,63,.08);--danger-bg:rgba(192,57,43,.08);
     }
     [data-theme="dark"] {
       --bg:#0f0f0e;--bg2:#252525;--surface:#1f1e1c;--border:rgba(255,255,255,.08);
       --border-md:rgba(255,255,255,.14);--text:#f0eeea;--text2:#c4c2be;--text3:#9a9895;
       --accent:#8585ff;--accent-fg:#0f0f0e;--danger:#e05c4b;--success:#4caf82;
       --warn:#c4a84a;--warn-bg:rgba(250,200,50,.1);--warn-border:rgba(250,200,50,.3);
+      --success-bg:rgba(76,175,130,.08);--danger-bg:rgba(224,92,75,.08);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
-    .hdr{height:54px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+
+    /* Header */
+    .hdr{height:54px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
     .logo{font-size:22px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
     .logo span{color:var(--text3);font-weight:400;font-size:13px;margin-left:8px;letter-spacing:0}
-    .theme-btn{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);margin-left:auto}
+    .hdr-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .icon-btn{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:border-color .15s,color .15s}
+    .icon-btn:hover{color:var(--text);border-color:var(--border-md)}
+    .signout-btn{height:34px;padding:0 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text3);font-family:'Geist',sans-serif;font-size:12px;transition:border-color .15s,color .15s}
+    .signout-btn:hover{color:var(--danger);border-color:var(--danger)}
+
+    /* Theme icon toggling */
+    [data-theme="light"] .icon-moon{display:block}
+    [data-theme="light"] .icon-sun{display:none}
+    [data-theme="dark"] .icon-moon{display:none}
+    [data-theme="dark"] .icon-sun{display:block}
+
+    /* Layout */
     .wrap{max-width:1100px;margin:0 auto;padding:32px 24px}
     .section-title{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+
+    /* Metrics */
     .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:32px}
     .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
     .metric-label{font-size:12px;color:var(--text3);margin-bottom:6px}
     .metric-value{font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
     .metric-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:'Geist Mono',monospace}
+
+    /* Cards */
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:24px;overflow:hidden}
     .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
     .card-title{font-weight:500;font-size:14px;color:var(--text)}
     .card-body{padding:0}
+
+    /* Tables */
     table{width:100%;border-collapse:collapse;font-size:13px}
     th{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:10px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:400}
     td{padding:10px 18px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--bg)}
+
+    /* Badges */
     .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-family:'Geist Mono',monospace}
     .badge-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
     .badge-ok{background:rgba(26,122,63,.08);color:var(--success);border:1px solid rgba(26,122,63,.2)}
     .badge-blue{background:rgba(0,0,238,.08);color:var(--accent);border:1px solid rgba(0,0,238,.15)}
+
+    /* Table cell types */
     .email{color:var(--text);font-weight:500}
     .url-cell{color:var(--text3);font-family:'Geist Mono',monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .mono{font-family:'Geist Mono',monospace;font-size:12px}
+    .at-limit{color:var(--danger)!important;font-weight:500}
+
+    /* States */
     .loading{padding:32px 18px;text-align:center;color:var(--text3);font-size:13px}
     .error-msg{padding:16px 18px;color:var(--danger);font-size:13px}
-    .refresh-btn{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-family:'Geist',sans-serif}
+
+    /* Refresh button */
+    .refresh-btn{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-family:'Geist',sans-serif;display:flex;align-items:center;gap:6px;transition:border-color .15s,color .15s}
     .refresh-btn:hover{color:var(--text);border-color:var(--border-md)}
+    .refresh-btn.loading-state{opacity:.6;pointer-events:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{animation:spin .7s linear infinite;display:inline-block}
+
     .divider{height:1px;background:var(--border);margin:32px 0}
-    .at-limit{color:var(--danger)!important;font-weight:500}
+
+    /* ── Cost Model ── */
+    .cost-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px 18px}
+    @media(max-width:700px){.cost-grid{grid-template-columns:1fr}}
+    .cost-outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:0 18px 18px}
+    .cost-out{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+    .cost-out-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+    .cost-out-value{font-size:22px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+    .cost-out.profit-pos{background:var(--success-bg);border-color:rgba(26,122,63,.2)}
+    .cost-out.profit-pos .cost-out-label,.cost-out.profit-pos .cost-out-value{color:var(--success)}
+    .cost-out.profit-neg{background:var(--danger-bg);border-color:rgba(192,57,43,.2)}
+    .cost-out.profit-neg .cost-out-label,.cost-out.profit-neg .cost-out-value{color:var(--danger)}
+    .cost-notes{padding:10px 18px 16px;font-size:11px;color:var(--text3);font-family:'Geist Mono',monospace;border-top:1px solid var(--border);line-height:1.6}
+
+    /* Sliders */
+    .slider-group{display:flex;flex-direction:column;gap:16px}
+    .slider-item label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+    .slider-label{font-size:13px;color:var(--text);font-weight:500}
+    .slider-val{font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent);font-weight:500}
+    .slider-tip{font-size:11px;color:var(--text3);margin-bottom:6px;line-height:1.5}
+    input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4px}
+
+    /* Bar chart */
+    .cost-bars{padding:16px 18px;border-top:1px solid var(--border)}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+    .bar-row:last-child{margin-bottom:0}
+    .bar-label{width:90px;color:var(--text3);flex-shrink:0;font-family:'Geist Mono',monospace;font-size:11px}
+    .bar-track{flex:1;background:var(--bg2);border-radius:4px;height:8px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .3s}
+    .bar-amount{width:50px;text-align:right;color:var(--text2);font-family:'Geist Mono',monospace;font-size:11px}
   </style>
 </head>
 <body>
   <div class="hdr">
     <div class="logo">Sitesave <span>Admin</span></div>
-    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
-      <svg class="icon-sun" width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-      <svg class="icon-moon" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13.5 10.5A6 6 0 0 1 5.5 2.5a6.002 6.002 0 0 0 0 11 6 6 0 0 0 8-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
+    <div class="hdr-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
+        <svg class="icon-sun" width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13.5 10.5A6 6 0 0 1 5.5 2.5a6.002 6.002 0 0 0 0 11 6 6 0 0 0 8-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="signout-btn" onclick="signOut()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sign out
+      </button>
+    </div>
   </div>
 
   <div class="wrap">
     <div class="section-title">Overview</div>
-    <div class="metrics" id="metrics">
+    <div class="metrics">
       <div class="metric"><div class="metric-label">Total users</div><div class="metric-value" id="m-users">—</div></div>
       <div class="metric"><div class="metric-label">Total saves</div><div class="metric-value" id="m-saves">—</div></div>
       <div class="metric"><div class="metric-label">Avg saves / user</div><div class="metric-value" id="m-avg">—</div></div>
@@ -82,7 +152,10 @@
     <div class="card">
       <div class="card-head">
         <div class="card-title">Users by save count</div>
-        <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+        <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">
+          <svg id="refresh-icon" width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5a5.5 5.5 0 0 1 3.89 1.61L13.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13.5 2.5V6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
       </div>
       <div class="card-body">
         <table>
@@ -101,36 +174,128 @@
         </table>
       </div>
     </div>
+
+    <div class="divider"></div>
+
+    <!-- Cost Model -->
+    <div class="section-title">Cost model</div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Monthly cost & revenue projection</div></div>
+
+      <div class="cost-outputs">
+        <div class="cost-out"><div class="cost-out-label">Monthly cost</div><div class="cost-out-value" id="c-cost">—</div></div>
+        <div class="cost-out"><div class="cost-out-label">Monthly revenue</div><div class="cost-out-value" id="c-revenue">—</div></div>
+        <div class="cost-out" id="c-profit-card"><div class="cost-out-label" id="c-profit-label">Profit / loss</div><div class="cost-out-value" id="c-profit">—</div></div>
+        <div class="cost-out"><div class="cost-out-label">Break-even</div><div class="cost-out-value" id="c-breakeven">—</div><div style="font-size:10px;color:var(--text3);font-family:'Geist Mono',monospace;margin-top:2px">paid users needed</div></div>
+      </div>
+
+      <div class="cost-bars" id="c-bars"></div>
+
+      <div class="cost-grid">
+        <div class="slider-group">
+
+          <div class="slider-item">
+            <label><span class="slider-label">Total users</span><span class="slider-val" id="v-users">100</span></label>
+            <div class="slider-tip">Total registered accounts. Slide this to model growth scenarios — try 500 or 1,000 to see when costs start to matter.</div>
+            <input type="range" id="s-users" min="10" max="2000" step="10" value="100" oninput="calc()">
+          </div>
+
+          <div class="slider-item">
+            <label><span class="slider-label">Avg saves / user / month</span><span class="slider-val" id="v-saves">5</span></label>
+            <div class="slider-tip">How many new sites each user saves per month on average. Power users might save 20+, but most casual users will save 2–5. Your current avg is shown in the metrics above.</div>
+            <input type="range" id="s-saves" min="1" max="30" step="1" value="5" oninput="calc()">
+          </div>
+
+          <div class="slider-item">
+            <label><span class="slider-label">Cache hit rate</span><span class="slider-val" id="v-cache">25%</span></label>
+            <div class="slider-tip">% of saves where the screenshot is already cached in R2 from a previous user saving the same URL. Early on this is ~25%. As user numbers grow and popular sites get saved repeatedly, expect 60–70%. A higher cache rate = fewer Thum.io API calls = lower cost.</div>
+            <input type="range" id="s-cache" min="0" max="90" step="5" value="25" oninput="calc()">
+          </div>
+
+        </div>
+        <div class="slider-group">
+
+          <div class="slider-item">
+            <label><span class="slider-label">Pro conversion rate</span><span class="slider-val" id="v-conv">2%</span></label>
+            <div class="slider-tip">% of free users who upgrade to Pro. SaaS benchmarks are typically 2–5%. At launch expect 1–2%. As you build trust and add features, this should climb. Even 3% makes a meaningful difference to the bottom line.</div>
+            <input type="range" id="s-conv" min="0" max="20" step="0.5" value="2" oninput="calc()">
+          </div>
+
+          <div class="slider-item">
+            <label><span class="slider-label">Pro price (one-time, £)</span><span class="slider-val" id="v-price">£15</span></label>
+            <div class="slider-tip">One-time payment for Pro tier. Since revenue here is modelled monthly, this assumes Pro users spread evenly across the month (i.e. total Pro users × price ÷ 12 for annualised view). Adjust based on your pricing experiments.</div>
+            <input type="range" id="s-price" min="5" max="50" step="1" value="15" oninput="calc()">
+          </div>
+
+          <div class="slider-item">
+            <label><span class="slider-label">Screenshot size (KB)</span><span class="slider-val" id="v-size">325</span></label>
+            <div class="slider-tip">Average file size of a cached Thum.io screenshot in R2. Currently ~325KB at 500px width with JPG compression. Affects R2 storage estimate. Check your R2 bucket object sizes to calibrate this.</div>
+            <input type="range" id="s-size" min="50" max="600" step="25" value="325" oninput="calc()">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="cost-notes" id="c-notes"></div>
+    </div>
+
   </div>
 
 <script>
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
-const ADMIN_ID = 'edd41b56-a71e-4146-95d6-848cdec0bd50';
+const OWNER_ID  = 'edd41b56-a71e-4146-95d6-848cdec0bd50'; // wpwojda@gmail.com
+const ADMIN_SVC = '35301022-bad9-4bdd-bd24-c1e478f0e2d2'; // admin@sitesave.co.uk
 const FREE_LIMIT = 50;
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// Theme
+// ── Theme ────────────────────────────────────────────────
 const html = document.documentElement;
-const saved = localStorage.getItem('sitesave-theme');
-if (saved) html.dataset.theme = saved;
+const savedTheme = localStorage.getItem('sitesave-theme');
+if (savedTheme) html.dataset.theme = savedTheme;
 else if (window.matchMedia('(prefers-color-scheme: dark)').matches) html.dataset.theme = 'dark';
+
 function toggleTheme() {
   const next = html.dataset.theme === 'light' ? 'dark' : 'light';
   html.dataset.theme = next;
   localStorage.setItem('sitesave-theme', next);
 }
 
+// ── Sign out ─────────────────────────────────────────────
+async function signOut() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ── Formatters ────────────────────────────────────────────
 function fmt(dt) {
   return new Date(dt).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
 }
 function fmtTime(dt) {
   return new Date(dt).toLocaleString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 }
+function fmtGBP(n) {
+  return '£' + Math.abs(n).toFixed(2);
+}
 
+// ── Refresh button state ──────────────────────────────────
+function setRefreshLoading(on) {
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  if (on) {
+    btn.classList.add('loading-state');
+    icon.classList.add('spin');
+  } else {
+    btn.classList.remove('loading-state');
+    icon.classList.remove('spin');
+  }
+}
+
+// ── Load data ─────────────────────────────────────────────
 async function loadAll() {
-  // Sign in as dedicated admin service account
-  // Cloudflare Access already gates this page — only wpwojda@gmail.com can reach it
+  setRefreshLoading(true);
+
+  // Sign in as admin service account
   const { data: { session }, error: signInErr } = await sb.auth.signInWithPassword({
     email: 'admin@sitesave.co.uk',
     password: 'S0l1d_Ch1p5!'
@@ -138,34 +303,38 @@ async function loadAll() {
 
   if (signInErr || !session) {
     document.getElementById('t-users').innerHTML = `<tr><td colspan="4" class="error-msg">Auth failed: ${signInErr?.message || 'No session'}</td></tr>`;
+    setRefreshLoading(false);
     return;
   }
 
-  // Fetch all bookmarks via admin RPC
+  // Fetch all bookmarks
   const { data: saves, error: savesErr } = await sb.rpc('get_admin_bookmarks');
-
   if (savesErr) {
     document.getElementById('t-users').innerHTML = `<tr><td colspan="4" class="error-msg">${savesErr.message}</td></tr>`;
+    setRefreshLoading(false);
     return;
   }
 
-  // Aggregate by user
+  // Fetch user emails
+  const { data: authUsers } = await sb.rpc('get_admin_users');
+
+  // Aggregate bookmarks by user — exclude admin service account
   const userMap = {};
-  saves.forEach(s => {
+  (saves || []).forEach(s => {
+    if (s.user_id === ADMIN_SVC) return;
     if (!userMap[s.user_id]) userMap[s.user_id] = { count: 0, earliest: s.created_at };
     userMap[s.user_id].count++;
     if (s.created_at < userMap[s.user_id].earliest) userMap[s.user_id].earliest = s.created_at;
   });
 
-  // Get user emails
-  const { data: authUsers } = await sb.rpc('get_admin_users');
-
+  // Metrics — exclude owner from "at limit" count
   const totalUsers = Object.keys(userMap).length;
-  const totalSaves = saves.length;
+  const totalSaves = (saves || []).filter(s => s.user_id !== ADMIN_SVC).length;
   const avg = totalUsers > 0 ? (totalSaves / totalUsers).toFixed(1) : 0;
-  const atLimit = Object.values(userMap).filter(u => u.count >= FREE_LIMIT).length;
+  const atLimit = Object.entries(userMap)
+    .filter(([uid, data]) => uid !== OWNER_ID && data.count >= FREE_LIMIT).length;
   const oneWeekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
-  const weekSaves = saves.filter(s => s.created_at > oneWeekAgo).length;
+  const weekSaves = (saves || []).filter(s => s.user_id !== ADMIN_SVC && s.created_at > oneWeekAgo).length;
   const estStorageMB = (totalSaves * 325 / 1024).toFixed(0);
 
   document.getElementById('m-users').textContent = totalUsers;
@@ -175,21 +344,17 @@ async function loadAll() {
   document.getElementById('m-week').textContent = weekSaves;
   document.getElementById('m-storage').textContent = estStorageMB + ' MB';
 
-  // Build email map — exclude the internal admin service account
+  // Build email map — exclude admin service account
   const emailMap = {};
   if (authUsers) authUsers.forEach(u => {
-    if (u.email !== 'admin@sitesave.co.uk') emailMap[u.id] = u.email;
+    if (u.id !== ADMIN_SVC) emailMap[u.id] = u.email;
   });
 
-  // Users table — sorted by save count desc, exclude admin service account
-  const sorted = Object.entries(userMap)
-    .filter(([uid]) => uid !== '35301022-bad9-4bdd-bd24-c1e478f0e2d2')
-    .sort((a,b) => b[1].count - a[1].count);
-
-  const tUsers = document.getElementById('t-users');
-  tUsers.innerHTML = sorted.map(([uid, data]) => {
+  // Users table — sorted by save count desc
+  const sorted = Object.entries(userMap).sort((a,b) => b[1].count - a[1].count);
+  document.getElementById('t-users').innerHTML = sorted.map(([uid, data]) => {
     const email = emailMap[uid] || uid.slice(0,8) + '…';
-    const isOwner = uid === ADMIN_ID;
+    const isOwner = uid === OWNER_ID;
     const atLim = data.count >= FREE_LIMIT;
     const badge = isOwner
       ? '<span class="badge badge-blue">Owner</span>'
@@ -206,10 +371,8 @@ async function loadAll() {
 
   // Recent saves — exclude admin service account
   const { data: recent } = await sb.rpc('get_admin_recent_bookmarks');
-
-  const tRecent = document.getElementById('t-recent');
-  tRecent.innerHTML = (recent || [])
-    .filter(r => r.user_id !== '35301022-bad9-4bdd-bd24-c1e478f0e2d2')
+  document.getElementById('t-recent').innerHTML = (recent || [])
+    .filter(r => r.user_id !== ADMIN_SVC)
     .map(r => {
       const email = emailMap[r.user_id] || r.user_id.slice(0,8) + '…';
       return `<tr>
@@ -219,9 +382,111 @@ async function loadAll() {
         <td class="mono">${fmtTime(r.created_at)}</td>
       </tr>`;
     }).join('');
+
+  setRefreshLoading(false);
 }
 
+// ── Cost model ────────────────────────────────────────────
+function calc() {
+  const users    = parseInt(document.getElementById('s-users').value);
+  const savespm  = parseInt(document.getElementById('s-saves').value);
+  const cache    = parseInt(document.getElementById('s-cache').value) / 100;
+  const conv     = parseFloat(document.getElementById('s-conv').value) / 100;
+  const price    = parseInt(document.getElementById('s-price').value);
+  const sizeKB   = parseInt(document.getElementById('s-size').value);
+
+  // Update displayed values
+  document.getElementById('v-users').textContent  = users.toLocaleString();
+  document.getElementById('v-saves').textContent  = savespm;
+  document.getElementById('v-cache').textContent  = Math.round(cache * 100) + '%';
+  document.getElementById('v-conv').textContent   = (conv * 100).toFixed(1) + '%';
+  document.getElementById('v-price').textContent  = '£' + price;
+  document.getElementById('v-size').textContent   = sizeKB + ' KB';
+
+  // ── Cost calculations ──
+  // Thum.io: $2 per 10,000 screenshots (Good plan). Cache misses only hit API.
+  const totalShotsPerMonth = users * savespm;
+  const thumioHits = totalShotsPerMonth * (1 - cache);
+  const thumioUSD  = (thumioHits / 10000) * 2;
+  const thumioGBP  = thumioUSD * 0.79;
+
+  // Cloudflare Workers: $1/mo fixed (free tier covers requests easily)
+  const cfWorkersGBP = 0.79; // $1 USD
+
+  // R2 storage: free up to 10GB, then $0.015/GB/mo
+  const totalScreenshots = users * 50; // assume avg 50 saves per user historically
+  const storageGB = (totalScreenshots * sizeKB) / (1024 * 1024);
+  const r2FreeGB  = 10;
+  const r2BillableGB = Math.max(0, storageGB - r2FreeGB);
+  const r2GBP = r2BillableGB * 0.015 * 0.79;
+
+  // Supabase: free up to 50k MAU & 500MB DB. Pro = $25/mo if needed.
+  // Simple model: free below 500 users, $25/mo above (conservative)
+  const supabaseUSD = users > 500 ? 25 : 0;
+  const supabaseGBP = supabaseUSD * 0.79;
+
+  // Resend: free up to 3,000 emails/mo. Pro = $20/mo above.
+  // Estimate: 10% of users trigger an email per month (signup, reset, etc.)
+  const monthlyEmails = users * 0.1;
+  const resendUSD = monthlyEmails > 3000 ? 20 : 0;
+  const resendGBP = resendUSD * 0.79;
+
+  // GitHub Pages: always free
+  const githubGBP = 0;
+
+  const totalCost = thumioGBP + cfWorkersGBP + r2GBP + supabaseGBP + resendGBP + githubGBP;
+
+  // ── Revenue ──
+  // One-time payment model — monthly new Pro conversions
+  // Approximation: conv% of total users convert, spread over 12 months
+  const monthlyNewPro = (users * conv) / 12;
+  const revenueGBP = monthlyNewPro * price;
+
+  const profit = revenueGBP - totalCost;
+  const breakEven = totalCost > 0 && price > 0
+    ? Math.ceil((totalCost * 12) / price)
+    : 0;
+
+  // ── Update outputs ──
+  document.getElementById('c-cost').textContent     = fmtGBP(totalCost);
+  document.getElementById('c-revenue').textContent  = fmtGBP(revenueGBP);
+  document.getElementById('c-profit').textContent   = (profit >= 0 ? '+' : '-') + fmtGBP(profit);
+  document.getElementById('c-breakeven').textContent = breakEven > 0 ? breakEven : '0';
+
+  const profitCard = document.getElementById('c-profit-card');
+  profitCard.className = 'cost-out ' + (profit >= 0 ? 'profit-pos' : 'profit-neg');
+
+  // ── Bar chart ──
+  const components = [
+    { label: 'Thum.io',    val: thumioGBP },
+    { label: 'CF Workers', val: cfWorkersGBP },
+    { label: 'R2 storage', val: r2GBP },
+    { label: 'Supabase',   val: supabaseGBP },
+    { label: 'Resend',     val: resendGBP },
+  ];
+  const maxVal = Math.max(...components.map(c => c.val), 0.01);
+  document.getElementById('c-bars').innerHTML = components.map(c => {
+    const pct = (c.val / maxVal * 100).toFixed(1);
+    return `<div class="bar-row">
+      <div class="bar-label">${c.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="bar-amount">${fmtGBP(c.val)}</div>
+    </div>`;
+  }).join('');
+
+  // ── Notes ──
+  const storageMB = (storageGB * 1024).toFixed(0);
+  document.getElementById('c-notes').innerHTML =
+    `Thum.io API calls/mo: <strong>${Math.round(thumioHits).toLocaleString()}</strong> (${Math.round(cache*100)}% cache hit) &nbsp;·&nbsp; ` +
+    `R2 storage est: <strong>${storageMB} MB</strong> &nbsp;·&nbsp; ` +
+    `Supabase free tier covers up to 500 users &nbsp;·&nbsp; ` +
+    `USD → GBP at 0.79 &nbsp;·&nbsp; ` +
+    `One-time Pro revenue amortised monthly`;
+}
+
+// ── Init ─────────────────────────────────────────────────
 loadAll();
+calc();
 </script>
 </body>
 </html>
