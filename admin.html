@@ -425,13 +425,17 @@ async function loadAll() {
     const email = emailMap[uid] || uid.slice(0,8) + '…';
     const isOwner = uid === OWNER_ID;
     const atLim = data.count >= FREE_LIMIT;
+    const disposable = isDisposable(email);
     const badge = isOwner
       ? '<span class="badge badge-blue">Owner</span>'
       : atLim
         ? '<span class="badge badge-warn">At limit</span>'
         : '<span class="badge badge-ok">Active</span>';
+    const dispFlag = disposable
+      ? ' <span title="Disposable email domain" style="font-size:11px;color:var(--warn);font-family:\'Geist Mono\',monospace;cursor:default;">⚠ disposable</span>'
+      : '';
     return `<tr>
-      <td class="email">${email}</td>
+      <td class="email">${email}${dispFlag}</td>
       <td class="mono ${atLim && !isOwner ? 'at-limit' : ''}">${data.count}${isOwner ? '' : ' / ' + FREE_LIMIT}</td>
       <td>${badge}</td>
       <td class="mono">${fmt(data.earliest)}</td>
@@ -455,7 +459,24 @@ async function loadAll() {
   setRefreshLoading(false);
 }
 
-// ── Cost model ────────────────────────────────────────────
+// ── Disposable email domains ──────────────────────────────
+const DISPOSABLE_DOMAINS = new Set([
+  'ruru.be','mailinator.com','guerrillamail.com','temp-mail.org',
+  'throwam.com','yopmail.com','sharklasers.com','guerrillamailblock.com',
+  'grr.la','guerrillamail.info','guerrillamail.biz','guerrillamail.de',
+  'guerrillamail.net','guerrillamail.org','spam4.me','trashmail.com',
+  'trashmail.me','trashmail.net','dispostable.com','mailnull.com',
+  'spamgourmet.com','tempinbox.com','fakeinbox.com','maildrop.cc',
+  'tempr.email','discard.email','spamhereplease.com','spamthisplease.com',
+  'getairmail.com','filzmail.com','throwam.com','mohmal.com',
+  'tempmail.com','tempemail.com','emailondeck.com','getnada.com',
+  'kuku.lu','spamex.com','spamfree24.org','mailexpire.com',
+]);
+
+function isDisposable(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return domain && DISPOSABLE_DOMAINS.has(domain);
+}
 let period = 'monthly'; // 'monthly' | 'yearly'
 
 function setPeriod(p) {
@@ -530,7 +551,14 @@ function calc() {
   // Resend: free <3,000 emails/mo (10% of users/mo), $20/mo above
   const resendGBP = (users * 0.1) > 3000 ? 20 * 0.79 : 0;
 
-  const monthlyCost = thumioGBP + cfWorkersGBP + r2GBP + supabaseGBP + resendGBP;
+  // ── Payment processor fee (Creem: 3.9% + £0.32 per transaction) ──
+  // Applied to each paid user's yearly payment, amortised monthly
+  const creemPctFee = 0.039;
+  const creemFlatFee = 0.32; // £0.40 USD converted
+  const monthlyTransactions = paid / 12; // new paid users per month
+  const processorGBP = (monthlyTransactions * price * creemPctFee) + (monthlyTransactions * creemFlatFee);
+
+  const monthlyCost = thumioGBP + cfWorkersGBP + r2GBP + supabaseGBP + resendGBP + processorGBP;
 
   // ── Revenue ──
   // One-time model: paid users × price = total revenue ever earned
@@ -587,6 +615,7 @@ function calc() {
     { label: 'R2 storage', val: r2GBP },
     { label: 'Supabase',   val: supabaseGBP },
     { label: 'Resend',     val: resendGBP },
+    { label: 'Creem fees', val: processorGBP },
   ];
   const maxVal = Math.max(...components.map(c => c.val), 0.01);
   document.getElementById('c-bars').innerHTML =
@@ -604,7 +633,8 @@ function calc() {
     `R2 storage est: <strong>${storageMB} MB</strong> &nbsp;·&nbsp; ` +
     `DB est: <strong>${dbMB.toFixed(1)} MB</strong> at ${users} users × 50 avg saves &nbsp;·&nbsp; ` +
     `Supabase free tier: 500MB DB — upgrade needed ~${Math.floor(500 / (50 * bytesPerBookmark / (1024*1024))).toLocaleString()} users &nbsp;·&nbsp; ` +
-    `Revenue model: one-time payment, amortised &nbsp;·&nbsp; USD → GBP at 0.79`;
+    `Creem: 3.9% + 40¢ per transaction (MoR — UK VAT handled) &nbsp;·&nbsp; ` +
+    `Revenue model: one-time yearly payment &nbsp;·&nbsp; USD → GBP at 0.79`;
 }
 
 // ── Init ─────────────────────────────────────────────────
