@@ -1586,7 +1586,7 @@ function openModal(id = null) {
   // Save limit check (only for new saves, not edits)
   const limitWarn = document.getElementById('save-limit-warn');
   const saveBtn = document.getElementById('btn-save-modal');
-  const isUnlimited = UNLIMITED_USERS.includes(S.user?.id);
+  const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER?.id);
   const atLimit = !id && !isUnlimited && BM.length >= FREE_SAVE_LIMIT;
   if (limitWarn) limitWarn.style.display = atLimit ? 'flex' : 'none';
   if (saveBtn) saveBtn.disabled = atLimit;
