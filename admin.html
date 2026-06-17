@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitesave Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:#f7f6f4;--bg2:#f0eeeb;--surface:#ffffff;--border:rgba(0,0,0,.09);
+      --border-md:rgba(0,0,0,.15);--text:#111110;--text2:#4a4a47;--text3:#7a7874;
+      --accent:#0000EE;--accent-fg:#ffffff;--danger:#c0392b;--r:8px;
+      --success:#1a7a3f;--warn:#7a5c00;--warn-bg:#fef3cd;--warn-border:#f5c842;
+    }
+    [data-theme="dark"] {
+      --bg:#0f0f0e;--bg2:#252525;--surface:#1f1e1c;--border:rgba(255,255,255,.08);
+      --border-md:rgba(255,255,255,.14);--text:#f0eeea;--text2:#c4c2be;--text3:#9a9895;
+      --accent:#8585ff;--accent-fg:#0f0f0e;--danger:#e05c4b;--success:#4caf82;
+      --warn:#c4a84a;--warn-bg:rgba(250,200,50,.1);--warn-border:rgba(250,200,50,.3);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+    .hdr{height:54px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+    .logo{font-size:22px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+    .logo span{color:var(--text3);font-weight:400;font-size:13px;margin-left:8px;letter-spacing:0}
+    .theme-btn{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);margin-left:auto}
+    .wrap{max-width:1100px;margin:0 auto;padding:32px 24px}
+    .section-title{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:32px}
+    .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .metric-label{font-size:12px;color:var(--text3);margin-bottom:6px}
+    .metric-value{font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+    .metric-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:'Geist Mono',monospace}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:24px;overflow:hidden}
+    .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .card-title{font-weight:500;font-size:14px;color:var(--text)}
+    .card-body{padding:0}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:10px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:400}
+    td{padding:10px 18px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--bg)}
+    .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-family:'Geist Mono',monospace}
+    .badge-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+    .badge-ok{background:rgba(26,122,63,.08);color:var(--success);border:1px solid rgba(26,122,63,.2)}
+    .badge-blue{background:rgba(0,0,238,.08);color:var(--accent);border:1px solid rgba(0,0,238,.15)}
+    .email{color:var(--text);font-weight:500}
+    .url-cell{color:var(--text3);font-family:'Geist Mono',monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mono{font-family:'Geist Mono',monospace;font-size:12px}
+    .loading{padding:32px 18px;text-align:center;color:var(--text3);font-size:13px}
+    .error-msg{padding:16px 18px;color:var(--danger);font-size:13px}
+    .refresh-btn{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-family:'Geist',sans-serif}
+    .refresh-btn:hover{color:var(--text);border-color:var(--border-md)}
+    .divider{height:1px;background:var(--border);margin:32px 0}
+    .at-limit{color:var(--danger)!important;font-weight:500}
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <div class="logo">Sitesave <span>Admin</span></div>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-sun" width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <svg class="icon-moon" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13.5 10.5A6 6 0 0 1 5.5 2.5a6.002 6.002 0 0 0 0 11 6 6 0 0 0 8-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <div class="wrap">
+    <div class="section-title">Overview</div>
+    <div class="metrics" id="metrics">
+      <div class="metric"><div class="metric-label">Total users</div><div class="metric-value" id="m-users">—</div></div>
+      <div class="metric"><div class="metric-label">Total saves</div><div class="metric-value" id="m-saves">—</div></div>
+      <div class="metric"><div class="metric-label">Avg saves / user</div><div class="metric-value" id="m-avg">—</div></div>
+      <div class="metric"><div class="metric-label">At limit (50)</div><div class="metric-value" id="m-limit">—</div><div class="metric-sub">potential paid converts</div></div>
+      <div class="metric"><div class="metric-label">New this week</div><div class="metric-value" id="m-week">—</div><div class="metric-sub">saves in last 7 days</div></div>
+      <div class="metric"><div class="metric-label">R2 est. storage</div><div class="metric-value" id="m-storage">—</div><div class="metric-sub">at 325KB avg per screenshot</div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Users by save count</div>
+        <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Email</th><th>Saves</th><th>Status</th><th>Joined</th></tr></thead>
+          <tbody id="t-users"><tr><td colspan="4" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Recent saves (last 20)</div></div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Email</th><th>URL</th><th>Name</th><th>Saved at</th></tr></thead>
+          <tbody id="t-recent"><tr><td colspan="4" class="loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
+const ADMIN_ID = 'edd41b56-a71e-4146-95d6-848cdec0bd50';
+const FREE_LIMIT = 50;
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Theme
+const html = document.documentElement;
+const saved = localStorage.getItem('sitesave-theme');
+if (saved) html.dataset.theme = saved;
+else if (window.matchMedia('(prefers-color-scheme: dark)').matches) html.dataset.theme = 'dark';
+function toggleTheme() {
+  const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+  html.dataset.theme = next;
+  localStorage.setItem('sitesave-theme', next);
+}
+
+function fmt(dt) {
+  return new Date(dt).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+}
+function fmtTime(dt) {
+  return new Date(dt).toLocaleString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadAll() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session || session.user.id !== ADMIN_ID) {
+    document.body.innerHTML = '<div style="padding:48px;text-align:center;font-family:Geist,sans-serif;color:#c0392b">Access denied.</div>';
+    return;
+  }
+
+  // Load user save counts
+  const { data: saves, error: savesErr } = await sb
+    .from('bookmarks')
+    .select('user_id, created_at');
+
+  if (savesErr) {
+    document.getElementById('t-users').innerHTML = `<tr><td colspan="4" class="error-msg">${savesErr.message}</td></tr>`;
+    return;
+  }
+
+  // Aggregate by user
+  const userMap = {};
+  saves.forEach(s => {
+    if (!userMap[s.user_id]) userMap[s.user_id] = { count: 0, earliest: s.created_at };
+    userMap[s.user_id].count++;
+    if (s.created_at < userMap[s.user_id].earliest) userMap[s.user_id].earliest = s.created_at;
+  });
+
+  // Load user emails from auth
+  const { data: users, error: usersErr } = await sb
+    .from('bookmarks')
+    .select('user_id, url')
+    .limit(1);
+
+  // Use RPC to get user emails — query auth.users via is_admin
+  const { data: authUsers } = await sb.rpc('get_admin_users');
+
+  const totalUsers = Object.keys(userMap).length;
+  const totalSaves = saves.length;
+  const avg = totalUsers > 0 ? (totalSaves / totalUsers).toFixed(1) : 0;
+  const atLimit = Object.values(userMap).filter(u => u.count >= FREE_LIMIT).length;
+  const oneWeekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+  const weekSaves = saves.filter(s => s.created_at > oneWeekAgo).length;
+  const estStorageMB = (totalSaves * 325 / 1024).toFixed(0);
+
+  document.getElementById('m-users').textContent = totalUsers;
+  document.getElementById('m-saves').textContent = totalSaves;
+  document.getElementById('m-avg').textContent = avg;
+  document.getElementById('m-limit').textContent = atLimit;
+  document.getElementById('m-week').textContent = weekSaves;
+  document.getElementById('m-storage').textContent = estStorageMB + ' MB';
+
+  // Build email map from authUsers if available
+  const emailMap = {};
+  if (authUsers) authUsers.forEach(u => { emailMap[u.id] = u.email; });
+
+  // Users table — sorted by save count desc
+  const sorted = Object.entries(userMap).sort((a,b) => b[1].count - a[1].count);
+  const tUsers = document.getElementById('t-users');
+  tUsers.innerHTML = sorted.map(([uid, data]) => {
+    const email = emailMap[uid] || uid.slice(0,8) + '…';
+    const isOwner = uid === ADMIN_ID;
+    const atLim = data.count >= FREE_LIMIT;
+    const badge = isOwner
+      ? '<span class="badge badge-blue">Owner</span>'
+      : atLim
+        ? '<span class="badge badge-warn">At limit</span>'
+        : '<span class="badge badge-ok">Active</span>';
+    return `<tr>
+      <td class="email">${email}</td>
+      <td class="mono ${atLim && !isOwner ? 'at-limit' : ''}">${data.count}${isOwner ? '' : ' / ' + FREE_LIMIT}</td>
+      <td>${badge}</td>
+      <td class="mono">${fmt(data.earliest)}</td>
+    </tr>`;
+  }).join('');
+
+  // Recent saves
+  const { data: recent } = await sb
+    .from('bookmarks')
+    .select('user_id, url, name, created_at')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const tRecent = document.getElementById('t-recent');
+  tRecent.innerHTML = recent.map(r => {
+    const email = emailMap[r.user_id] || r.user_id.slice(0,8) + '…';
+    return `<tr>
+      <td class="email">${email}</td>
+      <td class="url-cell" title="${r.url}">${r.url}</td>
+      <td>${r.name || '—'}</td>
+      <td class="mono">${fmtTime(r.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+loadAll();
+</script>
+</body>
+</html>
