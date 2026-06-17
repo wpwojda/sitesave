@@ -669,6 +669,11 @@ async function dbInsert(bm, attempt = 1) {
   try {
     const { data, error } = await Promise.race([insertPromise, timeoutPromise]);
     if (error) {
+      if (error.code === 'P0001' || error.message?.includes('Save limit reached')) {
+        clearStatus();
+        toast('You\'ve reached the 50 site limit. Review and delete some saves to free up space.');
+        return null;
+      }
       if (attempt < 3) {
         showStatus(`Saving… (attempt ${attempt + 1} of 3)`);
         await new Promise(r => setTimeout(r, 1500));
