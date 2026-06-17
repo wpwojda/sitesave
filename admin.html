@@ -155,6 +155,7 @@
       <div class="metric"><div class="metric-label">At limit (50)</div><div class="metric-value" id="m-limit">—</div><div class="metric-sub">potential paid converts</div></div>
       <div class="metric"><div class="metric-label">New this week</div><div class="metric-value" id="m-week">—</div><div class="metric-sub">saves in last 7 days</div></div>
       <div class="metric"><div class="metric-label">R2 est. storage</div><div class="metric-value" id="m-storage">—</div><div class="metric-sub">at 325KB avg per screenshot</div></div>
+      <div class="metric"><div class="metric-label">Never saved</div><div class="metric-value" id="m-nosave">—</div><div class="metric-sub">signed up, 0 bookmarks</div></div>
     </div>
 
     <div class="divider"></div>
@@ -412,6 +413,11 @@ async function loadAll() {
   document.getElementById('m-limit').textContent = atLimit;
   document.getElementById('m-week').textContent = weekSaves;
   document.getElementById('m-storage').textContent = estStorageMB + ' MB';
+
+  // Never saved — registered users with zero bookmarks
+  const registeredTotal = (authUsers || []).filter(u => u.id !== ADMIN_SVC).length;
+  const neverSaved = Math.max(0, registeredTotal - totalUsers);
+  document.getElementById('m-nosave').textContent = neverSaved;
 
   // Build email map — exclude admin service account
   const emailMap = {};

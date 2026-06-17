@@ -556,6 +556,69 @@ async function deleteAccount() {
   }
 }
 
+function exportBookmarks() {
+  document.getElementById('user-dropdown').classList.add('hidden');
+  if (!BM || BM.length === 0) {
+    toast('No bookmarks to export');
+    return;
+  }
+
+  // Build Netscape Bookmark File format — compatible with all browsers,
+  // Raindrop, Notion, Arc, and most bookmark tools
+  const escape = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  // Group bookmarks by collection
+  const colMap = {}; // collectionId -> { name, bookmarks[] }
+  const uncollected = [];
+
+  BM.forEach(b => {
+    const addDate = b.date ? Math.floor(new Date(b.date).getTime() / 1000) : Math.floor(Date.now() / 1000);
+    const entry = { url: b.url, name: b.name || b.url, tags: b.tags || [], addDate };
+    if (b.collections && b.collections.length > 0) {
+      b.collections.forEach(cid => {
+        if (!colMap[cid]) {
+          const col = COLLECTIONS.find(c => c.id === cid);
+          colMap[cid] = { name: col?.name || 'Collection', bookmarks: [] };
+        }
+        colMap[cid].bookmarks.push(entry);
+      });
+    } else {
+      uncollected.push(entry);
+    }
+  });
+
+  const bookmarkLink = b =>
+    `        <DT><A HREF="${escape(b.url)}" ADD_DATE="${b.addDate}"${b.tags.length ? ` TAGS="${escape(b.tags.join(','))}"` : ''}>${escape(b.name)}</A>`;
+
+  let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<!-- This is an automatically generated file. -->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>Sitesave Bookmarks</TITLE>\n<H1>Sitesave Bookmarks</H1>\n<DL><p>\n`;
+
+  // Uncollected bookmarks first
+  if (uncollected.length > 0) {
+    uncollected.forEach(b => { html += bookmarkLink(b) + '\n'; });
+  }
+
+  // Then each collection as a folder
+  Object.values(colMap).forEach(col => {
+    html += `    <DT><H3>${escape(col.name)}</H3>\n    <DL><p>\n`;
+    col.bookmarks.forEach(b => { html += bookmarkLink(b) + '\n'; });
+    html += `    </DL><p>\n`;
+  });
+
+  html += `</DL><p>`;
+
+  // Trigger download
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `sitesave-bookmarks-${new Date().toISOString().slice(0,10)}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Exported ${BM.length} bookmark${BM.length !== 1 ? 's' : ''}`);
+}
+
 function updateUserAvatar() {
   const avatar = document.getElementById('user-avatar');
   if (!avatar || !CURRENT_USER) return;
