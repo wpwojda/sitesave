@@ -201,6 +201,9 @@ function renderCTA() {
   }
 }
 
+const FREE_SAVE_LIMIT = 50;
+const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
+
 async function importCollection() {
   if (!CURRENT_USER) return;
   const importBtn = document.getElementById('share-import-btn');
@@ -211,13 +214,35 @@ async function importCollection() {
     const collectionName = document.getElementById('share-title')?.textContent?.trim() || 'Imported collection';
     const { data: existing } = await sb.from('bookmarks').select('url').eq('user_id', CURRENT_USER.id);
     const existingUrls = new Set((existing || []).map(b => b.url));
-    const toImport = BM.filter(b => !existingUrls.has(b.url));
-    const skipped = BM.length - toImport.length;
+    const currentCount = existing?.length || 0;
+    const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
 
-    if (toImport.length === 0) {
+    // Filter out duplicates first
+    const newItems = BM.filter(b => !existingUrls.has(b.url));
+    const skipped = BM.length - newItems.length;
+
+    if (newItems.length === 0) {
       if (btn) { btn.textContent = 'Already in your library'; btn.disabled = false; }
       return;
     }
+
+    // Enforce save limit for non-unlimited users
+    if (!isUnlimited) {
+      const remaining = FREE_SAVE_LIMIT - currentCount;
+      if (remaining <= 0) {
+        showImportError(importBtn, btn,
+          `You've reached your ${FREE_SAVE_LIMIT}-save limit. Upgrade to Pro to import more.`);
+        return;
+      }
+      if (newItems.length > remaining) {
+        // Partial import not offered — block the whole import and explain clearly
+        showImportError(importBtn, btn,
+          `This collection has ${newItems.length} new sites but you only have room for ${remaining} more (${FREE_SAVE_LIMIT}-save limit). Upgrade to Pro to import the full collection.`);
+        return;
+      }
+    }
+
+    const toImport = newItems;
 
     const { data: col, error: colErr } = await sb.from('collections')
       .insert({ name: collectionName, user_id: CURRENT_USER.id })
@@ -232,18 +257,28 @@ async function importCollection() {
       fav:     false,
     }));
     const { data: inserted, error: bmErr } = await sb.from('bookmarks').insert(rows).select('id');
-    if (bmErr) throw bmErr;
+
+    // Catch server-side limit enforcement (Supabase trigger P0001)
+    if (bmErr) {
+      if (bmErr.code === 'P0001') {
+        showImportError(importBtn, btn,
+          `You've reached your ${FREE_SAVE_LIMIT}-save limit. Upgrade to Pro to import more.`);
+      } else {
+        throw bmErr;
+      }
+      return;
+    }
 
     const links = inserted.map(r => ({ bookmark_id: r.id, collection_id: col.id }));
     await sb.from('bookmark_collections').insert(links);
 
-    const msg = skipped > 0
-      ? `Imported ${toImport.length} bookmarks (${skipped} duplicate${skipped > 1 ? 's' : ''} skipped)`
-      : `Imported ${toImport.length} bookmarks`;
+    const parts = [];
+    if (toImport.length > 0) parts.push(`Imported ${toImport.length} bookmark${toImport.length > 1 ? 's' : ''}`);
+    if (skipped > 0) parts.push(`${skipped} duplicate${skipped > 1 ? 's' : ''} skipped`);
+    const msg = parts.join(' · ');
 
     if (importBtn) importBtn.innerHTML = `<a class="btn-add" style="height:32px;padding:0 14px;font-size:13px;text-decoration:none;" href="https://sitesave.co.uk/">View my library</a>`;
 
-    // Show a simple toast
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;font-family:Geist,sans-serif;';
@@ -254,6 +289,19 @@ async function importCollection() {
     console.error('Import failed:', e);
     if (btn) { btn.textContent = '+ Add to my library'; btn.disabled = false; }
   }
+}
+
+function showImportError(importBtn, btn, message) {
+  // Restore button
+  if (btn) { btn.textContent = '+ Add to my library'; btn.disabled = false; }
+  // Show inline error below the button
+  const existing = document.getElementById('import-limit-msg');
+  if (existing) existing.remove();
+  const msg = document.createElement('div');
+  msg.id = 'import-limit-msg';
+  msg.style.cssText = 'margin-top:8px;font-size:13px;color:var(--danger);font-family:Geist,sans-serif;max-width:320px;line-height:1.5;';
+  msg.textContent = message;
+  importBtn?.appendChild(msg);
 }
 
 function host(u) { try { return new URL(u).hostname.replace('www.', ''); } catch { return u; } }
