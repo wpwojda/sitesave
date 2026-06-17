@@ -129,16 +129,20 @@ function fmtTime(dt) {
 }
 
 async function loadAll() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session || session.user.id !== ADMIN_ID) {
-    document.body.innerHTML = '<div style="padding:48px;text-align:center;font-family:Geist,sans-serif;color:#c0392b">Access denied.</div>';
+  // Sign in as dedicated admin service account
+  // Cloudflare Access already gates this page — only wpwojda@gmail.com can reach it
+  const { data: { session }, error: signInErr } = await sb.auth.signInWithPassword({
+    email: 'admin@sitesave.co.uk',
+    password: 'S0l1d_Ch1p5!'
+  });
+
+  if (signInErr || !session) {
+    document.getElementById('t-users').innerHTML = `<tr><td colspan="4" class="error-msg">Auth failed: ${signInErr?.message || 'No session'}</td></tr>`;
     return;
   }
 
-  // Load user save counts
-  const { data: saves, error: savesErr } = await sb
-    .from('bookmarks')
-    .select('user_id, created_at');
+  // Fetch all bookmarks via admin RPC
+  const { data: saves, error: savesErr } = await sb.rpc('get_admin_bookmarks');
 
   if (savesErr) {
     document.getElementById('t-users').innerHTML = `<tr><td colspan="4" class="error-msg">${savesErr.message}</td></tr>`;
@@ -153,13 +157,7 @@ async function loadAll() {
     if (s.created_at < userMap[s.user_id].earliest) userMap[s.user_id].earliest = s.created_at;
   });
 
-  // Load user emails from auth
-  const { data: users, error: usersErr } = await sb
-    .from('bookmarks')
-    .select('user_id, url')
-    .limit(1);
-
-  // Use RPC to get user emails — query auth.users via is_admin
+  // Get user emails
   const { data: authUsers } = await sb.rpc('get_admin_users');
 
   const totalUsers = Object.keys(userMap).length;
@@ -177,12 +175,17 @@ async function loadAll() {
   document.getElementById('m-week').textContent = weekSaves;
   document.getElementById('m-storage').textContent = estStorageMB + ' MB';
 
-  // Build email map from authUsers if available
+  // Build email map — exclude the internal admin service account
   const emailMap = {};
-  if (authUsers) authUsers.forEach(u => { emailMap[u.id] = u.email; });
+  if (authUsers) authUsers.forEach(u => {
+    if (u.email !== 'admin@sitesave.co.uk') emailMap[u.id] = u.email;
+  });
 
-  // Users table — sorted by save count desc
-  const sorted = Object.entries(userMap).sort((a,b) => b[1].count - a[1].count);
+  // Users table — sorted by save count desc, exclude admin service account
+  const sorted = Object.entries(userMap)
+    .filter(([uid]) => uid !== '35301022-bad9-4bdd-bd24-c1e478f0e2d2')
+    .sort((a,b) => b[1].count - a[1].count);
+
   const tUsers = document.getElementById('t-users');
   tUsers.innerHTML = sorted.map(([uid, data]) => {
     const email = emailMap[uid] || uid.slice(0,8) + '…';
@@ -201,23 +204,21 @@ async function loadAll() {
     </tr>`;
   }).join('');
 
-  // Recent saves
-  const { data: recent } = await sb
-    .from('bookmarks')
-    .select('user_id, url, name, created_at')
-    .order('created_at', { ascending: false })
-    .limit(20);
+  // Recent saves — exclude admin service account
+  const { data: recent } = await sb.rpc('get_admin_recent_bookmarks');
 
   const tRecent = document.getElementById('t-recent');
-  tRecent.innerHTML = recent.map(r => {
-    const email = emailMap[r.user_id] || r.user_id.slice(0,8) + '…';
-    return `<tr>
-      <td class="email">${email}</td>
-      <td class="url-cell" title="${r.url}">${r.url}</td>
-      <td>${r.name || '—'}</td>
-      <td class="mono">${fmtTime(r.created_at)}</td>
-    </tr>`;
-  }).join('');
+  tRecent.innerHTML = (recent || [])
+    .filter(r => r.user_id !== '35301022-bad9-4bdd-bd24-c1e478f0e2d2')
+    .map(r => {
+      const email = emailMap[r.user_id] || r.user_id.slice(0,8) + '…';
+      return `<tr>
+        <td class="email">${email}</td>
+        <td class="url-cell" title="${r.url}">${r.url}</td>
+        <td>${r.name || '—'}</td>
+        <td class="mono">${fmtTime(r.created_at)}</td>
+      </tr>`;
+    }).join('');
 }
 
 loadAll();
