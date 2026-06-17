@@ -1542,6 +1542,9 @@ function setFilter(f, el) {
 let modalTags = [];
 let modalCollections = []; // collection ids selected in modal
 
+const FREE_SAVE_LIMIT = 50;
+const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
+
 function openModal(id = null) {
   if (S.guestMode) { openAuthModal('signup'); return; }
   S.editId = id;
@@ -1579,6 +1582,15 @@ function openModal(id = null) {
   renderTagTokens();
   renderCollectionDropdown();
   document.getElementById('m-ov').classList.remove('hidden');
+
+  // Save limit check (only for new saves, not edits)
+  const limitWarn = document.getElementById('save-limit-warn');
+  const saveBtn = document.getElementById('btn-save-modal');
+  const isUnlimited = UNLIMITED_USERS.includes(S.user?.id);
+  const atLimit = !id && !isUnlimited && BM.length >= FREE_SAVE_LIMIT;
+  if (limitWarn) limitWarn.style.display = atLimit ? 'flex' : 'none';
+  if (saveBtn) saveBtn.disabled = atLimit;
+
   setTimeout(() => document.getElementById('f-url').focus(), 80);
 
   // Wire up duplicate URL detection on the URL field (new saves only)
