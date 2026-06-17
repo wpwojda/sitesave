@@ -110,16 +110,14 @@
     .cost-out.profit-neg .cost-out-label,.cost-out.profit-neg .cost-out-value{color:var(--danger)}
     .cost-notes{padding:12px 18px 18px;font-size:12px;color:var(--text3);font-family:'Geist Mono',monospace;border-top:1px solid var(--border);line-height:1.8}
 
-    /* Sliders + number inputs */
-    .slider-group{display:flex;flex-direction:column;gap:20px}
-    .slider-item{display:flex;flex-direction:column;gap:0}
-    .slider-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px}
-    .slider-label{font-size:15px;color:var(--text);font-weight:500}
-    .slider-controls{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-    .slider-controls input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
-    .num-input{width:72px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--accent);font-family:'Geist Mono',monospace;font-size:13px;font-weight:500;text-align:right;outline:none;transition:border-color .15s}
+    /* Input grid */
+    .input-group{display:flex;flex-direction:column;gap:20px}
+    .input-item{display:flex;flex-direction:column;gap:6px}
+    .input-label{font-size:13px;color:var(--text3)}
+    .input-tip{font-size:12px;color:var(--text3);line-height:1.6}
+    .num-input{width:100%;padding:8px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-.03em;text-align:left;outline:none;transition:border-color .15s;-moz-appearance:textfield;appearance:textfield}
     .num-input:focus{border-color:var(--accent)}
-    .slider-tip{font-size:13px;color:var(--text3);line-height:1.6}
+    .num-input::-webkit-outer-spin-button,.num-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
     /* Bar chart */
     .cost-bars{padding:16px 18px;border-top:1px solid var(--border)}
@@ -233,75 +231,45 @@
       <div class="cost-bars" id="c-bars"></div>
 
       <div class="cost-grid">
-        <div class="slider-group">
+        <div class="input-group">
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Total users</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-users" min="10" max="2000" step="10" value="100" oninput="syncFromSlider('users')">
-              <input type="number" class="num-input" id="n-users" min="10" max="2000" step="10" value="100" oninput="syncFromNumber('users')">
-            </div>
-            <div class="slider-tip">Total registered accounts. Model growth by typing an exact number or sliding. Try 500 or 1,000 to see when costs start to kick in.</div>
+          <div class="input-item">
+            <div class="input-label">Total users</div>
+            <input type="number" class="num-input" id="n-users" min="1" max="5000" step="1" value="100" oninput="calc()">
+            <div class="input-tip">Total registered accounts. Try 500 or 1,000 to see when costs start to kick in.</div>
           </div>
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Paid users</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-paid" min="0" max="500" step="1" value="1" oninput="syncFromSlider('paid')">
-              <input type="number" class="num-input" id="n-paid" min="0" max="500" step="1" value="1" oninput="syncFromNumber('paid')">
-            </div>
-            <div class="slider-tip">How many users have actually paid for Pro. Set this to your real current number (you can see it above in the "At limit" metric as a proxy). SaaS benchmarks suggest 2–5% of total users will convert — at 100 users that's 2–5 paid. Revenue is: paid users × Pro price.</div>
+          <div class="input-item">
+            <div class="input-label">Paid users</div>
+            <input type="number" class="num-input" id="n-paid" min="0" max="1000" step="1" value="1" oninput="calc()">
+            <div class="input-tip">How many users have actually paid for Pro. SaaS benchmarks: 2–5% of total users convert. Revenue is: paid users × Pro price.</div>
           </div>
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Avg saves / user / month</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-saves" min="1" max="30" step="1" value="5" oninput="syncFromSlider('saves')">
-              <input type="number" class="num-input" id="n-saves" min="1" max="30" step="1" value="5" oninput="syncFromNumber('saves')">
-            </div>
-            <div class="slider-tip">New saves per user per month — drives Thum.io API usage. Your current avg is shown in the metrics above. Casual users: 2–5. Power users: 10–20+.</div>
+          <div class="input-item">
+            <div class="input-label">Avg saves / user / month</div>
+            <input type="number" class="num-input" id="n-saves" min="1" max="100" step="1" value="5" oninput="calc()">
+            <div class="input-tip">New saves per user per month — drives Thum.io API usage. Your current avg is shown in the metrics above. Casual: 2–5. Power users: 10–20+.</div>
           </div>
 
         </div>
-        <div class="slider-group">
+        <div class="input-group">
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Cache hit rate</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-cache" min="0" max="90" step="5" value="25" oninput="syncFromSlider('cache')">
-              <input type="number" class="num-input" id="n-cache" min="0" max="90" step="5" value="25" oninput="syncFromNumber('cache')">
-            </div>
-            <div class="slider-tip">% of saves where R2 already has the screenshot from a previous user saving the same URL — no Thum.io call needed. Early stage: ~25%. Mature product with hundreds of users: 60–70%. Higher = cheaper.</div>
+          <div class="input-item">
+            <div class="input-label">Cache hit rate (%)</div>
+            <input type="number" class="num-input" id="n-cache" min="0" max="90" step="1" value="25" oninput="calc()">
+            <div class="input-tip">% of saves where R2 already has the screenshot — no Thum.io call needed. Early stage: ~25%. Mature product: 60–70%. Higher = cheaper.</div>
           </div>
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Pro price (one-time, £)</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-price" min="5" max="50" step="1" value="15" oninput="syncFromSlider('price')">
-              <input type="number" class="num-input" id="n-price" min="5" max="50" step="1" value="15" oninput="syncFromNumber('price')">
-            </div>
-            <div class="slider-tip">One-time payment for Pro. Revenue = paid users × this price. For yearly view, this is total revenue in a year assuming all paid users converted within that year.</div>
+          <div class="input-item">
+            <div class="input-label">Pro price (yearly, £)</div>
+            <input type="number" class="num-input" id="n-price" min="1" max="500" step="1" value="25" oninput="calc()">
+            <div class="input-tip">Yearly payment for Pro. Revenue = paid users × this price. For yearly view, this is total revenue assuming all paid users converted within that year.</div>
           </div>
 
-          <div class="slider-item">
-            <div class="slider-item-header">
-              <span class="slider-label">Screenshot size (KB)</span>
-            </div>
-            <div class="slider-controls">
-              <input type="range" id="s-size" min="50" max="600" step="25" value="325" oninput="syncFromSlider('size')">
-              <input type="number" class="num-input" id="n-size" min="50" max="600" step="25" value="325" oninput="syncFromNumber('size')">
-            </div>
-            <div class="slider-tip">Average Thum.io JPG size in R2. Currently ~325KB at 500px width. Affects R2 storage cost estimate only — check your R2 bucket to calibrate.</div>
+          <div class="input-item">
+            <div class="input-label">Screenshot size (KB)</div>
+            <input type="number" class="num-input" id="n-size" min="50" max="5000" step="25" value="325" oninput="calc()">
+            <div class="input-tip">Average Thum.io JPG size in R2. Currently ~325KB at 500px width. Affects R2 and DB storage estimates — check your R2 bucket to calibrate.</div>
           </div>
 
         </div>
@@ -483,7 +451,8 @@ function isDisposable(email) {
   const domain = email.split('@')[1]?.toLowerCase();
   return domain && DISPOSABLE_DOMAINS.has(domain);
 }
-let period = 'monthly'; // 'monthly' | 'yearly'
+// ── Cost model ────────────────────────────────────────────
+let period = 'monthly';
 
 function setPeriod(p) {
   period = p;
@@ -492,39 +461,9 @@ function setPeriod(p) {
   calc();
 }
 
-// Slider keys and their config
-const SLIDERS = {
-  users: { min:10, max:2000, step:10 },
-  paid:  { min:0,  max:500,  step:1  },
-  saves: { min:1,  max:30,   step:1  },
-  cache: { min:0,  max:90,   step:5  },
-  price: { min:5,  max:50,   step:1  },
-  size:  { min:50, max:600,  step:25 },
-};
-
-function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
-
-function syncFromSlider(key) {
-  const s = document.getElementById('s-' + key);
-  const n = document.getElementById('n-' + key);
-  n.value = s.value;
-  calc();
-}
-
-function syncFromNumber(key) {
-  const cfg = SLIDERS[key];
-  const n = document.getElementById('n-' + key);
-  const s = document.getElementById('s-' + key);
-  let val = parseFloat(n.value);
-  if (isNaN(val)) return;
-  val = clamp(val, cfg.min, cfg.max);
-  s.value = val;
-  n.value = val;
-  calc();
-}
-
 function getVal(key) {
-  return parseFloat(document.getElementById('s-' + key).value);
+  const val = parseFloat(document.getElementById('n-' + key).value);
+  return isNaN(val) ? 0 : val;
 }
 
 function calc() {
@@ -551,18 +490,28 @@ function calc() {
   const storageGB = (totalScreenshots * sizeKB) / (1024 * 1024);
   const r2GBP = Math.max(0, storageGB - 10) * 0.015 * 0.79;
 
-  // Supabase: free <500 users, $25/mo above
-  const supabaseGBP = users > 500 ? 25 * 0.79 : 0;
+  // ── Supabase DB size estimate ──
+  const bytesPerBookmark = 600;
+  const bytesPerUser = 200;
+  const avgSavesPerUser = 50;
+  const dbBytes = (users * avgSavesPerUser * bytesPerBookmark) + (users * bytesPerUser);
+  const dbMB = dbBytes / (1024 * 1024);
+  const dbPct = (dbMB / 500 * 100);
+  const dbWarning = dbPct > 80;
+
+  // Supabase: free until DB hits 400MB (conservative buffer before 500MB limit)
+  // Far more accurate than old 500-user threshold — real trigger is DB size
+  const supabaseGBP = dbMB > 400 ? 25 * 0.79 : 0;
+  const supabaseUpgradeUsers = Math.floor(400 / ((avgSavesPerUser * bytesPerBookmark + bytesPerUser) / (1024 * 1024)));
 
   // Resend: free <3,000 emails/mo (10% of users/mo), $20/mo above
   const resendGBP = (users * 0.1) > 3000 ? 20 * 0.79 : 0;
 
-  // ── Payment processor fee (Creem: 3.9% + £0.32 per transaction) ──
-  // Applied to each paid user's yearly payment, amortised monthly
-  const creemPctFee = 0.039;
-  const creemFlatFee = 0.32; // £0.40 USD converted
-  const monthlyTransactions = paid / 12; // new paid users per month
-  const processorGBP = (monthlyTransactions * price * creemPctFee) + (monthlyTransactions * creemFlatFee);
+  // Payment processor (Paddle: 5% + £0.40 per transaction)
+  const paddlePctFee = 0.05;
+  const paddleFlatFee = 0.40;
+  const monthlyTransactions = paid / 12;
+  const processorGBP = (monthlyTransactions * price * paddlePctFee) + (monthlyTransactions * paddleFlatFee);
 
   const monthlyCost = thumioGBP + cfWorkersGBP + r2GBP + supabaseGBP + resendGBP + processorGBP;
 
@@ -581,24 +530,11 @@ function calc() {
   const yearlyCost = monthlyCost * 12;
   const breakEven  = price > 0 ? Math.ceil(yearlyCost / price) : 0;
 
-  // ── Supabase DB size estimate ──
-  // Each bookmark row: ~500 bytes (url avg 80 chars, name 40, tags JSONB 100, metadata ~280)
-  // Each user row in auth.users: ~200 bytes
-  // Collections, bookmark_collections: ~100 bytes per bookmark
-  // Total per bookmark: ~600 bytes. Per user: ~200 bytes overhead.
-  const bytesPerBookmark = 600;
-  const bytesPerUser = 200;
-  const avgSavesPerUser = 50; // assume users fill toward the free cap over time
-  const dbBytes = (users * avgSavesPerUser * bytesPerBookmark) + (users * bytesPerUser);
-  const dbMB = dbBytes / (1024 * 1024);
-  const dbPct = (dbMB / 500 * 100); // 500MB free tier
-  const dbWarning = dbPct > 80; // warn at 80% of free tier
-
+  // ── Supabase DB card update ──
   const dbCard = document.getElementById('c-db-card');
   dbCard.className = 'cost-out ' + (dbWarning ? 'profit-neg' : '');
   document.getElementById('c-db').textContent = dbMB < 1 ? (dbMB * 1024).toFixed(0) + ' KB' : dbMB.toFixed(1) + ' MB';
   document.getElementById('c-db-sub').textContent = `${dbPct.toFixed(1)}% of 500MB free tier`;
-
 
   const pfx = period === 'yearly' ? 'Annual' : 'Monthly';
   document.getElementById('c-cost-label').textContent   = pfx + ' cost';
@@ -621,7 +557,7 @@ function calc() {
     { label: 'R2 storage', val: r2GBP },
     { label: 'Supabase',   val: supabaseGBP },
     { label: 'Resend',     val: resendGBP },
-    { label: 'Creem fees', val: processorGBP },
+    { label: 'Paddle fees', val: processorGBP },
   ];
   const maxVal = Math.max(...components.map(c => c.val), 0.01);
   document.getElementById('c-bars').innerHTML =
@@ -638,9 +574,9 @@ function calc() {
     `Thum.io API calls/mo: <strong>${Math.round(thumioHits).toLocaleString()}</strong> (${Math.round(cache*100)}% cache hit) &nbsp;·&nbsp; ` +
     `R2 storage est: <strong>${storageMB} MB</strong> &nbsp;·&nbsp; ` +
     `DB est: <strong>${dbMB.toFixed(1)} MB</strong> at ${users} users × 50 avg saves &nbsp;·&nbsp; ` +
-    `Supabase free tier: 500MB DB — upgrade needed ~${Math.floor(500 / (50 * bytesPerBookmark / (1024*1024))).toLocaleString()} users &nbsp;·&nbsp; ` +
-    `Creem: 3.9% + 40¢ per transaction (MoR — UK VAT handled) &nbsp;·&nbsp; ` +
-    `Revenue model: one-time yearly payment &nbsp;·&nbsp; USD → GBP at 0.79`;
+    `Supabase upgrade at ~${supabaseUpgradeUsers.toLocaleString()} users (400MB DB threshold) &nbsp;·&nbsp; ` +
+    `Paddle: 5% + 40p per transaction (MoR — UK VAT &amp; GBP checkout) &nbsp;·&nbsp; ` +
+    `Revenue model: yearly payment &nbsp;·&nbsp; USD → GBP at 0.79`;
 }
 
 // ── Init ─────────────────────────────────────────────────
