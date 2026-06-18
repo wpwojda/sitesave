@@ -248,7 +248,7 @@ async function enterApp() {
   else if (window.innerWidth > 640) setTimeout(showKeyboardHint, 1000);
 }
 
-// ── PRO STATUS ────────────────────────────────────────────
+// ── PRO STATUS ────────────────────────────────────────────────
 async function loadProStatus() {
   if (!CURRENT_USER) return;
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
@@ -269,7 +269,7 @@ function getActiveLimit() {
   return CURRENT_USER_IS_PRO ? PRO_SAVE_LIMIT : FREE_SAVE_LIMIT;
 }
 
-
+// ── AUTH ──────────────────────────────────────────────────────
 // ── AUTH MODAL ────────────────────────────────────────────────
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -767,10 +767,7 @@ async function dbInsert(bm, attempt = 1) {
     if (error) {
       if (error.code === 'P0001' || error.message?.includes('Save limit reached')) {
         clearStatus();
-        const msg = CURRENT_USER_IS_PRO
-          ? `You've reached the ${PRO_SAVE_LIMIT} site Pro limit. Delete some saves to free up space.`
-          : `You've reached the ${FREE_SAVE_LIMIT} site free limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`;
-        toast(msg);
+        toast('You\'ve reached the 50 site limit. Review and delete some saves to free up space.');
         return null;
       }
       if (attempt < 3) {
@@ -1646,7 +1643,6 @@ function setFilter(f, el) {
 let modalTags = [];
 let modalCollections = []; // collection ids selected in modal
 
-
 function openModal(id = null) {
   if (S.guestMode) { openAuthModal('signup'); return; }
   S.editId = id;
@@ -1694,11 +1690,11 @@ function openModal(id = null) {
   if (limitWarn) {
     limitWarn.style.display = atLimit ? 'flex' : 'none';
     if (atLimit) {
-      const msgEl = limitWarn.querySelector('span');
-      if (msgEl) {
-        msgEl.textContent = CURRENT_USER_IS_PRO
+      const warnText = document.getElementById('save-limit-warn-text');
+      if (warnText) {
+        warnText.innerHTML = CURRENT_USER_IS_PRO
           ? `You've reached the ${PRO_SAVE_LIMIT} site Pro limit. Delete some saves to free up space.`
-          : `You've reached the ${FREE_SAVE_LIMIT} site free limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`;
+          : `You've reached the ${FREE_SAVE_LIMIT} site free limit. <a href="upgrade.html" style="color:inherit;font-weight:500;text-decoration:underline;">Upgrade to Pro</a> for up to ${PRO_SAVE_LIMIT} saves.`;
       }
     }
   }
