@@ -19,6 +19,10 @@
 <link rel="stylesheet" href="styles.css?v=2.0">
 <style>
 .save-limit-warn{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin-bottom:12px;background:#fef3cd;border:1px solid #f5c842;border-radius:6px;font-size:13px;color:#7a5c00;line-height:1.45}
+.pro-nudge{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;margin:0 0 12px;background:#fef3cd;border:1px solid #f5c842;border-radius:6px;font-size:13px;color:#7a5c00;line-height:1.45}
+.pro-nudge a{color:inherit;font-weight:500;text-decoration:underline;white-space:nowrap}
+.pro-nudge-dismiss{background:none;border:none;cursor:pointer;color:#7a5c00;opacity:.6;padding:0;font-size:16px;line-height:1;flex-shrink:0}
+.pro-nudge-dismiss:hover{opacity:1}
 .btn-add:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 </style>
 </head>
@@ -388,6 +392,10 @@ loop();
       </button>
     </div>
     <div class="pills" id="pills"></div>
+    <div class="pro-nudge" id="pro-nudge">
+      <span id="pro-nudge-text"></span>
+      <button class="pro-nudge-dismiss" onclick="dismissNudge()" title="Dismiss">×</button>
+    </div>
     <div id="grid" class="grid"></div>
   </main>
 

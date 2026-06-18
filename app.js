@@ -269,7 +269,40 @@ function getActiveLimit() {
   return CURRENT_USER_IS_PRO ? PRO_SAVE_LIMIT : FREE_SAVE_LIMIT;
 }
 
-// ── AUTH ──────────────────────────────────────────────────────
+// ── PRO NUDGE ─────────────────────────────────────────────────
+const NUDGE_DISMISS_KEY = 'sitesave-nudge-dismissed';
+
+function updateProNudge() {
+  const nudge = document.getElementById('pro-nudge');
+  const nudgeText = document.getElementById('pro-nudge-text');
+  if (!nudge || !nudgeText) return;
+
+  // Don't show nudge to unlimited users, Pro users, or if dismissed this session
+  const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER?.id);
+  if (isUnlimited || CURRENT_USER_IS_PRO) { nudge.style.display = 'none'; return; }
+
+  const count = BM.length;
+  const dismissed = sessionStorage.getItem(NUDGE_DISMISS_KEY);
+
+  if (count >= 45 && count < FREE_SAVE_LIMIT) {
+    // High urgency — 45+ saves, 5 or fewer remaining
+    nudge.style.display = 'flex';
+    nudgeText.innerHTML = `Only ${FREE_SAVE_LIMIT - count} save${FREE_SAVE_LIMIT - count === 1 ? '' : 's'} left on the free plan. <a href="upgrade.html">Upgrade to Pro</a> for up to ${PRO_SAVE_LIMIT}.`;
+  } else if (count >= 35 && !dismissed) {
+    // Gentle nudge — 35+ saves, dismissible
+    nudge.style.display = 'flex';
+    nudgeText.innerHTML = `You've saved ${count} of ${FREE_SAVE_LIMIT} sites. <a href="upgrade.html">Upgrade to Pro</a> for up to ${PRO_SAVE_LIMIT}.`;
+  } else {
+    nudge.style.display = 'none';
+  }
+}
+
+function dismissNudge() {
+  sessionStorage.setItem(NUDGE_DISMISS_KEY, '1');
+  const nudge = document.getElementById('pro-nudge');
+  if (nudge) nudge.style.display = 'none';
+}
+
 // ── AUTH MODAL ────────────────────────────────────────────────
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -906,6 +939,7 @@ function render() {
   renderSidebar();
   renderPills();
   renderCards();
+  updateProNudge();
 }
 
 function renderCards() {
