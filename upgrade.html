@@ -199,7 +199,7 @@
       </li>
     </ul>
 
-    <a class="upgrade-cta" href="https://www.creem.io/test/payment/prod_2fzuSsPTYQrloSDYL8Q3TU" id="upgrade-btn">
+    <a class="upgrade-cta" href="https://www.creem.io/payment/prod_2fzuSsPTYQrloSDYL8Q3TU" id="upgrade-btn">
       Get Sitesave Pro →
     </a>
   </div>
@@ -281,7 +281,7 @@ function toggleTheme() {
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user?.email) {
       const btn = document.getElementById('upgrade-btn');
-      const base = 'https://www.creem.io/test/payment/prod_2fzuSsPTYQrloSDYL8Q3TU';
+      const base = 'https://www.creem.io/payment/prod_2fzuSsPTYQrloSDYL8Q3TU';
       const params = new URLSearchParams({
         prefilled_email: session.user.email,
         metadata_user_id: session.user.id,

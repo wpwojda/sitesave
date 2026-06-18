@@ -336,7 +336,7 @@ async function loadAll() {
   // Sign in as admin service account
   const { data: { session }, error: signInErr } = await sb.auth.signInWithPassword({
     email: 'admin@sitesave.co.uk',
-    password: 'S0l1d_Ch1p5!'
+    password: 'REPLACE_WITH_ADMIN_PASSWORD'
   });
 
   if (signInErr || !session) {
@@ -507,11 +507,11 @@ function calc() {
   // Resend: free <3,000 emails/mo (10% of users/mo), $20/mo above
   const resendGBP = (users * 0.1) > 3000 ? 20 * 0.79 : 0;
 
-  // Payment processor (Paddle: 5% + £0.40 per transaction)
-  const paddlePctFee = 0.05;
-  const paddleFlatFee = 0.40;
+  // Payment processor (Creem: 3.9% + $0.40 per transaction)
+  const creemPctFee = 0.039;
+  const creemFlatFee = 0.32; // $0.40 USD converted to GBP
   const monthlyTransactions = paid / 12;
-  const processorGBP = (monthlyTransactions * price * paddlePctFee) + (monthlyTransactions * paddleFlatFee);
+  const processorGBP = (monthlyTransactions * price * creemPctFee) + (monthlyTransactions * creemFlatFee);
 
   const monthlyCost = thumioGBP + cfWorkersGBP + r2GBP + supabaseGBP + resendGBP + processorGBP;
 
@@ -557,7 +557,7 @@ function calc() {
     { label: 'R2 storage', val: r2GBP },
     { label: 'Supabase',   val: supabaseGBP },
     { label: 'Resend',     val: resendGBP },
-    { label: 'Paddle fees', val: processorGBP },
+    { label: 'Creem fees', val: processorGBP },
   ];
   const maxVal = Math.max(...components.map(c => c.val), 0.01);
   document.getElementById('c-bars').innerHTML =
@@ -575,7 +575,7 @@ function calc() {
     `R2 storage est: <strong>${storageMB} MB</strong> &nbsp;·&nbsp; ` +
     `DB est: <strong>${dbMB.toFixed(1)} MB</strong> at ${users} users × 50 avg saves &nbsp;·&nbsp; ` +
     `Supabase upgrade at ~${supabaseUpgradeUsers.toLocaleString()} users (400MB DB threshold) &nbsp;·&nbsp; ` +
-    `Paddle: 5% + 40p per transaction (MoR — UK VAT &amp; GBP checkout) &nbsp;·&nbsp; ` +
+    `Creem: 3.9% + 40¢ per transaction (MoR — VAT handled) &nbsp;·&nbsp; ` +
     `Revenue model: yearly payment &nbsp;·&nbsp; USD → GBP at 0.79`;
 }
 
