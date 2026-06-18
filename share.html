@@ -202,7 +202,18 @@ function renderCTA() {
 }
 
 const FREE_SAVE_LIMIT = 50;
+const PRO_SAVE_LIMIT  = 250;
 const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
+
+async function getImportLimit() {
+  if (UNLIMITED_USERS.includes(CURRENT_USER?.id)) return Infinity;
+  const { data } = await sb.rpc('get_my_profile');
+  if (data && data.length > 0 && data[0].pro_expires_at) {
+    const expiry = new Date(data[0].pro_expires_at);
+    if (expiry > new Date()) return PRO_SAVE_LIMIT;
+  }
+  return FREE_SAVE_LIMIT;
+}
 
 async function importCollection() {
   if (!CURRENT_USER) return;
@@ -215,9 +226,10 @@ async function importCollection() {
     const { data: existing } = await sb.from('bookmarks').select('url').eq('user_id', CURRENT_USER.id);
     const existingUrls = new Set((existing || []).map(b => b.url));
     const currentCount = existing?.length || 0;
-    const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
+    const activeLimit = await getImportLimit();
+    const isUnlimited = activeLimit === Infinity;
 
-    // Filter out duplicates first
+    // Filter duplicates
     const newItems = BM.filter(b => !existingUrls.has(b.url));
     const skipped = BM.length - newItems.length;
 
@@ -226,30 +238,35 @@ async function importCollection() {
       return;
     }
 
-    // Enforce save limit for non-unlimited users
+    // Enforce save limit
     if (!isUnlimited) {
-      const remaining = FREE_SAVE_LIMIT - currentCount;
+      const remaining = activeLimit - currentCount;
       if (remaining <= 0) {
+        const isPro = activeLimit === PRO_SAVE_LIMIT;
         showImportError(importBtn, btn,
-          `You've reached your ${FREE_SAVE_LIMIT}-save limit. Upgrade to Pro to import more.`);
+          isPro
+            ? `You've reached the ${PRO_SAVE_LIMIT} site Pro limit. Delete some saves to free up space.`
+            : `You've reached the ${FREE_SAVE_LIMIT} site free limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`
+        );
         return;
       }
       if (newItems.length > remaining) {
-        // Partial import not offered — block the whole import and explain clearly
+        const isPro = activeLimit === PRO_SAVE_LIMIT;
         showImportError(importBtn, btn,
-          `This collection has ${newItems.length} new sites but you only have room for ${remaining} more (${FREE_SAVE_LIMIT}-save limit). Upgrade to Pro to import the full collection.`);
+          isPro
+            ? `This collection has ${newItems.length} new sites but you only have room for ${remaining} more (${PRO_SAVE_LIMIT} Pro limit). Delete some saves to free up space.`
+            : `This collection has ${newItems.length} new sites but you only have room for ${remaining} more (${FREE_SAVE_LIMIT} free limit). Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`
+        );
         return;
       }
     }
-
-    const toImport = newItems;
 
     const { data: col, error: colErr } = await sb.from('collections')
       .insert({ name: collectionName, user_id: CURRENT_USER.id })
       .select().single();
     if (colErr) throw colErr;
 
-    const rows = toImport.map(b => ({
+    const rows = newItems.map(b => ({
       url:     b.url,
       name:    b.name,
       tags:    b.tags || [],
@@ -258,11 +275,9 @@ async function importCollection() {
     }));
     const { data: inserted, error: bmErr } = await sb.from('bookmarks').insert(rows).select('id');
 
-    // Catch server-side limit enforcement (Supabase trigger P0001)
     if (bmErr) {
       if (bmErr.code === 'P0001') {
-        showImportError(importBtn, btn,
-          `You've reached your ${FREE_SAVE_LIMIT}-save limit. Upgrade to Pro to import more.`);
+        showImportError(importBtn, btn, `You've reached your save limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`);
       } else {
         throw bmErr;
       }
@@ -273,14 +288,13 @@ async function importCollection() {
     await sb.from('bookmark_collections').insert(links);
 
     const parts = [];
-    if (toImport.length > 0) parts.push(`Imported ${toImport.length} bookmark${toImport.length > 1 ? 's' : ''}`);
-    if (skipped > 0) parts.push(`${skipped} duplicate${skipped > 1 ? 's' : ''} skipped`);
-    const msg = parts.join(' · ');
+    if (newItems.length > 0) parts.push(`Imported ${newItems.length} bookmark${newItems.length !== 1 ? 's' : ''}`);
+    if (skipped > 0) parts.push(`${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped`);
 
     if (importBtn) importBtn.innerHTML = `<a class="btn-add" style="height:32px;padding:0 14px;font-size:13px;text-decoration:none;" href="https://sitesave.co.uk/">View my library</a>`;
 
     const t = document.createElement('div');
-    t.textContent = msg;
+    t.textContent = parts.join(' · ');
     t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;font-family:Geist,sans-serif;';
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 4000);
@@ -292,9 +306,7 @@ async function importCollection() {
 }
 
 function showImportError(importBtn, btn, message) {
-  // Restore button
   if (btn) { btn.textContent = '+ Add to my library'; btn.disabled = false; }
-  // Show inline error below the button
   const existing = document.getElementById('import-limit-msg');
   if (existing) existing.remove();
   const msg = document.createElement('div');

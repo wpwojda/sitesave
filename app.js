@@ -56,6 +56,13 @@ let COLLECTIONS = []; // { id, name, color, created_at }
 let CURRENT_USER = null;
 let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 
+// ── SAVE LIMITS ───────────────────────────────────────────────
+const FREE_SAVE_LIMIT = 50;
+const PRO_SAVE_LIMIT  = 250;
+const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
+let CURRENT_USER_IS_PRO = false;
+let CURRENT_USER_PRO_EXPIRES = null;
+
 
 
 // ── BOOT ─────────────────────────────────────────────────────
@@ -234,13 +241,35 @@ async function enterApp() {
   updateUserAvatar();
   await loadCollections();
   await loadBookmarks();
+  await loadProStatus();
   const uid = CURRENT_USER?.id;
   const seenOnboarding = uid ? localStorage.getItem(`sitesave-onboarded-${uid}`) : localStorage.getItem('sitesave-onboarded');
   if (!seenOnboarding && BM.length === 0) setTimeout(startOnboarding, 800);
   else if (window.innerWidth > 640) setTimeout(showKeyboardHint, 1000);
 }
 
-// ── AUTH ──────────────────────────────────────────────────────
+// ── PRO STATUS ────────────────────────────────────────────
+async function loadProStatus() {
+  if (!CURRENT_USER) return;
+  const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; return; }
+  const { data } = await sb.rpc('get_my_profile');
+  if (data && data.length > 0 && data[0].pro_expires_at) {
+    const expiry = new Date(data[0].pro_expires_at);
+    CURRENT_USER_PRO_EXPIRES = expiry;
+    CURRENT_USER_IS_PRO = expiry > new Date();
+  } else {
+    CURRENT_USER_IS_PRO = false;
+    CURRENT_USER_PRO_EXPIRES = null;
+  }
+}
+
+function getActiveLimit() {
+  if (UNLIMITED_USERS.includes(CURRENT_USER?.id)) return Infinity;
+  return CURRENT_USER_IS_PRO ? PRO_SAVE_LIMIT : FREE_SAVE_LIMIT;
+}
+
+
 // ── AUTH MODAL ────────────────────────────────────────────────
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -510,6 +539,8 @@ async function submitPasswordReset() {
 
 async function signOut() {
   _authHandled = false;
+  CURRENT_USER_IS_PRO = false;
+  CURRENT_USER_PRO_EXPIRES = null;
   document.getElementById('user-dropdown').classList.add('hidden');
   localStorage.removeItem('sitesave-reset-in-progress');
   document.getElementById('kb-hint')?.remove();
@@ -542,6 +573,8 @@ async function deleteAccount() {
     if (authError) throw authError;
 
     _authHandled = false;
+    CURRENT_USER_IS_PRO = false;
+    CURRENT_USER_PRO_EXPIRES = null;
     localStorage.removeItem('sitesave-auth');
     await sb.auth.signOut({ scope: 'local' });
     CURRENT_USER = null;
@@ -734,7 +767,10 @@ async function dbInsert(bm, attempt = 1) {
     if (error) {
       if (error.code === 'P0001' || error.message?.includes('Save limit reached')) {
         clearStatus();
-        toast('You\'ve reached the 50 site limit. Review and delete some saves to free up space.');
+        const msg = CURRENT_USER_IS_PRO
+          ? `You've reached the ${PRO_SAVE_LIMIT} site Pro limit. Delete some saves to free up space.`
+          : `You've reached the ${FREE_SAVE_LIMIT} site free limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`;
+        toast(msg);
         return null;
       }
       if (attempt < 3) {
@@ -1610,8 +1646,6 @@ function setFilter(f, el) {
 let modalTags = [];
 let modalCollections = []; // collection ids selected in modal
 
-const FREE_SAVE_LIMIT = 50;
-const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
 
 function openModal(id = null) {
   if (S.guestMode) { openAuthModal('signup'); return; }
@@ -1655,8 +1689,19 @@ function openModal(id = null) {
   const limitWarn = document.getElementById('save-limit-warn');
   const saveBtn = document.getElementById('btn-save-modal');
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER?.id);
-  const atLimit = !id && !isUnlimited && BM.length >= FREE_SAVE_LIMIT;
-  if (limitWarn) limitWarn.style.display = atLimit ? 'flex' : 'none';
+  const activeLimit = getActiveLimit();
+  const atLimit = !id && !isUnlimited && BM.length >= activeLimit;
+  if (limitWarn) {
+    limitWarn.style.display = atLimit ? 'flex' : 'none';
+    if (atLimit) {
+      const msgEl = limitWarn.querySelector('span');
+      if (msgEl) {
+        msgEl.textContent = CURRENT_USER_IS_PRO
+          ? `You've reached the ${PRO_SAVE_LIMIT} site Pro limit. Delete some saves to free up space.`
+          : `You've reached the ${FREE_SAVE_LIMIT} site free limit. Upgrade to Pro for up to ${PRO_SAVE_LIMIT} saves.`;
+      }
+    }
+  }
   if (saveBtn) saveBtn.disabled = atLimit;
 
   setTimeout(() => document.getElementById('f-url').focus(), 80);
