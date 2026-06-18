@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitesave Pro</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="canonical" href="https://sitesave.co.uk/upgrade.html">
+  <meta name="description" content="Upgrade to Sitesave Pro — save up to 250 sites visually.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .upgrade-wrap {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+    .upgrade-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 14px; color: var(--text2);
+      text-decoration: none; margin-bottom: 48px;
+      transition: color .15s;
+    }
+    .upgrade-back:hover { color: var(--text); }
+
+    /* Hero */
+    .upgrade-eyebrow {
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .upgrade-title {
+      font-size: 36px; font-weight: 600;
+      letter-spacing: -.04em; color: var(--text);
+      line-height: 1.1; margin-bottom: 14px;
+    }
+    .upgrade-sub {
+      font-size: 16px; color: var(--text2);
+      line-height: 1.6; margin-bottom: 40px;
+    }
+
+    /* Pricing card */
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .price-row {
+      display: flex; align-items: baseline;
+      gap: 6px; margin-bottom: 6px;
+    }
+    .price-amount {
+      font-size: 42px; font-weight: 600;
+      letter-spacing: -.04em; color: var(--text);
+    }
+    .price-period {
+      font-size: 14px; color: var(--text3);
+      font-family: 'Geist Mono', monospace;
+    }
+    .price-note {
+      font-size: 13px; color: var(--text3);
+      margin-bottom: 28px; line-height: 1.5;
+    }
+
+    /* Feature list */
+    .feature-list {
+      list-style: none; padding: 0; margin: 0 0 28px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text2); line-height: 1.5;
+    }
+    .feature-icon {
+      width: 18px; height: 18px; flex-shrink: 0;
+      margin-top: 1px; color: var(--accent);
+    }
+    .feature-list li strong { color: var(--text); font-weight: 500; }
+
+    /* CTA */
+    .upgrade-cta {
+      display: flex; align-items: center;
+      justify-content: center;
+      width: 100%; height: 48px;
+      background: var(--accent); color: var(--accent-fg);
+      border: none; border-radius: 8px;
+      font-family: 'Geist', sans-serif;
+      font-size: 15px; font-weight: 500;
+      letter-spacing: -.02em;
+      cursor: pointer; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .upgrade-cta:hover { opacity: .88; }
+
+    /* Divider */
+    .upgrade-divider {
+      height: 1px; background: var(--border);
+      margin: 32px 0;
+    }
+
+    /* Guarantee */
+    .guarantee {
+      display: flex; align-items: flex-start;
+      gap: 10px; padding: 16px 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .guarantee-icon { flex-shrink: 0; margin-top: 1px; color: var(--text3); }
+    .guarantee p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0; }
+    .guarantee p strong { color: var(--text); font-weight: 500; }
+
+    /* FAQ */
+    .faq { margin-top: 40px; }
+    .faq-title {
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text3);
+      margin-bottom: 20px;
+    }
+    .faq-item { margin-bottom: 20px; }
+    .faq-q { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
+    .faq-a { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+    @media (max-width: 480px) {
+      .upgrade-title { font-size: 28px; }
+      .price-amount { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">Sitesave</a>
+  <div class="search-wrap"></div>
+  <div class="hdr-r">
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark mode">
+      <svg class="icon-sun" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 16 16" fill="none">
+        <path d="M13.5 10.5A6 6 0 0 1 5.5 2.5a6.002 6.002 0 0 0 0 11 6 6 0 0 0 8-3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <a class="btn-add" href="index.html" style="text-decoration:none;font-size:13px;height:34px;padding:0 14px">Go to app</a>
+  </div>
+</header>
+
+<div class="upgrade-wrap">
+
+  <a class="upgrade-back" href="index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Back to Sitesave
+  </a>
+
+  <div class="upgrade-eyebrow">Sitesave Pro</div>
+  <h1 class="upgrade-title">Save more of what inspires you</h1>
+  <p class="upgrade-sub">The free plan holds 50 sites. Pro gives you 250 — more than enough room to build a serious visual library.</p>
+
+  <div class="price-card">
+    <div class="price-row">
+      <div class="price-amount">$31</div>
+      <div class="price-period">/ year</div>
+    </div>
+    <div class="price-note">One payment. No subscription. No auto-renewal.</div>
+
+    <ul class="feature-list">
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>250 saves</strong> — up from 50 on the free plan</span>
+      </li>
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>Visual screenshots</strong> for every save, cached and fast</span>
+      </li>
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>Collections, tags and favourites</strong> — all features included</span>
+      </li>
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>Share collections</strong> publicly with anyone</span>
+      </li>
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>Export your library</strong> as a standard bookmark file</span>
+      </li>
+      <li>
+        <svg class="feature-icon" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>Your library stays safe</strong> even if you don't renew</span>
+      </li>
+    </ul>
+
+    <a class="upgrade-cta" href="https://www.creem.io/payment/prod_2fzuSsPTYQrloSDYL8Q3TU" id="upgrade-btn">
+      Get Sitesave Pro →
+    </a>
+  </div>
+
+  <div class="guarantee">
+    <svg class="guarantee-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1.5L2 4v4c0 3.3 2.5 5.8 6 6.5 3.5-.7 6-3.2 6-6.5V4L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p><strong>Your library is always yours.</strong> If your Pro year runs out and you don't renew, you keep everything you've saved — you just won't be able to add new sites until you do. No data is ever deleted.</p>
+  </div>
+
+  <div class="upgrade-divider"></div>
+
+  <div class="faq">
+    <div class="faq-title">Common questions</div>
+
+    <div class="faq-item">
+      <div class="faq-q">What happens when my year is up?</div>
+      <div class="faq-a">Your library stays exactly as it is. You can still view, organise and share your saves — you just can't add new ones until you renew. If you've deleted saves and dropped below 50, you can save again up to the free limit.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What if I renew while I still have days left?</div>
+      <div class="faq-a">Your new year starts after your current one ends. No days are wasted.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Is this a subscription?</div>
+      <div class="faq-a">No. It's a single payment for one year of Pro access. Nothing auto-renews. You decide if and when to pay again.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What currency is this in?</div>
+      <div class="faq-a">Payments are in USD. Your card provider will convert at their current rate. Tax is included in the price shown.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I get a refund?</div>
+      <div class="faq-a">All sales are final. If you run into a technical problem, get in touch at <a href="mailto:privacy@sitesave.co.uk" style="color:var(--accent);text-decoration:none;">privacy@sitesave.co.uk</a> and we'll sort it out.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Who built this?</div>
+      <div class="faq-a">Sitesave is an independent product built by one person. Payments are processed securely by Creem, a Merchant of Record — they handle tax and billing so you're always protected.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+  html.dataset.theme = next;
+  localStorage.setItem('sitesave-theme', next);
+}
+(function () {
+  const saved = localStorage.getItem('sitesave-theme');
+  if (saved) document.documentElement.dataset.theme = saved;
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.dataset.theme = 'dark';
+})();
+
+// Pass user email to Creem checkout if available
+(async function() {
+  try {
+    const { createClient } = supabase;
+  } catch(e) { return; }
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function() {
+  try {
+    const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
+    const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user?.email) {
+      const btn = document.getElementById('upgrade-btn');
+      const base = 'https://www.creem.io/payment/prod_2fzuSsPTYQrloSDYL8Q3TU';
+      const params = new URLSearchParams({
+        prefilled_email: session.user.email,
+        metadata_user_id: session.user.id,
+      });
+      btn.href = `${base}?${params.toString()}`;
+    }
+  } catch(e) { /* no session, link works without prefill */ }
+})();
+</script>
+
+</body>
+</html>
