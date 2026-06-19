@@ -152,7 +152,7 @@
       <div class="metric"><div class="metric-label">Avg saves / user</div><div class="metric-value" id="m-avg">—</div></div>
       <div class="metric"><div class="metric-label">At limit (50)</div><div class="metric-value" id="m-limit">—</div><div class="metric-sub">potential paid converts</div></div>
       <div class="metric"><div class="metric-label">New this week</div><div class="metric-value" id="m-week">—</div><div class="metric-sub">saves in last 7 days</div></div>
-      <div class="metric"><div class="metric-label">R2 est. storage</div><div class="metric-value" id="m-storage">—</div><div class="metric-sub">at 325KB avg per screenshot</div></div>
+      <div class="metric"><div class="metric-label">R2 est. storage</div><div class="metric-value" id="m-storage">—</div><div class="metric-sub">at 140KB avg per screenshot</div></div>
       <div class="metric"><div class="metric-label">Never saved</div><div class="metric-value" id="m-nosave">—</div><div class="metric-sub">signed up, 0 bookmarks</div></div>
     </div>
 
@@ -268,8 +268,8 @@
 
           <div class="input-item">
             <div class="input-label">Screenshot size (KB)</div>
-            <input type="number" class="num-input" id="n-size" min="50" max="5000" step="25" value="325" oninput="calc()">
-            <div class="input-tip">Average Thum.io JPG size in R2. Currently ~325KB at 500px width. Affects R2 and DB storage estimates — check your R2 bucket to calibrate.</div>
+            <input type="number" class="num-input" id="n-size" min="50" max="5000" step="25" value="140" oninput="calc()">
+            <div class="input-tip">Average Thum.io JPG size in R2. Currently ~140KB at 1200px width / 900 crop. Affects R2 and DB storage estimates — check your R2 bucket to calibrate.</div>
           </div>
 
         </div>
@@ -373,7 +373,7 @@ async function loadAll() {
     .filter(([uid, data]) => uid !== OWNER_ID && data.count >= FREE_LIMIT).length;
   const oneWeekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
   const weekSaves = (saves || []).filter(s => s.user_id !== ADMIN_SVC && s.created_at > oneWeekAgo).length;
-  const estStorageMB = (totalSaves * 325 / 1024).toFixed(0);
+  const estStorageMB = (totalSaves * 140 / 1024).toFixed(0);
 
   document.getElementById('m-users').textContent = totalUsers;
   document.getElementById('m-saves').textContent = totalSaves;
