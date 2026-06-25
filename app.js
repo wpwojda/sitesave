@@ -255,7 +255,7 @@ async function enterApp() {
 async function loadProStatus() {
   if (!CURRENT_USER) return;
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
-  if (isUnlimited) { CURRENT_USER_IS_PRO = true; return; }
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); return; }
   const { data } = await sb.rpc('get_my_profile');
   if (data && data.length > 0 && data[0].pro_expires_at) {
     const expiry = new Date(data[0].pro_expires_at);
@@ -264,6 +264,17 @@ async function loadProStatus() {
   } else {
     CURRENT_USER_IS_PRO = false;
     CURRENT_USER_PRO_EXPIRES = null;
+  }
+  updateProBadge();
+}
+
+function updateProBadge() {
+  const badge = document.getElementById('logo-pro-badge');
+  if (!badge) return;
+  if (CURRENT_USER_IS_PRO) {
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
   }
 }
 
@@ -577,6 +588,8 @@ async function signOut() {
   _authHandled = false;
   CURRENT_USER_IS_PRO = false;
   CURRENT_USER_PRO_EXPIRES = null;
+  document.getElementById('logo-pro-badge')?.classList.remove('visible');
+  document.getElementById('save-counter')?.classList.remove('visible');
   document.getElementById('user-dropdown').classList.add('hidden');
   localStorage.removeItem('sitesave-reset-in-progress');
   document.getElementById('kb-hint')?.remove();
@@ -943,6 +956,20 @@ function render() {
   renderPills();
   renderCards();
   updateProNudge();
+  updateSaveCounter();
+}
+
+function updateSaveCounter() {
+  const el = document.getElementById('save-counter');
+  if (!el || !CURRENT_USER) return;
+  const count = BM.length;
+  const limit = getActiveLimit();
+  if (limit === Infinity) {
+    el.textContent = `${count} saves`;
+  } else {
+    el.textContent = `${count} / ${limit}`;
+  }
+  el.classList.add('visible');
 }
 
 function renderCards() {

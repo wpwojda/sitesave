@@ -150,6 +150,7 @@
       <div class="metric"><div class="metric-label">Total users</div><div class="metric-value" id="m-users">—</div></div>
       <div class="metric"><div class="metric-label">Total saves</div><div class="metric-value" id="m-saves">—</div></div>
       <div class="metric"><div class="metric-label">Avg saves / user</div><div class="metric-value" id="m-avg">—</div></div>
+      <div class="metric"><div class="metric-label">Paid users</div><div class="metric-value" id="m-paid">—</div><div class="metric-sub">active Pro subscriptions</div></div>
       <div class="metric"><div class="metric-label">At limit (50)</div><div class="metric-value" id="m-limit">—</div><div class="metric-sub">potential paid converts</div></div>
       <div class="metric"><div class="metric-label">New this week</div><div class="metric-value" id="m-week">—</div><div class="metric-sub">saves in last 7 days</div></div>
       <div class="metric"><div class="metric-label">R2 est. storage</div><div class="metric-value" id="m-storage">—</div><div class="metric-sub">at 140KB avg per screenshot</div></div>
@@ -356,6 +357,11 @@ async function loadAll() {
   // Fetch user emails
   const { data: authUsers } = await sb.rpc('get_admin_users');
 
+  // Fetch Pro profiles to count paid users
+  const { data: profiles } = await sb.from('public.profiles').select('id, pro_expires_at');
+  const now = new Date();
+  const paidCount = (profiles || []).filter(p => p.pro_expires_at && new Date(p.pro_expires_at) > now && p.id !== ADMIN_SVC).length;
+
   // Aggregate bookmarks by user — exclude admin service account
   const userMap = {};
   (saves || []).forEach(s => {
@@ -378,6 +384,7 @@ async function loadAll() {
   document.getElementById('m-users').textContent = totalUsers;
   document.getElementById('m-saves').textContent = totalSaves;
   document.getElementById('m-avg').textContent = avg;
+  document.getElementById('m-paid').textContent = paidCount;
   document.getElementById('m-limit').textContent = atLimit;
   document.getElementById('m-week').textContent = weekSaves;
   document.getElementById('m-storage').textContent = estStorageMB + ' MB';

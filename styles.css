@@ -66,7 +66,33 @@ header {
   letter-spacing: -.03em;
   flex: 1;
   transition: var(--trans);
+  display: flex; align-items: center; gap: 8px;
 }
+
+.logo-pro-badge {
+  display: none;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.logo-pro-badge.visible { display: inline-flex; align-items: center; }
+
+.save-counter {
+  display: none;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+.save-counter.visible { display: inline; }
 
 .search-wrap { flex: 1; max-width: 400px; position: relative; }
 .search-icon {
@@ -857,7 +883,7 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
     padding: 10px 14px;
     gap: 8px;
   }
-  .logo { font-size: 22px; flex: none; }
+  .logo { font-size: 22px; flex: none; align-items: center; }
   .search-wrap {
     order: 3;
     flex: 0 0 100%;
