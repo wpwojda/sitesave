@@ -81,6 +81,20 @@
   </div>
 </header>
 
+<!-- MOBILE ACCOUNT BOTTOM SHEET -->
+<div class="sheet-overlay hidden" id="sheet-overlay" onclick="closeBottomSheet()"></div>
+<div class="account-sheet hidden" id="account-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-email" id="sheet-email"></div>
+  <a class="sheet-btn sheet-get-pro hidden" id="sheet-btn-get-pro" href="upgrade.html">✦ Get Pro</a>
+  <div class="sheet-div hidden" id="sheet-get-pro-div"></div>
+  <button class="sheet-btn" onclick="signOut()">Sign out</button>
+  <div class="sheet-div"></div>
+  <button class="sheet-btn" onclick="exportBookmarks()">Export bookmarks</button>
+  <div class="sheet-div"></div>
+  <button class="sheet-btn sheet-btn-danger" onclick="deleteAccount()">Delete account</button>
+</div>
+
 <!-- LANDING SCREEN -->
 <div class="landing hidden" id="landing">
   <div class="landing-hero">

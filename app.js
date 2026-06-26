@@ -279,10 +279,13 @@ function updateProBadge() {
 function updateGetProButton() {
   const btn = document.getElementById('btn-get-pro');
   const div = document.getElementById('get-pro-div');
-  if (!btn || !div) return;
+  const sheetBtn = document.getElementById('sheet-btn-get-pro');
+  const sheetDiv = document.getElementById('sheet-get-pro-div');
   const show = !!CURRENT_USER && !CURRENT_USER_IS_PRO;
-  btn.classList.toggle('hidden', !show);
-  div.classList.toggle('hidden', !show);
+  btn?.classList.toggle('hidden', !show);
+  div?.classList.toggle('hidden', !show);
+  sheetBtn?.classList.toggle('hidden', !show);
+  sheetDiv?.classList.toggle('hidden', !show);
 }
 
 function updateSaveCounter() {
@@ -612,6 +615,7 @@ async function signOut() {
   document.getElementById('save-counter')?.classList.remove('visible');
   document.getElementById('btn-get-pro')?.classList.add('hidden');
   document.getElementById('get-pro-div')?.classList.add('hidden');
+  closeBottomSheet();
   document.getElementById('user-dropdown').classList.add('hidden');
   localStorage.removeItem('sitesave-reset-in-progress');
   document.getElementById('kb-hint')?.remove();
@@ -621,6 +625,7 @@ async function signOut() {
 
 async function deleteAccount() {
   document.getElementById('user-dropdown').classList.add('hidden');
+  closeBottomSheet();
   const confirmed = confirm('This will permanently delete your account and all saved sites. This cannot be undone.\n\nAre you sure?');
   if (!confirmed) return;
 
@@ -662,6 +667,7 @@ async function deleteAccount() {
 
 function exportBookmarks() {
   document.getElementById('user-dropdown').classList.add('hidden');
+  closeBottomSheet();
   if (!BM || BM.length === 0) {
     toast('No bookmarks to export');
     return;
@@ -736,12 +742,24 @@ function updateUserAvatar() {
 }
 
 function toggleUserMenu() {
-  const dd = document.getElementById('user-dropdown');
-  const emailEl = document.getElementById('user-email');
-  if (CURRENT_USER && emailEl) {
-    emailEl.textContent = CURRENT_USER.email || CURRENT_USER.user_metadata?.full_name || '';
+  const email = CURRENT_USER?.email || CURRENT_USER?.user_metadata?.full_name || '';
+  if (window.innerWidth <= 640) {
+    // Mobile: bottom sheet
+    document.getElementById('sheet-email').textContent = email;
+    document.getElementById('sheet-overlay').classList.remove('hidden');
+    document.getElementById('account-sheet').classList.remove('hidden');
+  } else {
+    // Desktop: dropdown
+    const dd = document.getElementById('user-dropdown');
+    const emailEl = document.getElementById('user-email');
+    if (emailEl) emailEl.textContent = email;
+    dd.classList.toggle('hidden');
   }
-  dd.classList.toggle('hidden');
+}
+
+function closeBottomSheet() {
+  document.getElementById('sheet-overlay')?.classList.add('hidden');
+  document.getElementById('account-sheet')?.classList.add('hidden');
 }
 
 document.addEventListener('click', e => {
