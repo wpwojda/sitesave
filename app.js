@@ -255,7 +255,22 @@ async function enterApp() {
 async function loadProStatus() {
   if (!CURRENT_USER) return;
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
-  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); return; }
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; return; }
+  const { data } = await sb.rpc('get_my_profile');
+  if (data && data.length > 0 && data[0].pro_expires_at) {
+    const expiry = new Date(data[0].pro_expires_at);
+    CURRENT_USER_PRO_EXPIRES = expiry;
+    CURRENT_USER_IS_PRO = expiry > new Date();
+  } else {
+    CURRENT_USER_IS_PRO = false;
+    CURRENT_USER_PRO_EXPIRES = null;
+  }
+}
+
+async function loadProStatus() {
+  if (!CURRENT_USER) return;
+  const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); updateSaveCounter(); return; }
   const { data } = await sb.rpc('get_my_profile');
   if (data && data.length > 0 && data[0].pro_expires_at) {
     const expiry = new Date(data[0].pro_expires_at);
@@ -266,16 +281,22 @@ async function loadProStatus() {
     CURRENT_USER_PRO_EXPIRES = null;
   }
   updateProBadge();
+  updateSaveCounter();
 }
 
 function updateProBadge() {
   const badge = document.getElementById('logo-pro-badge');
   if (!badge) return;
-  if (CURRENT_USER_IS_PRO) {
-    badge.classList.add('visible');
-  } else {
-    badge.classList.remove('visible');
-  }
+  badge.classList.toggle('visible', CURRENT_USER_IS_PRO);
+}
+
+function updateSaveCounter() {
+  const el = document.getElementById('save-counter');
+  if (!el || !CURRENT_USER) return;
+  const count = BM.length;
+  const limit = getActiveLimit();
+  el.textContent = limit === Infinity ? `${count} saves` : `${count} / ${limit}`;
+  el.classList.add('visible');
 }
 
 function getActiveLimit() {
@@ -957,19 +978,6 @@ function render() {
   renderCards();
   updateProNudge();
   updateSaveCounter();
-}
-
-function updateSaveCounter() {
-  const el = document.getElementById('save-counter');
-  if (!el || !CURRENT_USER) return;
-  const count = BM.length;
-  const limit = getActiveLimit();
-  if (limit === Infinity) {
-    el.textContent = `${count} saves`;
-  } else {
-    el.textContent = `${count} / ${limit}`;
-  }
-  el.classList.add('visible');
 }
 
 function renderCards() {

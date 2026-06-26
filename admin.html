@@ -357,10 +357,10 @@ async function loadAll() {
   // Fetch user emails
   const { data: authUsers } = await sb.rpc('get_admin_users');
 
-  // Fetch Pro profiles to count paid users
-  const { data: profiles } = await sb.from('public.profiles').select('id, pro_expires_at');
+  // Fetch Pro profiles to count active paid users
+  const { data: profiles } = await sb.from('profiles').select('id, pro_expires_at');
   const now = new Date();
-  const paidCount = (profiles || []).filter(p => p.pro_expires_at && new Date(p.pro_expires_at) > now && p.id !== ADMIN_SVC).length;
+  const paidCount = (profiles || []).filter(p => p.id !== ADMIN_SVC && p.id !== OWNER_ID && p.pro_expires_at && new Date(p.pro_expires_at) > now).length;
 
   // Aggregate bookmarks by user — exclude admin service account
   const userMap = {};
