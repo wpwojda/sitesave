@@ -62,7 +62,7 @@ let S = { filter: 'all', sort: 'newest', editId: null, color: '#111110' };
 // ── SAVE LIMITS ───────────────────────────────────────────────
 const FREE_SAVE_LIMIT = 50;
 const PRO_SAVE_LIMIT  = 250;
-const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50'];
+const UNLIMITED_USERS = ['edd41b56-a71e-4146-95d6-848cdec0bd50', 'f282a5b1-13fe-4422-b5bc-5af14c557b79', '2e34c237-0a98-4bd4-b173-bb68a73f0518'];
 let CURRENT_USER_IS_PRO = false;
 let CURRENT_USER_PRO_EXPIRES = null;
 
