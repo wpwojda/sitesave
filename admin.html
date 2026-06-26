@@ -358,7 +358,8 @@ async function loadAll() {
   const { data: authUsers } = await sb.rpc('get_admin_users');
 
   // Fetch Pro profiles to count active paid users
-  const { data: profiles } = await sb.from('profiles').select('id, pro_expires_at');
+  const { data: profiles, error: profilesErr } = await sb.from('profiles').select('id, pro_expires_at');
+console.log('profiles data:', profiles, 'error:', profilesErr);
   const now = new Date();
   const paidCount = (profiles || []).filter(p => p.id !== ADMIN_SVC && p.id !== OWNER_ID && p.pro_expires_at && new Date(p.pro_expires_at) > now).length;
 
