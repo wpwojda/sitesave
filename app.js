@@ -255,22 +255,7 @@ async function enterApp() {
 async function loadProStatus() {
   if (!CURRENT_USER) return;
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
-  if (isUnlimited) { CURRENT_USER_IS_PRO = true; return; }
-  const { data } = await sb.rpc('get_my_profile');
-  if (data && data.length > 0 && data[0].pro_expires_at) {
-    const expiry = new Date(data[0].pro_expires_at);
-    CURRENT_USER_PRO_EXPIRES = expiry;
-    CURRENT_USER_IS_PRO = expiry > new Date();
-  } else {
-    CURRENT_USER_IS_PRO = false;
-    CURRENT_USER_PRO_EXPIRES = null;
-  }
-}
-
-async function loadProStatus() {
-  if (!CURRENT_USER) return;
-  const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
-  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); updateSaveCounter(); return; }
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); updateSaveCounter(); updateGetProButton(); return; }
   const { data } = await sb.rpc('get_my_profile');
   if (data && data.length > 0 && data[0].pro_expires_at) {
     const expiry = new Date(data[0].pro_expires_at);
@@ -282,6 +267,7 @@ async function loadProStatus() {
   }
   updateProBadge();
   updateSaveCounter();
+  updateGetProButton();
 }
 
 function updateProBadge() {
@@ -290,12 +276,25 @@ function updateProBadge() {
   badge.classList.toggle('visible', CURRENT_USER_IS_PRO);
 }
 
+function updateGetProButton() {
+  const btn = document.getElementById('btn-get-pro');
+  const div = document.getElementById('get-pro-div');
+  if (!btn || !div) return;
+  const show = !!CURRENT_USER && !CURRENT_USER_IS_PRO;
+  btn.classList.toggle('hidden', !show);
+  div.classList.toggle('hidden', !show);
+}
+
 function updateSaveCounter() {
   const el = document.getElementById('save-counter');
   if (!el || !CURRENT_USER) return;
   const count = BM.length;
   const limit = getActiveLimit();
-  el.textContent = limit === Infinity ? `${count} saves` : `${count} / ${limit}`;
+  if (limit === Infinity) {
+    el.textContent = 'Unlimited';
+  } else {
+    el.textContent = `${count} / ${limit}`;
+  }
   el.classList.add('visible');
 }
 
@@ -611,6 +610,8 @@ async function signOut() {
   CURRENT_USER_PRO_EXPIRES = null;
   document.getElementById('logo-pro-badge')?.classList.remove('visible');
   document.getElementById('save-counter')?.classList.remove('visible');
+  document.getElementById('btn-get-pro')?.classList.add('hidden');
+  document.getElementById('get-pro-div')?.classList.add('hidden');
   document.getElementById('user-dropdown').classList.add('hidden');
   localStorage.removeItem('sitesave-reset-in-progress');
   document.getElementById('kb-hint')?.remove();

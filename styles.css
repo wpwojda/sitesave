@@ -721,6 +721,13 @@ main { flex: 1; min-width: 0; padding: 20px 20px 60px; }
 }
 .signout-btn:hover { background: var(--bg2); color: var(--danger); }
 
+.dropdown-get-pro {
+  color: var(--accent) !important;
+  font-weight: 500;
+  text-decoration: none;
+}
+.dropdown-get-pro:hover { background: var(--bg2); color: var(--accent) !important; }
+
 /* ── SIGNUP PROMPT CARD ──────────────────────────────────────── */
 .card-signup-prompt { cursor: pointer; }
 .card-signup-prompt:hover { transform: translateY(-2px); }
