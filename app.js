@@ -255,7 +255,7 @@ async function enterApp() {
 async function loadProStatus() {
   if (!CURRENT_USER) return;
   const isUnlimited = UNLIMITED_USERS.includes(CURRENT_USER.id);
-  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); updateSaveCounter(); updateGetProButton(); return; }
+  if (isUnlimited) { CURRENT_USER_IS_PRO = true; updateProBadge(); updateGetProButton(); return; }
   const { data } = await sb.rpc('get_my_profile');
   if (data && data.length > 0 && data[0].pro_expires_at) {
     const expiry = new Date(data[0].pro_expires_at);
@@ -266,7 +266,6 @@ async function loadProStatus() {
     CURRENT_USER_PRO_EXPIRES = null;
   }
   updateProBadge();
-  updateSaveCounter();
   updateGetProButton();
 }
 
@@ -288,18 +287,7 @@ function updateGetProButton() {
   sheetDiv?.classList.toggle('hidden', !show);
 }
 
-function updateSaveCounter() {
-  const el = document.getElementById('save-counter');
-  if (!el || !CURRENT_USER) return;
-  const count = BM.length;
-  const limit = getActiveLimit();
-  if (limit === Infinity) {
-    el.textContent = 'Unlimited';
-  } else {
-    el.textContent = `${count} / ${limit}`;
-  }
-  el.classList.add('visible');
-}
+
 
 function getActiveLimit() {
   if (UNLIMITED_USERS.includes(CURRENT_USER?.id)) return Infinity;
@@ -612,7 +600,6 @@ async function signOut() {
   CURRENT_USER_IS_PRO = false;
   CURRENT_USER_PRO_EXPIRES = null;
   document.getElementById('logo-pro-badge')?.classList.remove('visible');
-  document.getElementById('save-counter')?.classList.remove('visible');
   document.getElementById('btn-get-pro')?.classList.add('hidden');
   document.getElementById('get-pro-div')?.classList.add('hidden');
   closeBottomSheet();
@@ -996,7 +983,6 @@ function render() {
   renderPills();
   renderCards();
   updateProNudge();
-  updateSaveCounter();
 }
 
 function renderCards() {
@@ -1013,7 +999,20 @@ function renderCards() {
   }
 
   document.getElementById('pg-title').textContent = title;
-  document.getElementById('pg-count').textContent = `${list.length} site${list.length !== 1 ? 's' : ''}`;
+
+  // Save counter: show tier-aware count on the "All" view when signed in
+  const pgCount = document.getElementById('pg-count');
+  if (CURRENT_USER && S.filter === 'all' && !document.getElementById('q').value.trim()) {
+    const total = BM.length;
+    const limit = getActiveLimit();
+    if (limit === Infinity) {
+      pgCount.textContent = `${total} / unlimited saves`;
+    } else {
+      pgCount.textContent = `${total} / ${limit} saves`;
+    }
+  } else {
+    pgCount.textContent = `${list.length} site${list.length !== 1 ? 's' : ''}`;
+  }
 
   if (!list.length && !S.guestMode) {
     const firstName = CURRENT_USER?.user_metadata?.full_name?.split(' ')[0] || null;

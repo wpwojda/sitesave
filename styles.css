@@ -66,12 +66,7 @@ header {
   letter-spacing: -.03em;
   flex: 1;
   transition: var(--trans);
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px;
-}
-
-.logo-wordmark {
   display: flex; align-items: center; gap: 8px;
-  line-height: 1;
 }
 
 .logo-pro-badge {
@@ -87,17 +82,6 @@ header {
   flex-shrink: 0;
 }
 .logo-pro-badge.visible { display: inline-flex; align-items: center; }
-
-.save-counter {
-  display: none;
-  font-family: 'Geist Mono', monospace;
-  font-size: 10px;
-  color: var(--text3);
-  flex-shrink: 0;
-  letter-spacing: 0;
-  line-height: 1;
-}
-.save-counter.visible { display: inline; }
 
 .search-wrap { flex: 1; max-width: 400px; position: relative; }
 .search-icon {
