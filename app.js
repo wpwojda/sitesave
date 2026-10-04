@@ -1,6 +1,6 @@
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL = 'https://rrosyexsujynvykdjrlp.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyb3N5ZXhzdWp5bnZ5a2RqcmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzkwNjAsImV4cCI6MjA5NTA1NTA2MH0.9oo-WeyULtRPCMmrfm0VJrl9e_OQh9cJlIkfA_bSiFI';
+const SUPA_KEY = 'sb_publishable_kA_g7YByIjz8_pQ400zmCg_cJSl6ls8';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
   auth: {
     storage: window.localStorage,
